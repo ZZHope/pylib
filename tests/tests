@@ -1,0 +1,6 @@
+#! /bin/bash
+# Test script for running all the test scripts
+python testppm.py
+python testATable.py
+python testmesaSL.py
+python testmesaprof.py
