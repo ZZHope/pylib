@@ -1,0 +1,191 @@
+% *********** Document name and reference:
+% Title of document
+\renewcommand{\ndoctitle}{data_plot.py and utils.py: A guide to using these superclasses} 
+% Document category acronym 
+\renewcommand{\ndocname}{Tools}                      
+% svn dir
+\renewcommand{\svndir}{svn://forum.astro.keele.ac.uk/utils/pylib/DOC/tools}  
+% Contributors to this document
+\renewcommand{\ndoccontribs}{DAC}
+
+\input{chap}
+
+Document name: \ndocname \\
+SVN directory: \svndir\\
+Contributors: \ndoccontribs\\
+
+
+
+{\textbf{Abstract:} \slshape
+This Document will allow a user to understand the methods contained within the super classes
+data\_plot.py and utils.py.  Also it will describe how to extend any module with 
+these super classes.
+}
+%##############################################################
+%# Section: Introduction
+%##############################################################
+
+\section{Introduction}
+\index{data_plot}\index{utils}Welcome to the Tools User Guide.  The purpose of these tools is to provide a structure and inheritance to 
+the suite of python modules. Currently this suite contains mesa.py, ppm.py, ppn.py, mppnp.py, ascii\_table.py, as well as the superclasses data\_plot.py and utils.py
+The goal behind the creation of these superclasses was that these modules in this suite all had related, general functions, for example they all had a plot function.
+It was decided that these general methods and functions would be contained in these superclasses.
+This way, we would have a greater and ore concrete hierarchy to out software system.
+This document will show the functions and variables contained within these superclasses and how a user could extend their module with data\_plot.py and utils.py
+
+\section{Downloading and configuring}
+Download the module from from svn://forum.astro.keele.ac.uk/utils/pylib/.   Once the package is placed in the filesystem, the user must add the location
+of data\_plot.py and utils.py to their python path.
+
+\section{Functions, Methods and Variables}
+Here the document will go about explaining how the user would go about using the functions, methods and variables
+contained within data\_plot.py and utils.py.
+
+\subsection{data\_plot.py}
+The class DataPlot contained within data\_plot.py is a super class that contains functions that pertain to plotting data.
+\newline
+\begin{verbatim}
+plot(self,atriX,atriY, FName=None,numType='ndump',legend=None,
+    labelX=None, labelY=None,indexX=None, indexY=None, title=None, 
+    shape='.',logX=False, logY=False, base=10)
+\end{verbatim}	
+Simple function that plots atriY as a function of atriX. This method will automatically find the data by calling
+get(attribute,FName, numType,resolution) for a YProfile class and get(attribute) for everything else, and plot the requested data.\newline
+		Input:\newline
+		atriX: The name of the attribute you want on the x axis \newline
+		atriY: The name of the attribute you want on the Y axis \newline
+		Fname: Be the filename, Ndump or time, Defaults to the last 
+			NDump, only need for a YProfile class.\newline
+		numType: designates how this function acts and how it interprets 
+			FName Defaults to file, only need for a YProfile class.\newline
+		if numType is 'file', this function will get the desird attribute from that file\newline
+		if numType is 'NDump' function will look at the cycle with that nDump\newline
+		if numType is 't' or 'time' function will find the \_cycle with the closest time stamp \newline
+		labelX: The label on the X axis \newline
+		labelY: The label on the Y axis \newline
+		indexX: Depreciated: If the get method returns a list of lists, indexX
+			would be the list at the index indexX in the list.\newline
+		indexY: Depreciated: If the get method returns a list of lists, indexY
+			would be the list at the index indexX in the list.\newline
+		shape: What shape and colour the user would like their plot in.
+		       \newline
+		title: The Title of the Graph \newline
+		logX: A boolean of weather the user wants the x axis logarithmically\newline
+		logY: A boolean of weather the user wants the Y axis logarithmically\newline
+		base: The base of the logarithm. Default = 10\newline
+		WARNING: Unstable if get returns a list with only one element (x=[0])\newline
+An example of calling this method would be:
+\begin{verbatim}
+instance.plot('A','FVconv')
+\end{verbatim}
+
+\begin{verbatim}
+plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2)
+\end{verbatim}
+Plot one species for cycle between xlim1 and xlim2. This plot function if for the classes mesa\_profile and h5TPlotTools in mppnp.py.\newline		
+	species      - which species to plot \newline
+	keystring    - label that appears in the plot, if the subclass is h5TPlotTools this gets interpereted as the model number \newline
+	xlim1, xlim2 - mass coordinate range\newline                                                 
+	ylim1, ylim2 - mass fraction coordinate range\newline
+
+
+\begin{verbatim}
+classTest()
+\end{verbatim}
+Determines what the type of class instance the subclass is, so
+		we can dynically determine the behaviour of methods.
+		
+		This method NEEDS to be modified if any names of files or classes
+		are changed
+\newline
+\newline
+\begin{verbatim}
+logarithm(self,tmpX,tmpY,logX,logY,base)
+\end{verbatim}
+Logarithm takes in two lists of data and then take the 
+		logarithm of each element with the base. If there is an
+		element at some index that is less than or equal to 0, this 
+		method will remove the elements in both lists at that index\newline
+		input:\newline
+		tmpX: a list of data\newline
+		tmpY: a list of data\newline
+		logX: If the user wants tmpX loged\newline
+		logY: If the user wants tmpY loged\newline
+		base: The base of the logarithm, defaults to 10\newline
+		
+		
+\begin{verbatim}
+clear(title=True, xlabel=True, ylabel=True)
+\end{verbatim}
+Method for removing the title and/or xlabel and/or Ylabel
+		of a matplotlib Plot.  Only to be called in an ipython 
+		environment\newline
+		input:\newline
+		Title -  boolean of if title will be cleared \newline
+		xlabel - boolean of if xlabel will be cleared \newline
+		ylabel - boolean of if ylabel will be cleared \newline\newline
+
+\begin{verbatim}
+xlimrev()
+\end{verbatim}
+Reverses the xrange of a matplotlib Plot.\newline\newline
+\subsection{utils.py}
+The current iteration currenly only has the class variables elements\_names and stable\_el.
+They are, respectively, a list of element names and stable elements for mppnp.py.
+
+\section[Extention and Modification]
+\subsection{Extention}
+One goal behind the creation of these superclasses, is that these classes should be able to extend any module, thus giving it all the methods and variables contained in 
+data\_plot.py and utils.py.  To do this there are some requirements:\newline
+A. Place 'from data\_table import *' or 'from utils import *' at the top of the module\newline
+B. If the class is defined like 'class MyClass:', change that to 
+   'class MyClass(DataTable):' or 'class MyClass(Utils):'\newline
+C. To properly use DataTable's methods properly one will need these methods:
+	a get(atri) that returns a numpy array of Data, or a 
+	list of numpy arrays of data.  The arguments of this function would need to be
+	atri which is the name of the data one is looking for.\newline\newline
+
+\subsection{Modification}
+
+\section{History} 
+This document history complements the svn log.
+
+\begin{tabular*}{\textwidth}{lll}
+\hline
+Authors & yymmdd & Comment \\
+\hline
+DAC & 101115 & generate template and input documentation\\
+
+\hline
+\end{tabular*}
+\subsection{To Do}
+-Finish modification subsection.
+
+
+\section{Contact}
+If any bugs do appear or if there are any questions, please email hoshi@uvic.ca
+% --------------- latex template below ---------------------------
+
+
+
+%\begin{figure}[htbp]
+%   \centering
+%%   \includegraphics[width=\textwidth]{layers.jpg} % 
+%      \caption{}   \includegraphics[width=0.48\textwidth]{FIGURES/HRD90ms.png}  
+%   \includegraphics[width=0.48\textwidth]{FIGURES/HRD150ms.png}  
+%
+%   \label{fig:one}
+%\end{figure}
+%
+%\begin{equation}
+%Y\_a = Y\_k + \sum\_{i \neq k} Y\_i
+%\end{equation}
+%
+%{
+%%\color{ForestGreen}
+%\sffamily 
+%  {\center  --------------- \hfill {\bf START: Some special text} \hfill ---------------}\\
+%$Y\_c$ does not contain ZZZ but we may assign one $Y_n$ to XYZ which is the decay product of the unstable nitrogen isotope JJHJ. %
+%
+%{\center ---------------  \hfill {\bf END:Some special text} \hfill ---------------}\\
+%}

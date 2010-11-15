@@ -1,0 +1,6 @@
+pdflatex tools-chapter
+pdflatex tools-chapter
+makeindex tools-chapter
+bibtex tools-chapter
+pdflatex tools-chapter
+pdflatex tools-chapter
