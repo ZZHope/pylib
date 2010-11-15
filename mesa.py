@@ -1,0 +1,393 @@
+''' MESA output data loading and plotting
+
+    Falk Herwig for the MESA collaboration (v0.1, 23JUN2010)
+
+    mesa.py provides tools to get MESA stellar evolution data output
+    into your favourite python session. In the LOGS directory MESA
+    outputs two types of files: star.log is a time evolution output,
+    printing one line per so many cycles (e.g. each cycle) of all
+    sorts of things. lognnn.data files are profile data files. nnn is
+    the number of log.data files that is translated into model cycles
+    in the profiles.index file.
+
+    MESA allows users to freely define what should go into these two
+    types of outputs, which means that column numbers can and do
+    change. mesa.py reads in both types of files and present them (as
+    well as any header attributes) as arrays that can be referenced by
+    the actual column name as defined in the header section of the
+    files. mesa.py then defines a (hopefully growing) set of standard
+    plots that make use of the data just obtained.
+
+    mesa.py is organised as a module that can be imported into any
+    python or ipython session. It is related to nmuh5.py which is a
+    similar module to deal with 'se' output, used by the NuGrid
+    collaboration. mesa.py does not need se libraries. The 'se' output
+    files that can be written with MESA can be read and processed with
+    the nuh5.py tool.
+
+    mesa.py is providing two class objects, profile and star_log. The
+    first makes profile data available, the second reads and plots the
+    star.log file. Note that several instances of these can be
+    initiated within one session and data from different instances
+    (i.e. models, tracks etc) can be overplotted.
+
+    Here is how a simple session could look like that is plotting an HRD
+    (I prefer to load ipython with matplotlib and numpy support via the alias
+    alias mpython='ipython -pylab -p numpy -editor emacsclient')
+
+        vortex$ mpython
+        Python 2.5.2 (r252:60911, Feb 22 2008, 07:57:53) 
+        Type "copyright", "credits" or "license" for more information.
+
+        IPython 0.9.1 -- An enhanced Interactive Python.
+        ?         -> Introduction and overview of IPython's features.
+        %quickref -> Quick reference.
+        help      -> Python's own help system.
+        object?   -> Details about 'object'. ?object also works, ?? prints more.
+
+        IPython profile: numpy
+
+          Welcome to pylab, a matplotlib-based Python environment.
+          For more information, type 'help(pylab)'.
+
+        In [1]: import mesa as ms
+
+        In [2]: help ms
+        ------> help(ms)
+
+        In [4]: s=ms.star_log('.')
+
+        In [5]: s.hrd()
+    
+     In order to find out what header attributes and columns are
+     available in star.log use:
+     
+        In [6]: s.header_attr
+        Out[6]: 
+        {'burn_min1': 50.0,
+         'burn_min2': 1000.0,
+         'c12_boundary_limit': 0.0001,
+         'h1_boundary_limit': 0.0001,
+         'he4_boundary_limit': 0.0001,
+         'initial_mass': 2.0,
+         'initial_z': 0.01}
+
+        In [7]: s.cols
+        Out[7]: 
+        {'center_c12': 38,
+         'center_h1': 36,
+         'center_he4': 37,
+          ...  
+          
+    In order to read the profile data from the first log.data file in
+    profiles.index, and then get the mass and temperature out and
+    finally plot them try:
+
+        100 in profiles.index file..
+        The 1. log.data file is 44
+        reading ./log44.data ...
+
+        In [10]: T=a1.get('temperature')
+
+        In [11]: mass=a1.get('mmid')
+
+        In [12]: plot(mass,T)
+        Out[12]: [<matplotlib.lines.Line2D object at 0x8456ed0>]
+
+    Of course, a1.cols etc are available here as well and many other
+    things. E.g. a.model contains an array with all the models for
+    which log.data are available. You may initiate a profile object
+    with a model number:
+
+        In [14]: a2=ms.profile('.',55000,num_type='model')
+        100 in profiles.index file ...
+        reading ./log87.data ...
+
+'''
+from data_plot import *
+import numpy as np
+import matplotlib.pylab as pyl
+import matplotlib.pyplot as pl
+import os
+
+
+
+class mesa_profile(DataPlot):
+    ''' read profiles.index and prepare reading MESA profile files
+
+    starts with reading profiles.index and creates hash array
+    log.data can then be accessed via prof_plot'''
+
+    sldir = ''
+    
+    def __init__(self,sldir,num,num_type='log_i',prof_ind_name='profiles.index',log_prefix='log',data_suffix='.data'):
+        '''read a log.data profile file
+
+        input:
+        sldir       directory path of LOGS
+
+        num         by default this is the i. log.data available
+                    (e.g. num=1 is the 1. available profile file),
+                    however if you give 
+        num_type    as 'log_num' then num will be interpreted as the
+                    log.data number log_num (log_num is the number
+                    that appears in the file names of type
+                    log23.data), or try 'model' to get the prfile
+                    log.data file for model (or cycle number) used by
+                    the stellar evolution code
+        prof_ind_name    use this optional argument if the profiles.index 
+                         file hasn an alternative name, for example, do 
+                         superpro=ms.profile('LOGS',1,prof_ind_name='super.prof') 
+        log_prefix, data_suffix are optional arguments that allow you to change
+                    the defaults for the log.data profile files. '''
+
+        self.prof_ind_name = prof_ind_name
+        self.sldir         = sldir
+
+        if num_type is 'model':
+            self.profiles_index()
+            try:
+                log_num=self.log_ind[num]
+            except KeyError:
+                print 'There is no log.data file for this model'
+                return
+        elif num_type is 'log_i':
+            log_num=self.log_file_ind(num)
+            if log_num == -1:
+                print "Could not find a log.data file with that number"
+                return
+        elif num_type is 'log_num':
+            log_num = num
+        else:
+            print 'unknown num_type'
+            return
+
+        filename=self.sldir+'/'+log_prefix+str(log_num)+data_suffix
+        
+        print 'reading '+filename+' ...'
+        header_attr = read_mesafile(filename,only='header_attr')
+        num_zones=int(header_attr['num_zones'])
+        header_attr,cols,data = read_mesafile(filename,data_rows=num_zones,only='all')
+
+        self.cols        = cols
+        self.header_attr = header_attr
+        self.data        = data
+
+
+    def __del__(self):
+        print 'Closing profile tool ...'
+
+    def profiles_index(self):
+        ''' read profiles.index and make hash array
+
+        log_ind     hash array that returns log.data file number from model number
+        model       the models for which log.data is available'''
+
+        prof_ind_name = self.prof_ind_name 
+
+        f = open(self.sldir+'/'+prof_ind_name,'r')
+        line = f.readline()
+        numlines=int(line.split()[0])
+        print str(numlines)+' in profiles.index file ...'
+
+        model=[]
+        log_file_num=[]
+        for line in f:
+            model.append(int(line.split()[0]))
+            log_file_num.append(int(line.split()[2]))
+
+        log_ind={}    # log.data number from model
+        for a,b in zip(model,log_file_num):
+            log_ind[a] = b
+            
+        self.log_ind=log_ind
+        self.model=model
+
+# let's start with functions that aquire data
+
+    def log_file_ind(self,inum):
+        ''' information about available log.data files
+        
+        inmu       attempt to get number of inum's log.data file
+        inum_max   max number of log.data files available'''
+        
+        self.profiles_index()
+        if inum <= 0:
+            print "Smallest argument is 1"
+            return
+
+        inum_max = len(self.log_ind)
+        inum -= 1
+        
+        if inum > inum_max:
+            print 'There are only '+str(inum_max)+' log.data file available.'
+            log_data_number = -1
+            return log_data_number
+        else:
+            log_data_number=self.log_ind[self.model[inum]]
+            print 'The '+str(inum+1)+'. log.data file is '+ \
+                  str(log_data_number)
+            return log_data_number
+
+    def get(self,str_name):
+        ''' return a column of data with the name str_name
+        
+        str_name is the name of the column as printed in the
+        lognnn.data file; get the available columns from self.cols
+        (where you replace self with the name of your instance)'''
+
+        column_array = self.data[:,self.cols[str_name]-1].astype('float')
+        return column_array
+
+
+
+        
+class star_log(DataPlot):
+    ''' read star.log MESA output and plot various things, including
+    HRD, Kippenhahn etc
+    
+    sldir  - which LOGS directory
+    slname - optional argument if star.log file has alternative name,
+    use like this: another=ms.star_log('LOGS',slname='anothername')
+    '''
+
+    sldir  = ''
+    slname = ''
+    header_attr = []
+    cols = []
+    
+    def __init__(self,sldir,slname='star.log'):
+        self.sldir = sldir
+        self.slname = slname
+
+        if not os.path.exists(sldir+'/'+slname):
+            print 'error: no star.log file found in '+sldir
+        else:
+            self.read_starlog()
+
+    def __del__(self):
+        print 'Closing star_log tool ...'
+
+# let's start with functions that aquire data
+    def read_starlog(self):
+        ''' read star.log file again'''
+
+        sldir   = self.sldir
+        slname  = self.slname
+        slaname = slname+'sa'
+        if os.path.exists(sldir+'/'+slaname):
+            os.remove(sldir+'/'+slaname)
+        # create new star.logsa file        
+#        os.popen('cd '+sldir+';cleanstarlog.py '+slname+' > /dev/null')
+
+        cleanstarlog(sldir+'/'+slname)
+            
+        if not os.path.exists(sldir+'/'+slaname):
+            print 'Warning in read_starlog: no sa file produced.'
+            
+        cmd=os.popen('wc '+sldir+'/'+slaname)    
+        cmd_out=cmd.readline()
+        cnum_cycles=cmd_out.split()[0]
+        num_cycles=int(cnum_cycles) - 6
+
+        filename=sldir+'/'+slaname
+
+        header_attr,cols,data = read_mesafile(filename,data_rows=num_cycles)
+
+        self.cols        = cols
+        self.header_attr = header_attr
+        self.data        = data
+        
+    def get(self,str_name):
+        ''' return a column of data with the name str_name
+        
+        str_name is the name of the column as printed in star.log
+        get the available columns from self.cols (where you replace
+        self with the name of your instance'''
+
+        column_array = self.data[:,self.cols[str_name]-1].astype('float')
+        return column_array
+
+# below are some utilities that the user typically never calls directly
+
+def read_mesafile(filename,data_rows=0,only='all'):
+    ''' private routine that is not directly called by the user
+    '''
+    f=open(filename,'r')
+    vv=[]
+    v=[]
+    lines = [] 
+    line  = ''
+    for i in range(0,6):
+        line = f.readline()
+        lines.extend([line])
+    
+    hval  = lines[2].split()
+    hlist = lines[1].split()
+    header_attr = {}
+    for a,b in zip(hlist,hval):
+        header_attr[a] = float(b)  
+    if only is 'header_attr':
+        return header_attr
+
+    cols    = {}
+    colnum  = lines[4].split()
+    colname = lines[5].split()
+    for a,b in zip(colname,colnum):
+        cols[a] = int(b)
+            
+    data = []
+    for i in range(data_rows):
+        line = f.readline()
+        v=line.split()
+        try: 
+            vv=np.array(v,dtype='float64')
+        except ValueError:
+            for item in v:
+                if item.__contains__('.') and not item.__contains__('E'):
+                    v[v.index(item)]='0'
+        data.append(vv)
+    f.close()
+    a=np.array(data) 
+    data = []
+    return header_attr, cols, a
+
+
+def cleanstarlog(file_in):
+    ''' cleaning star.log, e.g. to take care of repetitive restarts
+    
+    private, should not be called by user directly
+
+    file_in     typically the filename of the mesa output star.log file,
+                creates a clean file called star.logsa
+
+    (thanks to Raphael for providing this tool)            
+    '''
+
+    file_out=file_in+'sa'
+    f = open(file_in)
+    lignes = f.readlines()
+    f.close()
+
+    nb    = np.array([],dtype=int)   # model number
+    nb    = np.concatenate((nb    ,[  int(lignes[len(lignes)-1].split()[ 0])])) 
+    nbremove = np.array([],dtype=int)   # model number
+    i=-1
+
+    for i in np.arange(len(lignes)-1,0,-1):
+        line = lignes[i-1]
+        
+        if i > 6 and line != "" :
+            if int(line.split()[ 0])>=nb[-1]:
+                nbremove = np.concatenate((nbremove,[i-1])) 
+            else:
+                nb = np.concatenate((nb    ,[  int(line.split()[ 0])])) 
+    i=-1
+    for j in nbremove:
+        lignes.remove(lignes[j])
+ 
+    fout=file(file_out,'w')
+    for j in np.arange(len(lignes)):
+        fout.write(lignes[j])
+    fout.close()
+ 
