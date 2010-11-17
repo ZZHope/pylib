@@ -13,6 +13,7 @@ The next line after the header lines, is a line of column attribute names.
 The column attribute names are separated by '  ' by default or whatever the 
 	user dictates to the class.
 All the data columns are of equal length.
+Data columns are seperated by spaces
 
 Here is an example run through.
 bash-4.1$ python
@@ -23,7 +24,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> p=AsciiTable('c12cg.dat')
 >>> p.hattrs
 ['1 12  6  1  1  1  0  0  0  1 13  7  0', '55   1.943', 'c12pg']
->>> a.dcols.keys()
+>>> a.dcols
 ['upper', 'lower', 'T9', 'ado(gs)', 'ado/CA88', 'tt/gs', 'ado/fit', 'CA88', 'fitted']
 >>> a.get('upper')
 [1.3400000000000001e-24, ... 1590.0]
@@ -43,7 +44,8 @@ class AsciiTable(DataPlot):
 	files = []
 	sldir = ''
 	hattrs=[]
-	dcols ={}
+	dcols=[]
+	data ={}
 	def __init__(self,fileName,sldir='.',sep='  '):
 		'''
 		Init method
@@ -56,8 +58,8 @@ class AsciiTable(DataPlot):
 		self.sldir=sldir
 		self.files.append(fileName)
 		
-		self.hattrs,self.dcols=self._readFile(sldir,fileName,sep)
-	
+		self.hattrs,self.data=self._readFile(sldir,fileName,sep)
+		self.dcols=self.data.keys()
 	def get(self, attri):
 		'''
 		Method that dynamically determines the type of attribute that is 
@@ -79,6 +81,8 @@ class AsciiTable(DataPlot):
 		
 		if isCol:
 			return self.getColData(attri)
+		elif isHead:
+			return hattrs	
 	
 	def getColData(self,attri):
 		'''
@@ -86,7 +90,7 @@ class AsciiTable(DataPlot):
 		Input:
 		attri: The attribute we are looking for.
 		'''
-		return self.dcols[attri]
+		return self.data[attri]
 	
 	def _readFile(self,sldir,fileName,sep):
 		'''

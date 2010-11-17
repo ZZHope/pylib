@@ -1,6 +1,6 @@
-pdflatex ppm-chapter
-pdflatex ppm-chapter
-makeindex ppm-chapter
-bibtex ppm-chapter
-pdflatex ppm-chapter
-pdflatex ppm-chapter
+pdflatex asciiTable-chapter
+pdflatex asciiTable-chapter
+makeindex asciiTable-chapter
+bibtex asciiTable-chapter
+pdflatex asciiTable-chapter
+pdflatex asciiTable-chapter

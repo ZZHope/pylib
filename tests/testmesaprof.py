@@ -1,5 +1,5 @@
 from asserts import *
-from mesa2 import *
+from mesa import *
 
 def main():
 	print '\nprofile test\n'

@@ -49,23 +49,23 @@ def initTest(a):
 	
 def dataTest(a):
 	test='Data'
-	assertEquals(len(a.dcols['T9']),42 ,'Expected T9 Length', test)
+	assertEquals(len(a.data['T9']),42 ,'Expected T9 Length', test)
 	
-	assertEquals(a.dcols['T9'][0],float(.006),'Expected T9 Data Value', test)
+	assertEquals(a.data['T9'][0],float(.006),'Expected T9 Data Value', test)
 	
-	assertEquals(a.dcols['T9'][41],float(1.250),'Expected T9 Data Value', test)
+	assertEquals(a.data['T9'][41],float(1.250),'Expected T9 Data Value', test)
 	
-	assertEquals(len(a.dcols['fitted']),42 ,'Expected fitted Length', test)
+	assertEquals(len(a.data['fitted']),42 ,'Expected fitted Length', test)
 	
-	assertEquals(a.dcols['fitted'][0],float(1.21E-24),'Expected fitted Data Value', test)
+	assertEquals(a.data['fitted'][0],float(1.21E-24),'Expected fitted Data Value', test)
 	
-	assertEquals(a.dcols['fitted'][41],float(1.42E+03),'Expected fitted Data Value', test)
+	assertEquals(a.data['fitted'][41],float(1.42E+03),'Expected fitted Data Value', test)
 	
-	assertEquals(len(a.dcols['ado/fit']),42 ,'Expected ado/fit Length', test)
+	assertEquals(len(a.data['ado/fit']),42 ,'Expected ado/fit Length', test)
 	
-	assertEquals(a.dcols['ado/fit'][0],float(1.01),'Expected ado/fit Data Value', test)
+	assertEquals(a.data['ado/fit'][0],float(1.01),'Expected ado/fit Data Value', test)
 	
-	assertEquals(a.dcols['ado/fit'][41],float(1.01),'Expected ado/fit Data Value', test)
+	assertEquals(a.data['ado/fit'][41],float(1.01),'Expected ado/fit Data Value', test)
 if __name__ == "__main__":
    	main()
 

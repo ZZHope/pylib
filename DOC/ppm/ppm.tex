@@ -69,7 +69,7 @@ export PYTHONPATH=$PYTHONPATH:/location/of/ppm.py:
 Now we must repeat these steps with data\_plot.py and utils.py unless if they are in the same directory as ppm.py, in which case everything is ready to go.
 
 
-\subsection{Getting Started}
+\section{Getting Started}
 Here I will go about explaining how the user would go about using ppm.py for his or her purposes.
 First in our python command line (accessed by typing the command 'python' in your terminal) or in a python script,
 type the command:
@@ -97,7 +97,7 @@ Time values range from 0.0 to 8962.31
 \end{verbatim}
 Now the user can use their YProfile instance as they see fit.
 
-\subsection{Viewing Data}
+\section{Viewing Data}
 Once the user has instantiated their instance, they are ready to start working with it.
 One quick note, for the purposes of simplicity I will assume that the user has named
 their instance, p.
@@ -131,7 +131,7 @@ data=p.get('attribute', cycleNumber)
 Where 'attribute' is what data the user wants, and cycleNumber is which cycle this data will be read from.  Ie if cycleNumber was 20, YProfile-01-0020.bobaaa would be read.
 This will satisfy most users needs, but if more detail is needed, please read further in the Methods And Functions subsection
 
-\subsection{Plotting Data}
+\section{Plotting Data}
 To plot data, this guide recommends the user to download and install ipython, it will let the user to use plotting more dynamically. To install it go do http://ipython.scipy.org/moin/ and follow the links.
 But before the user does this, check if your system has ipython already installed by typing ipython in a terminal.
 \newline
@@ -151,7 +151,7 @@ p.plot(attriX, attriY)
 Where attriX is the name of the attribute of what the user wants on the X axis and attriY is the name of the attribute of what the user wants on the Y axis.
 This method automatically generates the title, the legend and the X and Y axis lables.
 
-\subsection{Methods And Functions}
+\section{Methods And Functions}
 Here, all the methods (public ones that is) that are available to ppn.py will be explained in detail.  Warning Here be Dragons!
 \newline
 {\bf getHattrs()}
@@ -242,7 +242,7 @@ Returns a list (Datalist) of values for the given attribute
 			    l will return the lowest
 			    Default resolution is h\newline
 		
-\subsection{History} 
+\section{History} 
 This document history complements the svn log.
 
 \begin{tabular*}{\textwidth}{lll}
@@ -255,7 +255,7 @@ DAC & 101112 & First final documentation done \\
 \end{tabular*}
 
 
-\subsection{Contact}
+\section{Contact}
 If any bugs do appear or if there are any questions, please email hoshi@uvic.ca
 % --------------- latex template below ---------------------------
 \begin{verbatim}

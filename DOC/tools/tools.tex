@@ -1,6 +1,6 @@
 % *********** Document name and reference:
 % Title of document
-\renewcommand{\ndoctitle}{data_plot.py and utils.py: A guide to using these superclasses} 
+\renewcommand{\ndoctitle}{data\_plot.py and utils.py: A guide to using these superclasses} 
 % Document category acronym 
 \renewcommand{\ndocname}{Tools}                      
 % svn dir
@@ -26,11 +26,11 @@ these super classes.
 %##############################################################
 
 \section{Introduction}
-\index{data_plot}\index{utils}Welcome to the Tools User Guide.  The purpose of these tools is to provide a structure and inheritance to 
+\index{data\_plot}\index{utils}Welcome to the Tools User Guide.  The purpose of these tools is to provide a structure and inheritance to 
 the suite of python modules. Currently this suite contains mesa.py, ppm.py, ppn.py, mppnp.py, ascii\_table.py, as well as the superclasses data\_plot.py and utils.py
 The goal behind the creation of these superclasses was that these modules in this suite all had related, general functions, for example they all had a plot function.
 It was decided that these general methods and functions would be contained in these superclasses.
-This way, we would have a greater and ore concrete hierarchy to out software system.
+This way, we would have a greater and more concrete hierarchy to out software system.
 This document will show the functions and variables contained within these superclasses and how a user could extend their module with data\_plot.py and utils.py
 
 \section{Downloading and configuring}
@@ -133,8 +133,10 @@ Reverses the xrange of a matplotlib Plot.\newline\newline
 The current iteration currenly only has the class variables elements\_names and stable\_el.
 They are, respectively, a list of element names and stable elements for mppnp.py.
 
-\section[Extention and Modification]
+\section{Extention and Modification}
+
 \subsection{Extention}
+
 One goal behind the creation of these superclasses, is that these classes should be able to extend any module, thus giving it all the methods and variables contained in 
 data\_plot.py and utils.py.  To do this there are some requirements:\newline
 A. Place 'from data\_table import *' or 'from utils import *' at the top of the module\newline
@@ -146,7 +148,7 @@ C. To properly use DataTable's methods properly one will need these methods:
 	atri which is the name of the data one is looking for.\newline\newline
 
 \subsection{Modification}
-
+To Do
 \section{History} 
 This document history complements the svn log.
 

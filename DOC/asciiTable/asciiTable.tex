@@ -1,6 +1,6 @@
 % *********** Document name and reference:
 % Title of document
-\renewcommand{\ndoctitle}{ascii_table.py: Simple Ascii Table Data Structure} 
+\renewcommand{\ndoctitle}{ascii\_table.py: Simple Ascii Table Data Structure} 
 % Document category acronym 
 \renewcommand{\ndocname}{ppm}                      
 % svn dir
@@ -17,7 +17,7 @@ Contributors: \ndoccontribs\\
 
 
 {  \textbf{Abstract:} \slshape
-A simple lession and tuitorial on using ascii_table.py in an effective and efficient manner
+A simple lession and tuitorial on using ascii\_table.py in an effective and efficient manner
 }
 %##############################################################
 %# Section: Introduction
@@ -33,7 +33,11 @@ how a typical user would go about using and working with this python module.
 \subsection{Nature of Ascii Files}
 There are a couple key identifiers to ascii table files \newline
 A)Lines of header attributes begin with a capital H \newline
-B) 
+B)The next line after the header lines, is a line of column attribute names.\newline
+C)The column attribute names are separated by '  ' by default or whatever the 
+user dictates to the class by specifying sep.\newline
+D)All the data columns are of equal length.\newline
+E)Data columns are seperated by blank spaces.\newline
 \section{Tutorial and Walkthough}
 
 \subsection{Downloading and configuring}
@@ -58,67 +62,60 @@ Now in this .bashrc there may or may not be a line like:
 export PYTHONPATH=/directory/:
 \end{verbatim}
 
-If there is add the location of ppm.py to the end of the line and a semi-colon.  It now should look like:
+Now add the location of ppm.py to the end of the line and a semi-colon.  It now should look like:
 
 \begin{verbatim}
-export PYTHONPATH=/directory/:/location/of/ppm.py:
+export PYTHONPATH=/directory/:/location/of/ascii_table.py:
 \end{verbatim}
 
 If that line did not already exist add this line to the .bashrc file.
 
 \begin{verbatim}
-export PYTHONPATH=$PYTHONPATH:/location/of/ppm.py:
+export PYTHONPATH=$PYTHONPATH:/location/of/ascii_table.py:
 \end{verbatim}
 
 Now we must repeat these steps with data\_plot.py and utils.py unless if they are in the same directory as ppm.py, in which case everything is ready to go.
 
 
-\subsection{Getting Started}
-Here I will go about explaining how the user would go about using ppm.py for his or her purposes.
+\section{Getting Started}
+Here I will go about explaining how the user would go about using ascii\_table.py for his or her purposes.
 First in our python command line (accessed by typing the command 'python' in your terminal) or in a python script,
 type the command:
 \begin{verbatim}
->import ppm as pm
+>import ascii_table as a
 \end{verbatim}
 Now, baring any errors ppm should be loaded into your command line or script, and the user can begin
 to work with ppm and its YProfile class. To create an instance of YProfile type:
 \begin{verbatim}
->p=pm.YProfile('DIRECTORY')
+>p=a.AsciiTable('file','Directory')
 \end{verbatim}
-'DIRECTORY' should be the directory where the YProfile files, that the user wants
+Where 'file' should be a ascii table compatable file and 'Directory' should be the directory where the YProfile files, that the user wants
 to work with, are located. If the user does not specify a directory by calling the class
 like: 
 \begin{verbatim}
->pm.YProfile()
+>p=a.AsciiTable('file')
 \end{verbatim}
-the class will then default to the working directory.
-Now the user should be presented with some feedback, the number of YProfiles in the selected 
-directory,the range of NDumps in the directory and the range of times in the directory. For example:
+The class will then default to the working directory.\newline
+There also is another agument, called sep. This is the seperator that seperates the 
+cycle attribute names. By default it equals '  '. For Example
 \begin{verbatim}
-There are 150 YProfile files in the . directory.
-Ndump values range from 0 to 149
-Time values range from 0.0 to 8962.31
+>p=a.AsciiTable('file',sep=';')
 \end{verbatim}
-Now the user can use their YProfile instance as they see fit.
+An actual, real life, example would be
+\begin{verbatim}
+>p=a.AsciiTable('C12.dat','./Run1/', sep=':')
+\end{verbatim}
 
-\subsection{Viewing Data}
+Now the user can use their AsciiTable instance as they see fit.
+
+\section{Viewing Data}
 Once the user has instantiated their instance, they are ready to start working with it.
 One quick note, for the purposes of simplicity I will assume that the user has named
 their instance, p.
 \newline
-To view the files that are available:
-\begin{verbatim}
->p.files
-\end{verbatim}
 To view the header attributes type:
 \begin{verbatim}
->p.hattrs.keys()
-\end{verbatim}
-
-
-To view the Cycle attributes type
-\begin{verbatim}
->p.cattrs
+>p.hattrs
 \end{verbatim}
 To view the Data Column attributes type
 \begin{verbatim}
@@ -128,14 +125,17 @@ To view the Data Column attributes type
 Now let us look at how to acquire data.
 \newline
 The basic way to acquire data is by the get function. The get method will dynamically determine what kind of attribute the user has passed in
-be it a header cycle or column attribute.  It returns a numpy array or a list of numpy arrays(if resolution ='a', more on that later).  In the most general way, it is called like:
+be it a header cycle or column attribute.  It returns a numpy array.  It is called like:
 \begin{verbatim}
-data=p.get('attribute', cycleNumber)
+data=p.get('attribute')
 \end{verbatim}
-Where 'attribute' is what data the user wants, and cycleNumber is which cycle this data will be read from.  Ie if cycleNumber was 20, YProfile-01-0020.bobaaa would be read.
-This will satisfy most users needs, but if more detail is needed, please read further in the Methods And Functions subsection
+Where 'attribute' is what data the user wants.
+An actual, real life, example would be
+\begin{verbatim}
+>p.get('upper')
+\end{verbatim}
 
-\subsection{Plotting Data}
+\section{Plotting Data}
 To plot data, this guide recommends the user to download and install ipython, it will let the user to use plotting more dynamically. To install it go do http://ipython.scipy.org/moin/ and follow the links.
 But before the user does this, check if your system has ipython already installed by typing ipython in a terminal.
 \newline
@@ -146,7 +146,7 @@ ipython --pylab --q4thread
 (note: the argument --q4thread is a work around for a bug in ipyhthon 0.10.1, if a different version is in use, this may not be needed)
 \newline
 Now import ppm and create an instance as was documented in the Getting Started section.
-For YProfile, the DataPlot class in  data\_plot.py provides us with two methods plot() and clear().
+For AsciiTable, the DataPlot class in  data\_plot.py provides us with two methods plot() and clear().
 \newline
 To use the plot method
 \begin{verbatim}
@@ -155,111 +155,31 @@ p.plot(attriX, attriY)
 Where attriX is the name of the attribute of what the user wants on the X axis and attriY is the name of the attribute of what the user wants on the Y axis.
 This method automatically generates the title, the legend and the X and Y axis lables.
 
-\subsection{Methods And Functions}
-Here, all the methods (public ones that is) that are available to ppn.py will be explained in detail.  Warning Here be Dragons!
-\newline
-{\bf getHattrs()}
-Returns a list of the header attribute names in sorted order. Same effect as the commands:
-\begin{verbatim}
-h=instance.hattrs.sorted()
-h.sort()
-\end{verbatim}
-{\bf getDCols()}
-Returns a list of the column attribute names. Same effect as the command:
-\begin{verbatim}
-instance.dcols
-\end{verbatim}
-{\bf getCattrs()}
-Returns a list of the cycle attribute names. Same effect as the command:
-\begin{verbatim}
-instance.cattrs
-\end{verbatim}
-
-{\bf get(attri, FName=None,numType='ndump',resolution='H').}
+\section{Methods And Functions}
+Here, all the methods (public ones that is) that are available to ppn.py will be explained in detail.
+\newline\newline
+{\bf get(attri).}
 \newline  
-Method that dynamically determines the type of attribute that is 
-passed into this method. Also it then returns that attribute's 
-associated data.
-The arguments are attri, fname, numType and rersolution.
-Input: \newline
+
+Method that dynamically determines the type of attribute that is passed into this method. Also it then returns that attribute's
+associated data.\newline
+Input:\newline
 attri: The attribute we are looking for.\newline
-Fname: Be the filename, Ndump or time, Defaults to the last NDump\newline
-numType: designates how this function acts and how it interprets FName
-defaults to file\newline
-if numType is 'file', this function will get the desired attribute from
-that file\newline
-if numType is 'NDump' function will look at the cycle with that nDump\newline
-if numType is 'T' or 'time' function will find the \_cycle with the 
-closest time stamp\newline
-Resolution: Data you want from a file, for example if the file 
-contains two different sized columns of data for one attribute, the 
-argument 'a' will return them all,
-'h' will return the largest,
-l will return the lowest
-Default resolution is h\newline
-
-
-{\bf getHeaderData(self,attri)}
-\newline 
-Returns a String or int of Header data that is associated with the attri
-\newline
-Input: \newline attri: the name of the attribute.\newline
-
-
-{\bf getCycleData( attri,FName=None,numType='ndump',Single=False,resolution='H')}
-\newline 
-Returns a list (Datalist) of values for the given attribute or a single attribute in the file FName.
-\newline
-		Input:\newline
-		attri: What we are looking for\newline
-		Fname: Be the filename, Ndump or time, Defaults to the last NDump\newline
-		numType: designates how this function acts and how it interprets FName
-			 Defaults to file\newline
-		if numType is 'file', this function will get the desired attribute from that file\newline
-		if numType is 'NDump' function will look at the cycle with that nDump\newline
-		if numType is 'T' or 'time' function will find the \_cycle with the closest time stamp \newline
-		Single: A Boolean determining whether the user wants just the Attri contained
-		        in the specified ndump or all the dumps below that ndump. 
-		        Defaults to False\newline
-		Resolution: Data you want from a file, for example if the file 
-			    contains two different sized columns of data for one attribute, 
-			    the argument 'a' will return them all, 'h' will return the largest, 
-			    l will return the lowest
-			    Default resolution is h\newline
-			    
-			    
-{\bf getColData(attri, FName, numType='ndump' ,resolution='H', cycle=False)}
-\newline 
-Returns a list (Datalist) of values for the given attribute 
-\newline
-		Input: \newline
-		numType: designates how this function acts and how it interprets FName
-			 Defaults to file\newline
-		if numType is 'file', this function will get the desired attribute from that file\newline
-		if numType is 'NDump' function will look at the cycle with that nDump\newline
-		if numType is 'T' or 'time' function will find the \_cycle with the closest time stamp \newline
-		Fname: The name of the file we are looking or Ndump or time\newline
-		attri: Attri is the attribute we are loking for\newline
-		Resolution: Data you want from a file, for example if the file 
-			    contains two different sized columns of data for one attribute, 
-			    the argument 'a' will return them all, 'h' will return the largest, 
-			    l will return the lowest
-			    Default resolution is h\newline
 		
-\subsection{History} 
+\section{History} 
 This document history complements the svn log.
 
 \begin{tabular*}{\textwidth}{lll}
 \hline
 Authors & yymmdd & Comment \\
 \hline
-DAC & 101112 & generate template \\
+DAC & 101117 & generate template and imput data\\
 
 \hline
 \end{tabular*}
 
 
-\subsection{Contact}
+\section{Contact}
 If any bugs do appear or if there are any questions, please email hoshi@uvic.ca
 % --------------- latex template below ---------------------------
 \begin{verbatim}

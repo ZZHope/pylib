@@ -14,6 +14,9 @@ An Header attribute is separated by the previous Header attribute by white space
 There are only 5 data columns. The first being the number, second being Z, third A
 	fourth abundance_yps and finally the element name.
 The first four columns consist purely of numbers, no strings are allowed. 
+Of the values in the final column, the name column, the first two are letters 
+specifying the element name, and the rest are spaces or numbers (in that strict
+order), exceft for the element names: Neut and Prot
 All the profile files in the directory have the same cycle attributes.	
 The cycle numbers of the selemxxxxx start at 0.
 """
@@ -294,8 +297,18 @@ class ppn_profile(DataPlot):
 		for i in range(len(lines)):
 			if index==4 and len(lines[i])==6:
 				data.append(str(lines[i][index])+' '+str(lines[i][index+1]))
-			elif index==4 :
-				data.append(str(lines[i][index]))
+			elif index==4 and len(lines[i])!=6:
+				tmp=str(lines[i][index])
+				if tmp[len(tmp)-1].isdigit():
+					tmp1=tmp[0]+tmp[1]
+					tmp2=''
+					for j in range(len(tmp)):
+						if j == 0 or j == 1:
+							continue
+						tmp2+=tmp[j]
+					data.append(tmp1+' '+tmp2)
+				else:
+					data.append(tmp)
 			elif index==0:
 				data.append(int(lines[i][index]))
 			else:

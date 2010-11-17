@@ -1,10 +1,10 @@
-'''nuh5p is a collection of plots of data in se-type h5 files
+'''mppnp is a collection of plots of data in se-type h5 files
 
-   semod  - a list of models in se files in which mod can be found
-   sedir  - directory name where se files can be found
-   seprefix - model prefix of se files
+   sedir    - the directory on which the h5 files can be
+   pattern - a string pattern that the file names have to
+                    contain in order to be read
 
-   sedir and seprefix can be obtained from ppn_frame.input
+   
 
    usage:
    start by loading the module
@@ -13,7 +13,7 @@
    you can get help:
    2 : help mppnp
 
-   next, initiate a ploot_tools class instance, the arguments are the
+   next, initiate a se class instance, the arguments are the
    directory sedir and sefiles, a list of files you want to read;
    note:
 
@@ -28,7 +28,7 @@
          * you can have several of these for different file sets from
            different dirs, which should make comparing models quite easy
 
-   3 : pt =mppnp.h5TPlotTools('.','M1') 
+   3 : pt =mppnp.se('.','M1') 
 
    look at the data that is available in your instance
    4 : pt.sedir 
@@ -55,13 +55,13 @@ import time
 import glob
 from utils import *
 from data_plot import *
-class h5TPlotTools(DataPlot,Utils):
+class se(DataPlot,Utils):
     ''' This class provides easy access to h5 files from the NuGrid
         project, along with some standard plots
         
     arguments: 
-    dir_string    - the directory on which the h5 files can be
-    found pattern - a string pattern that the file names have to
+    sedir    - the directory on which the h5 files can be
+    pattern - a string pattern that the file names have to
                     contain in order to be read
 
     example: f=nu.plot_tools('.','260') reads all h5 files with the
