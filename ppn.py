@@ -307,6 +307,10 @@ class ppn_profile(DataPlot):
 							continue
 						tmp2+=tmp[j]
 					data.append(tmp1+' '+tmp2)
+				elif tmp=='PROT':
+					data.append('H 1')
+				elif tmp==('NEUT'or'NEUTR'or'nn'or'N   1'):
+					data.append('NEUT')
 				else:
 					data.append(tmp)
 			elif index==0:

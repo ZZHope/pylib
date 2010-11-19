@@ -307,7 +307,136 @@ class star_log(DataPlot):
 
         column_array = self.data[:,self.cols[str_name]-1].astype('float')
         return column_array
+        
+    def hrd(self):
+		''' plot an HR diagram '''
+	
+		pyl.plot(self.data[:,self.cols['log_Teff']-1],self.data[:,self.cols['log_L']-1],label = "M="+str(self.header_attr['initial_mass'])+", Z="+str(self.header_attr['initial_z']))
+		pyl.legend()
+		pyl.xlabel('log Teff')
+		pyl.ylabel('log L')
+    
+    def hrd_key(self,key_str):
+		''' plot an HR diagram 
+		
+		key_str    a label string'''
+	
+		pyl.plot(self.data[:,self.cols['log_Teff']-1],self.data[:,self.cols['log_L']-1],label = key_str)
+		pyl.legend()
+		pyl.xlabel('log Teff')
+		pyl.ylabel('log L')
+    
+    def kippenhahn(self,num_frame,xax):
+		''' Kippenhahn plot as a function of time or model
+		
+		num_frame    number of frame to plot this plot into
+		xax          string that is either model or time to indicate what is to 
+			     be used on the x-axis'''
+	
+		pyl.figure(num_frame)
+		
+		if xax == 'time':
+		    xaxisarray = self.get('star_age')
+		elif xax == 'model':
+		    xaxisarray = self.get('model_number')
+		else:
+		    print 'kippenhahn_error: invalid string for x-axis selction.'+\
+			  ' needs to be "time" or "model"'
+		
+	    
+		h1_boundary_mass  = self.get('h1_boundary_mass')
+		he4_boundary_mass = self.get('he4_boundary_mass')
+		star_mass         = self.get('star_mass')
+		mx1_bot           = self.get('conv_mx1_bot')*star_mass
+		mx1_top           = self.get('conv_mx1_top')*star_mass
+		mx2_bot           = self.get('conv_mx2_bot')*star_mass
+		mx2_top           = self.get('conv_mx2_top')*star_mass
+		surface_c12       = self.get('surface_c12')
+		surface_o16       = self.get('surface_o16')
+	
+		COratio=(surface_c12*4.)/(surface_o16*3.)
+	
+		pyl.plot(xaxisarray,COratio,'-k',label='CO ratio')
+		pyl.ylabel('C/O ratio')
+		pyl.legend(loc=4)
+	
+	
+		pyl.twinx()
+		pyl.plot(xaxisarray,h1_boundary_mass,label='h1_boundary_mass')
+		pyl.plot(xaxisarray,he4_boundary_mass,label='he4_boundary_mass')
+		pyl.plot(xaxisarray,mx1_bot,',r',label='conv bound')
+		pyl.plot(xaxisarray,mx1_top,',r')
+		pyl.plot(xaxisarray,mx2_bot,',r')
+		pyl.plot(xaxisarray,mx2_top,',r')
+		pyl.ylabel('mass coordinate')
+		if xax == 'time':
+		    pyl.xlabel('t / yrs')
+		elif xax == 'model':
+		    pyl.xlabel('model number')
+		pyl.plot(xaxisarray,star_mass,label='star_mass')
+		pyl.legend(loc=6)
 
+    def t_lumi(self,num_frame,xax):
+		''' Luminosity evolution as a function of time or model
+		
+		num_frame    number of frame to plot this plot into
+		xax          string that is either model or time to indicate what is 
+			     to be used on the x-axis'''
+	
+		pyl.figure(num_frame)
+		
+		if xax == 'time':
+		    xaxisarray = self.get('star_age')
+		elif xax == 'model':
+		    xaxisarray = self.get('model_number')
+		else:
+		    print 'kippenhahn_error: invalid string for x-axis selction. needs to be "time" or "model"'
+		
+	    
+		logLH   = self.get('log_LH')
+		logLHe  = self.get('log_LHe')
+	
+		pyl.plot(xaxisarray,logLH,label='L_(H)')
+		pyl.plot(xaxisarray,logLHe,label='L(He)')
+		pyl.ylabel('log L')
+		pyl.legend(loc=2)
+	
+	
+		if xax == 'time':
+		    pyl.xlabel('t / yrs')
+		elif xax == 'model':
+		    pyl.xlabel('model number')
+
+    def t_surf_parameter(self,num_frame,xax):
+		''' Surface parameter evolution as a function of time or model
+		
+		num_frame    number of frame to plot this plot into
+		xax          string that is either model or time to indicate what is 
+			     to be used on the x-axis'''
+	
+		pyl.figure(num_frame)
+		
+		if xax == 'time':
+		    xaxisarray = self.get('star_age')
+		elif xax == 'model':
+		    xaxisarray = self.get('model_number')
+		else:
+		    print 'kippenhahn_error: invalid string for x-axis selction. needs to be "time" or "model"'
+		
+	    
+		logL    = self.get('log_L')
+		logTeff    = self.get('log_Teff')
+	
+		pyl.plot(xaxisarray,logL,'-k',label='log L')
+		pyl.plot(xaxisarray,logTeff,'-k',label='log Teff')
+		pyl.ylabel('log L, log Teff')
+		pyl.legend(loc=2)
+	
+	
+		if xax == 'time':
+		    pyl.xlabel('t / yrs')
+		elif xax == 'model':
+		    pyl.xlabel('model number')
 # below are some utilities that the user typically never calls directly
 
 def read_mesafile(filename,data_rows=0,only='all'):
