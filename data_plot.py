@@ -77,8 +77,8 @@ class DataPlot:
 		elif logYER:
 			for i in range(len(tmpY)):
 				if tmpY[i]>0:
-					tmX.append( tmpX[i])
-					tmY.append(tmpY[i])
+					tmpX.append( tmpX[i])
+					tmpY.append(tmpY[i])
 			tmpX=tmX
 			tmpY=tmY
 		
@@ -110,34 +110,67 @@ class DataPlot:
 			tmpY=tmY
 		
 		return tmpX,tmpY
-	
+		
+	def sparse(self,x,y,sparse):
+			"""
+			Method that removes every non sparse th element.  For example 
+			if this argument was 5, This method would plotthe 0th, 5th, 10th
+			... elements.
+			Input:
+			x: list of x values, of lenthe j
+			y: list of y values, of lenthe j
+			sparse: Argument that skips every so many data points
+			"""
+			tmpX=[]
+			tmpY=[]
+			
+			for i in range(len(x)):
+				if sparse == 1:
+					print x
+					print y
+					return x,y
+				if (i%sparse)==0:
+					tmpX.append(x[i])
+					tmpY.append(y[i])
+			print tmpX
+			print tmpY
+			return tmpX, tmpY
+		
 	def plot(self,atriX,atriY, FName=None,numType='ndump',legend=None,labelX=None, labelY=None ,
-		indexX=None, indexY=None, title=None, shape='.',logX=False, logY=False, base=10):
+		indexX=None, indexY=None, title=None, shape='.',logX=False, logY=False, base=10,sparse=1):
 		"""
 		Simple function that plots atriY as a function of atriX
 		This method will automatically find and plot the requested data.
 		Input:
 		atriX, The name of the attribute you want on the x axis
 		atriY, The name of the attribute you want on the Y axis
-		Fname: Be the filename, Ndump or time, Defaults to the last NDump
-		numType: designates how this function acts and how it interprets FName
-			 Defaults to file
-		if numType is 'file', this function will get the desird attribute from that file
-		if numType is 'NDump' function will look at the cycle with that nDump
-		if numType is 't' or 'time' function will find the _cycle with the closest time stamp 
+		Fname: Be the filename, Ndump or time, Defaults to the last 
+		       NDump
+		numType: designates how this function acts and how it interprets 
+			 FName. Defaults to file
+		if numType is 'file', this function will get the desird 
+		attribute from that file
+		if numType is 'NDump' function will look at the cycle with that 
+		nDump
+		if numType is 't' or 'time' function will find the _cycle with 
+		the closest time stamp 
 		labelX: The label on the X axis
 		labelY: The label on the Y axis
-		indexX: Depreciated: If the get method returns a list of lists, indexX
-			would be the list at the index indexX in the list.
-		indexY: Depreciated: If the get method returns a list of lists, indexY
-			would be the list at the index indexX in the list.
+		indexX: Depreciated: If the get method returns a list of lists, 
+			indexX would be the list at the index indexX in the list.
+		indexY: Depreciated: If the get method returns a list of lists, 
+			indexY would be the list at the index indexX in the list.
 		shape: What shape and colour the user would like their plot in.
-		       Please see http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot
+		       Please see 
+		       http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot
 		       for all possable choices
 		title: The Title of the Graph
 		logX: A boolean of weather the user wants the x axis logarithmically
 		logY: A boolean of weather the user wants the Y axis logarithmically
 		base: The base of the logarithm. Default = 10
+		sparse: Argument that skips every so many data points. For 
+			example if this argument was 5, This method would plot
+			the 0th, 5th, 10th ... elements.
 		WARNING: Unstable if get returns a list with only one element (x=[0])
 		"""
 		
@@ -271,6 +304,8 @@ class DataPlot:
 		if len(tmpY)!=len(tmpX) and single == True:
 			print 'It seems that the selected lists are of different\nsize, now returning none'
 			return None
+		# Sparse stuff
+		tmpX,tmpY=self.sparse(tmpX,tmpY, sparse)
 		
 		# Logarithm stuff
 		if logY or logX:	

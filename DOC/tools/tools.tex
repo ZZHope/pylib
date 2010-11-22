@@ -129,6 +129,16 @@ Method for removing the title and/or xlabel and/or Ylabel
 xlimrev()
 \end{verbatim}
 Reverses the xrange of a matplotlib Plot.\newline\newline
+\begin{verbatim}
+sparse(x,y,sparse)
+\end{verbatim}
+Method that removes every non sparse th element.  For example 
+if this argument was 5, This method would plotthe 0th, 5th, 10th ... elements.\newline
+Input:\newline
+x: list of x values, of lenthe j\newline
+y: list of y values, of lenthe j\newline
+sparse: Argument that skips every so many data points\newline\newline
+
 \subsection{utils.py}
 The current iteration currenly only has the class variables elements\_names and stable\_el.
 They are, respectively, a list of element names and stable elements for mppnp.py.
