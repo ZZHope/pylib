@@ -8,10 +8,10 @@
 
    usage:
    start by loading the module
-   1 : import mppnp
+   1 : import mppnp as mp
 
    you can get help:
-   2 : help mppnp
+   2 : help mp
 
    next, initiate a se class instance, the arguments are the
    directory sedir and sefiles, a list of files you want to read;
@@ -28,7 +28,7 @@
          * you can have several of these for different file sets from
            different dirs, which should make comparing models quite easy
 
-   3 : pt =mppnp.se('.','M1') 
+   3 : pt =mp.se('.','M1') 
 
    look at the data that is available in your instance
    4 : pt.sedir 
@@ -291,18 +291,28 @@ class se(DataPlot,Utils):
         pyl.plot(mass_se,c12_se,'o',label='cycle '+str(mod))
         pyl.legend()
         
-
+    '''
     def iso_abund(self, mass_range, cycle, stable):
-        ''' plot the abundance of all the chemical species
+        plot the abundance of all the chemical species
         inputs:
             mass_range - a 1x2 array containing the lower and upper mass range.  
                                      if None, it will plot over the entire range
             cycle       - a string/integer of the cycle of interest.
             stable     - a boolean of whether to filter out the unstables.
                 
-        '''
-
+        
+        elem_list = []
+        elem_index = []
+        isotope_to_plot = self.se.isotopes 
+        abunds = self.se.get(cycle,'iso_massf')
         masses = []
+        masses = self.se.get(cycle,'mass')
+        if mass_range == None:
+            print 'Using default mass range'
+            mass_range = [min(masses),max(masses)]    
+        masses.sort()
+        mass_range.sort()
+        
         #    Check the inputs
         #if not self.se.cycles.count(str(cycle)):
         #    print 'You entered an cycle that doesn\'t exist in this dataset:', cycle
@@ -317,13 +327,7 @@ class se(DataPlot,Utils):
         
         #    if not self.se.cycles.count(str(cycle)):
         #        print 'I was unable to correct your cycle.  Please check that it exists in your dataset.'
-        masses = self.se.get(cycle,'mass')
-        if mass_range == None:
-            print 'Using default mass range'
-            mass_range = [min(masses),max(masses)]    
-        masses.sort()
-        mass_range.sort()
-
+        
         
         
         print 'Using The following conditions:'
@@ -332,25 +336,25 @@ class se(DataPlot,Utils):
         print '\tplot only stable:',stable
 
         elem_list = ['' for x in xrange(len(self.elements_names)) ]
-        elem_index = [[-1] for x in xrange(len(self.elements_names))] 
+        elem_index = [[-1] for x in xrange(len(self.elements_names))]
         #elem_list = self.elements_names
         
         for elem in elem_index:
             elem.remove(-1)
-        for x in xrange(len(self.se.isotopes)):
+        for x in xrange(len(isotope_to_plot)):
             
-            if self.elements_names.count(self.se.isotopes[x].split('-')[0]):
+            if self.elements_names.count(isotope_to_plot[x].split('-')[0]):
                 #print self.se.isotopes[x].split('-')[0], x
-                elem_index[self.elements_names.index(self.se.isotopes[x].split('-')[0])].append(x)
-                if elem_list.count(self.se.isotopes[x].split('-')[0]) == 0:
-                    elem_list[self.elements_names.index(self.se.isotopes[x].split('-')[0])] += \
-                                                             self.se.isotopes[x].split('-')[0]
-        #print elem_list
+                elem_index[self.elements_names.index(isotope_to_plot[x].split('-')[0])].append(x)
+                if elem_list.count(isotope_to_plot[x].split('-')[0]) == 0:
+                    elem_list[self.elements_names.index(isotope_to_plot[x].split('-')[0])] += \
+                                                             isotope_to_plot[x].split('-')[0]
+        
         
         for x in xrange(len(elem_index)):
             numbers = []
             for y in xrange(len(elem_index[x])):
-                numbers.append(self.se.isotopes[elem_index[x][y]][1])
+                numbers.append(isotope_to_plot[elem_index[x][y]][1])
 
             list3 = zip(elem_index[x], numbers)
             list3.sort()
@@ -358,13 +362,10 @@ class se(DataPlot,Utils):
             for y in xrange(len(list3)):
                 elem_index[x][y] = list3[y][0]        
         
-        
-        isotope_to_plot = self.se.isotopes
-        
         index = xrange(len(isotope_to_plot))
         #print elem_index
         #print '\n'
-        if stable:
+        if stable: #removing unstable elements
             
             #    loop through the index list
             for t in xrange(15):
@@ -376,9 +377,9 @@ class se(DataPlot,Utils):
                             for elem in self.stable_el:    
                                 #    Loop through the list of stable isotopes
                                 
-                                if self.se.isotopes[iso].split('-')[0] == elem[0]:    
+                                if isotope_to_plot[iso].split('-')[0] == elem[0]:    
                                     #    Is it the same element?                                    
-                                    matched = elem.count(int(self.se.isotopes[iso].split('-')[1]))    
+                                    matched = elem.count(int(isotope_to_plot[iso].split('-')[1]))    
                                     #    Does the stable el list contain he isotope
                                     #print matched, self.se.isotopes[iso].split('-')[0], elem[0]
                                     if matched == 0:
@@ -388,7 +389,7 @@ class se(DataPlot,Utils):
                                             elem_index[ind].remove(iso)        
                                             removed = True
                                         except:
-                                            print 'failed to remove: ', self.se.isotope[iso]
+                                            print 'failed to remove: ', isotope_to_plot[iso]
                     except IndexError:
                         removed = True
                         #print iso, ind
@@ -396,7 +397,7 @@ class se(DataPlot,Utils):
                     #print 'done popping'
                     break                
 
-        abunds = self.se.get(cycle,'iso_massf')
+       
         while len(abunds) == 1:
             abunds = abunds[0]
 
@@ -451,7 +452,8 @@ class se(DataPlot,Utils):
             #print time_step
             abund_plot.append(temp)
         
-        #print abund_plot
+        
+        
         
         #temp3 = []
         mass_num = []
@@ -462,7 +464,7 @@ class se(DataPlot,Utils):
                 
                 for k in xrange(len(elem_index[index[j]])):
                 
-                    temp.append(float(self.se.isotopes[elem_index[index[j]][k]].split('-')[1]))
+                    temp.append(float(isotope_to_plot[elem_index[index[j]][k]].split('-')[1]))
 
                 mass_num.append(temp)
             #temp3.append(temp2)
@@ -537,7 +539,7 @@ class se(DataPlot,Utils):
         pl.grid()
         pl.show()
         return
-
+        '''
 
     def read_iso_abund_marco(self, mass_range, cycle):
         ''' plot the abundance of all the chemical species

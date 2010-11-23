@@ -26,7 +26,9 @@ from data_plot import *
 import matplotlib
 from matplotlib.pylab import *
 from data_plot import *
+from utils import *
 import os
+
 class xtime(DataPlot):
     ''' read and plot x-time.dat output files
     Example:
@@ -167,12 +169,12 @@ class xtime(DataPlot):
         legend()
         '''
         
-class ppn_profile(DataPlot):
+class ppn_profile(DataPlot,Utils):
 	'''
 	Class for reading selem00xxxx.DAT files
 	Example run through:
 	>>> import ppn
-	>>> p=ppn.PPN('selem00017.DAT','run')
+	>>> p=ppn.ppn_profile(,'run')
 	18 numbers found in selem00017.DAT
 	>>> p.get('Z')
 	array([1, 2, 2, 4, 5, 3, 6, 6, 7, 7, 6, 7, 8, 8, 8, 9, 9, 9])
@@ -214,7 +216,7 @@ class ppn_profile(DataPlot):
 			return None
 		f=os.listdir(sldir) # reads the directory
 		for i in range(len(f)):  # Removes any files that are not YProfile files
-		    	if 'selem' in f[i] and 'DAT' in f[i]:
+		    	if 'selem' in f[i] and 'DAT' in f[i] and '~' not in f[i]:
 		    		self.files.append(f[i])
 		   
 		self.files.sort()
@@ -296,7 +298,7 @@ class ppn_profile(DataPlot):
 			
 		for i in range(len(lines)):
 			if index==4 and len(lines[i])==6:
-				data.append(str(lines[i][index])+' '+str(lines[i][index+1]))
+				data.append(str(lines[i][index].capitalize())+'-'+str(lines[i][index+1]))
 			elif index==4 and len(lines[i])!=6:
 				tmp=str(lines[i][index])
 				if tmp[len(tmp)-1].isdigit():
@@ -306,9 +308,9 @@ class ppn_profile(DataPlot):
 						if j == 0 or j == 1:
 							continue
 						tmp2+=tmp[j]
-					data.append(tmp1+' '+tmp2)
+					data.append(tmp1+'-'+tmp2)
 				elif tmp=='PROT':
-					data.append('H 1')
+					data.append('H-1')
 				elif tmp==('NEUT'or'NEUTR'or'nn'or'N   1'):
 					data.append('NEUT')
 				else:
@@ -343,14 +345,12 @@ class ppn_profile(DataPlot):
 		a=[]	   #Variable for holding the array of a
 		abd=[]	   #Variable for holding the array of Abundance
 		data=[]	   #variable for the final list of data
-		
-		fname=self.findFile(fname,numType)
-		
-		element=self.get('element_name')
-		number=self.get('number')
-		z=self.get('Z')
-		a=self.get('A')
-		abd=self.get('abundance_yps')
+
+		element=self.get('Name',fname,numType)
+		number=self.get('Number',fname,numType)
+		z=self.get('Z',fname,numType)
+		a=self.get('A',fname,numType)
+		abd=self.get('yps',fname,numType)
 		
 		index=0 #Variable for determing the index in the data columns
 		
@@ -385,12 +385,13 @@ class ppn_profile(DataPlot):
 			return self.getCycleData(attri,fname,numtype)
 		elif attri in self.dcols:
 			return self.getColData(attri,fname,numtype)
-		elif attri in self.dcols['element_name']:
-			return self.getElement(attri)
+		elif attri in self.get('Name',fname,numtype):
+			return self.getElement(attri,fname,numtype)
 		else:
 			print 'Attribute does not exist'
 			print 'Returning none'
 			return None
+			
 	def _readFile(self,fname,sldir):
 		'''
 		private method that reads in and organizes the .DAT file
@@ -500,14 +501,14 @@ class ppn_profile(DataPlot):
 		if numType=='FILE':
 			
 			#do nothing
-			return str(FName)
+			return str(fname)
 		
 		elif numType=='CYCNUM':
 			try:
 				fname=int(fname)
 			except ValueError:
-				print 'Improper choice of cycle number'
+				print 'Improper choice:'+ str(fname)
 				print 'Reselecting as 0'
 				fname=0
-			print 'Using '+self.files[fname]
+			#print 'Using '+self.files[fname]
 			return self.files[fname]

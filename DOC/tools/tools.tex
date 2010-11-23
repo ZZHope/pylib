@@ -73,6 +73,9 @@ get(attribute,FName, numType,resolution) for a YProfile class and get(attribute)
 		logX: A boolean of weather the user wants the x axis logarithmically\newline
 		logY: A boolean of weather the user wants the Y axis logarithmically\newline
 		base: The base of the logarithm. Default = 10\newline
+		sparse: Argument that skips every so many data points. For 
+			example if this argument was 5, This method would plot
+			the 0th, 5th, 10th ... elements.\newline
 		WARNING: Unstable if get returns a list with only one element (x=[0])\newline
 An example of calling this method would be:
 \begin{verbatim}
@@ -138,7 +141,14 @@ Input:\newline
 x: list of x values, of lenthe j\newline
 y: list of y values, of lenthe j\newline
 sparse: Argument that skips every so many data points\newline\newline
-
+\begin{verbatim}
+iso_abund(self, mass_range, cycle, stable):
+\end{verbatim}
+plot the abundance of all the chemical species, Only works for mppnp.py and ppn .py, at this time
+inputs:
+mass_range - a 1x2 array containing the lower and upper mass range. If None, it will plot over the entire range, This argument does nothing unless it is an isntance of se.\newline
+cycle       - a string/integer of the cycle of interest. \newline
+stable     - a boolean of whether to filter out the unstables. \newline\newline
 \subsection{utils.py}
 The current iteration currenly only has the class variables elements\_names and stable\_el.
 They are, respectively, a list of element names and stable elements for mppnp.py.
@@ -158,7 +168,19 @@ C. To properly use DataTable's methods properly one will need these methods:
 	atri which is the name of the data one is looking for.\newline\newline
 
 \subsection{Modification}
-To Do
+The only reason that one would need to modify plot\_tools is that your class that is being extended, is that plot_tools might fit your classes functionality.  For example
+instead of get(attri) your class has get(attri,someOtherArg) the methods in plot\_tools need to reflect that requirement:
+If you want to modify plot\_tool.py, thing can get a bit tricky so there are couple key factors to take into account.
+Firstly at there is a method called classTest, it returns a string that is usually the name of your class.  Firsly you must go into that class
+and add anoter elif to the method.  If your class is named myclass and it is in the file, myfile.py, it should look like: 
+'elif myfile.myclass==c:'. Now inside this elif statement have : tmp='myclass', and now classTest will return 'myclass' if it is 
+an instance of myclass.\newline
+Secondally you must now go into the individual methods and modify them.  Using the same example as before,
+In plot() there is a 'if plotType=='YProfile':' and in that if statement is the yprofile specific functionality. 
+if you want to add your unique functionality for your class, add another elif statement under it.
+What it would look like would be: if plotType=='myclass': and in it would be : listX=self.get(attri,someOtherArg).\newline
+Finally we would need to add isomeOtherArg, in this case to plots arguments, make it have a default value, so it doesnt break anyother methods
+
 \section{History} 
 This document history complements the svn log.
 
@@ -167,11 +189,12 @@ This document history complements the svn log.
 Authors & yymmdd & Comment \\
 \hline
 DAC & 101115 & generate template and input documentation\\
-
+DAC & 101123 & Added descriptions for the iso_abund and sparce methods.\\
+DAC & 101123 & Also finished Modification section\\
 \hline
 \end{tabular*}
 \subsection{To Do}
--Finish modification subsection.
+
 
 
 \section{Contact}
