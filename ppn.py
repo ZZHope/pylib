@@ -11,8 +11,8 @@ Header attributes are separated from their value by white space or by white spac
 	surrounding an equals sign.
 An Header attribute is separated by the previous Header attribute by white space
 	or a line break.
-There are only 5 data columns. The first being the number, second being Z, third A
-	fourth abundance_yps and finally the element name.
+There are only 5 data columns. The first being the number, second being Z, third 
+	A fourth abundance_yps and finally the element name.
 The first four columns consist purely of numbers, no strings are allowed. 
 Of the values in the final column, the name column, the first two are letters 
 specifying the element name, and the rest are spaces or numbers (in that strict
@@ -84,7 +84,8 @@ class xtime(DataPlot):
 		print 'Now returning None'
 		return None
 	else:
-		self.data, self.col_num, self.cols, self.col_tot, self.ilines = self._readFile(fname,sldir)
+		self.data, self.col_num, self.cols, self.col_tot, self.ilines = 
+		\self._readFile(fname,sldir)
     
    
     def _readFile(self,fname,sldir):
@@ -144,8 +145,8 @@ class xtime(DataPlot):
             data_column[i]=self.data[i][self.col_num[col_str]]
         return data_column
     
-    def plot_xtime(self,Y,X='age',label='default',labelX=None, labelY=None , title=None, 
-    	 shape='.',logX=False, logY=True, base=10):
+    def plot_xtime(self,Y,X='age',label='default',labelX=None, labelY=None , 
+    	title=None, shape='.',logX=False, logY=True, base=10):
         '''make a simple plot of two columns against each other
         Y         - column on Y-axis
         X         - column on X-axis, defaults to "age"
@@ -215,12 +216,14 @@ class ppn_profile(DataPlot,Utils):
 			print 'Now returning None'
 			return None
 		f=os.listdir(sldir) # reads the directory
-		for i in range(len(f)):  # Removes any files that are not YProfile files
+		for i in range(len(f)):  
+			# Removes any files that are not YProfile files
 		    	if 'selem' in f[i] and 'DAT' in f[i] and '~' not in f[i]:
 		    		self.files.append(f[i])
 		   
 		self.files.sort()
-		if len(self.files)==0: # If there are no selem Files in thes Directory
+		if len(self.files)==0: 
+			# If there are no selem Files in thes Directory
 		    	print 'Error: no YProfile named files exist in Directory'
 		    	print 'Now returning None'
 		    	return None
@@ -231,14 +234,17 @@ class ppn_profile(DataPlot,Utils):
 	
 	def getCycleData(self,attri,fname,numType='cycNum'):
 		"""
-		In this method a column of data for the associated cycle attribute is returned
+		In this method a column of data for the associated cycle 
+		attribute is returned
 		Input: 
 		attri: The name of the attribute we are looking for.
 		Fname: the name of the file we are getting the data from or
 			the cycle number found in the filename.
 		numtype: Determines whether fname is the name of a file or, the 
-			 Cycle number. If it is 'file' it will then  interpret it as a file
-			 if it is 'cycNum' it will then  interpret it as a cycle number
+			 Cycle number. If it is 'file' it will then  interpret 
+			 it as a file
+			 if it is 'cycNum' it will then  interpret it as a cycle 
+			 number
 		"""
 		fname=self.findFile(fname,numType)
 		f=open(fname,'r')
@@ -270,14 +276,17 @@ class ppn_profile(DataPlot,Utils):
 		
 	def getColData(self,attri,fname,numType='cycNum'):
 		"""
-		In this method a column of data for the associated column attribute is returned
+		In this method a column of data for the associated column 
+		attribute is returned
 		Input: 
 		attri: The name of the attribute we are looking for.
 		Fname: the name of the file we are getting the data from or
 			the cycle number found in the filename.
 		numtype: Determines whether fname is the name of a file or, the 
-			 Cycle number. If it is 'file' it will then  interpret it as a file
-			 if it is 'cycNum' it will then  interpret it as a cycle number
+			 Cycle number. If it is 'file' it will then  interpret 
+			 it as a file
+			 if it is 'cycNum' it will then  interpret it as a cycle 
+			 number
 		
 		"""
 		fname=self.findFile(fname,numType)
@@ -298,7 +307,8 @@ class ppn_profile(DataPlot,Utils):
 			
 		for i in range(len(lines)):
 			if index==4 and len(lines[i])==6:
-				data.append(str(lines[i][index].capitalize())+'-'+str(lines[i][index+1]))
+				data.append(str(lines[i][index].capitalize())+'-'\
+				+str(lines[i][index+1]))
 			elif index==4 and len(lines[i])!=6:
 				tmp=str(lines[i][index])
 				if tmp[len(tmp)-1].isdigit():
@@ -333,8 +343,10 @@ class ppn_profile(DataPlot,Utils):
 		Fname: the name of the file we are getting the data from or
 			the cycle number found in the filename.
 		numtype: Determines whether fname is the name of a file or, the 
-			 Cycle number. If it is 'file' it will then  interpret it as a file
-			 if it is 'cycNum' it will then  interpret it as a cycle number
+			 Cycle number. If it is 'file' it will then  interpret 
+			 it as a file
+			 if it is 'cycNum' it will then  interpret it as a 
+			 cycle number
 		Output:
 			A numpy array of the four ellement attributes, number, Z, A
 			and abundance, in that order
@@ -370,14 +382,17 @@ class ppn_profile(DataPlot,Utils):
 			
 	def get(self,attri,fname,numtype='cycNum'):
 		'''
-		In this method a column of data for the associated attribute is returned
+		In this method a column of data for the associated attribute is
+		returned
 		Input: 
 		attri: The name of the attribute we are looking for.
 		Fname: The name of the file we are getting the data from or
 			the cycle number found in the filename.
 		numtype: Determines whether fname is the name of a file or, the 
-			 Cycle number. If it is 'file' it will then  interpret it as a file
-			 if it is 'cycNum' it will then  interpret it as a cycle number
+			 Cycle number. If it is 'file' it will then  interpret 
+			 it as a file
+			 if it is 'cycNum' it will then  interpret it as a cycle 
+			 number
 		Output: Data in the form of a numpy array
 		
 		'''
@@ -402,7 +417,8 @@ class ppn_profile(DataPlot,Utils):
 		
 		'''
 		cattrs=[]
-		if sldir.endswith('/'): #Making sure fname will be formated correctly
+		if sldir.endswith('/'): 
+			#Making sure fname will be formated correctly
 			fname = str(sldir)+str(fname)
 		else:
 			fname = str(sldir)+'/'+str(fname)
@@ -414,8 +430,8 @@ class ppn_profile(DataPlot,Utils):
 		
 		cols=[]
 		for i in range(len(lines)):
-			if lines[i].startswith('#'): # if it is a cycle attribute line
-				
+			if lines[i].startswith('#'): 
+				# if it is a cycle attribute line
 				lines[i]=lines[i].strip('#')
 				tmp=lines[i].split()
 				tmp1=[]
@@ -489,11 +505,15 @@ class ppn_profile(DataPlot,Utils):
 		
 	def findFile(self,fname,numType):
 		"""
-		Function that finds the associated file for FName when Fname is time or NDump
+		Function that finds the associated file for FName when Fname is 
+		time or NDump
 		input:
-		numType designates how this function acts and how it interprets FName
-		if numType is 'file', this function will get the desired attribute from that file
-		if numType is 'cycNum'this function will get the desired attribute from that file
+		numType designates how this function acts and how it interprets 
+			FName
+		if numType is 'file', this function will get the desired 
+			attribute from that file
+		if numType is 'cycNum'this function will get the desired 
+			attribute from that file
 			with fname's model number
 		Fname the name of the file we are looking or
 		"""

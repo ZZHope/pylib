@@ -3,7 +3,7 @@ from mesa import *
 
 def main():
 	print '\nprofile test\n'
-	p=profile('LOGS',2,'log_num') 
+	p=mesa_profile('LOGS',2,'log_num') 
 	p.profiles_index()
 	
 	initTest(p)
