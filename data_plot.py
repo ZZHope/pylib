@@ -381,14 +381,16 @@ class DataPlot:
 		pyl.xlim(xmin,xmax)
 	
 	#from mppnp.se
-	def iso_abund(self,  cycle, stable,mass_range=None):
+	def iso_abund(self,  cycle, stable=False,mass_range=None):
 		''' plot the abundance of all the chemical species
 		inputs:
-		    mass_range - a 1x2 array containing the lower and upper mass range.  
-					     if None, it will plot over the entire range
+		    
 		    cycle       - a string/integer of the cycle of interest.
 		    stable     - a boolean of whether to filter out the unstables.
-			
+		    		Defaults to False
+		    mass_range - a 1x2 array containing the lower and upper mass range.  
+			 	if None, it will plot over the entire range
+				Defaults to None	     
 		'''
 		elem_list = []
 		elem_index = []
@@ -405,11 +407,16 @@ class DataPlot:
 			mass_range.sort()
 		elif plotType=='PPN':
 			isotope_to_plot = self.get('Name', cycle)
+			abunds=self.get('yps', cycle)
+			tmp1=[]
 			tmp=[]
 			for i in range (len(isotope_to_plot)):
-				tmp.append(isotope_to_plot[i])
+				if isotope_to_plot[i] != 'NEUT' and '*' not in isotope_to_plot[i] and 'g' not in isotope_to_plot[i]:
+					tmp.append(isotope_to_plot[i])
+					tmp1.append(abunds[i])
 			isotope_to_plot=tmp
-			abunds=self.get('yps', cycle)
+			abunds=tmp1
+			print abunds
 		else:
 			print 'This method, iso_abund, is not supported by this class'
 			print 'Returning None'
@@ -452,7 +459,7 @@ class DataPlot:
 			if elem_list.count(isotope_to_plot[x].split('-')[0]) == 0:
 			    elem_list[self.elements_names.index(isotope_to_plot[x].split('-')[0])] += \
 								     isotope_to_plot[x].split('-')[0]
-		#print elem_list
+		
 		
 		for x in xrange(len(elem_index)):
 		    numbers = []
@@ -470,8 +477,6 @@ class DataPlot:
 	       
 		
 		index = xrange(len(isotope_to_plot))
-		#print elem_index
-		#print '\n'
 		if stable:
 		    
 		    #    loop through the index list
@@ -505,8 +510,8 @@ class DataPlot:
 			    break                
 	
 		
-		print elem_list
-		print elem_index
+		#print elem_list
+		#print elem_index
 	
 		abund_plot = []
 		mass_num = []
@@ -567,7 +572,7 @@ class DataPlot:
 	        	
 	        	for i in xrange(len(elem_list)):
 	        		tmp=[]
-	        		yps=self.get('yps',cycle)
+	        		yps=abunds
 	        		if elem_list[i]!='':
 	        			
 	        			for j in xrange(len(elem_index[i])):
@@ -613,7 +618,7 @@ class DataPlot:
 		
 		
 		#print abund_plot,mass_num
-		for j in xrange(len(index)):        #Loop through the elements of interest
+		for j in xrange(len(abund_plot)):        #Loop through the elements of interest
 		    #    Process the line
 		    #print 'processing line'
 		    for l in xrange(len(abund_plot[j])):

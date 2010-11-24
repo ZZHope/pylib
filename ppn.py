@@ -84,8 +84,8 @@ class xtime(DataPlot):
 		print 'Now returning None'
 		return None
 	else:
-		self.data, self.col_num, self.cols, self.col_tot, self.ilines = 
-		\self._readFile(fname,sldir)
+		self.data, self.col_num, self.cols, self.col_tot, self.ilines =\
+		self._readFile(fname,sldir)
     
    
     def _readFile(self,fname,sldir):
@@ -218,7 +218,7 @@ class ppn_profile(DataPlot,Utils):
 		f=os.listdir(sldir) # reads the directory
 		for i in range(len(f)):  
 			# Removes any files that are not YProfile files
-		    	if 'selem' in f[i] and 'DAT' in f[i] and '~' not in f[i]:
+		    	if 'selem' in f[i] and 'DAT' in f[i] and '~' not in f[i] and len(f[i])>9 and 'restart' not in f[i]:
 		    		self.files.append(f[i])
 		   
 		self.files.sort()
@@ -231,6 +231,7 @@ class ppn_profile(DataPlot,Utils):
 		self.cattrs,self.dcols,self.index=self._readFile(fname,sldir)
 		
 		print str(len(self.files))+' cycle numbers found in '+sldir
+		print 'Rangeing from 0 to '+str(len(self.files)-1)
 	
 	def getCycleData(self,attri,fname,numType='cycNum'):
 		"""
@@ -306,6 +307,7 @@ class ppn_profile(DataPlot,Utils):
 			index+=1
 			
 		for i in range(len(lines)):
+			
 			if index==4 and len(lines[i])==6:
 				data.append(str(lines[i][index].capitalize())+'-'\
 				+str(lines[i][index+1]))
@@ -313,6 +315,7 @@ class ppn_profile(DataPlot,Utils):
 				tmp=str(lines[i][index])
 				if tmp[len(tmp)-1].isdigit():
 					tmp1=tmp[0]+tmp[1]
+					tmp1=tmp1.capitalize()
 					tmp2=''
 					for j in range(len(tmp)):
 						if j == 0 or j == 1:
