@@ -380,6 +380,26 @@ class DataPlot:
 		xmax,xmin=pyl.xlim()
 		pyl.xlim(xmin,xmax)
 	
+	def comparator(self,x, y):
+		'''
+		simple comparator method
+		'''
+		
+		indX=0
+		indY=0
+		for i in xrange(len(self.elements_names)):
+			if self.elements_names[i] == x.split('-')[0]:
+				indX=i
+			if self.elements_names[i] == y.split('-')[0]:
+				indY=i
+
+		if indX>indY:
+			return 1
+		if indX==indY:
+			return 0
+		if indX<indY:
+			return -1
+			
 	#from mppnp.se
 	def iso_abund(self,  cycle, stable=False,mass_range=None):
 		''' plot the abundance of all the chemical species
@@ -407,16 +427,35 @@ class DataPlot:
 			mass_range.sort()
 		elif plotType=='PPN':
 			isotope_to_plot = self.get('Name', cycle)
-			abunds=self.get('yps', cycle)
+			z=self.get('Z', cycle) #charge
+			a=self.get('A', cycle) #mass
 			tmp1=[]
 			tmp=[]
 			for i in range (len(isotope_to_plot)):
-				if isotope_to_plot[i] != 'NEUT' and '*' not in isotope_to_plot[i] and 'g' not in isotope_to_plot[i]:
-					tmp.append(isotope_to_plot[i])
-					tmp1.append(abunds[i])
+				if isotope_to_plot[i] != 'NEUT' and '*' not in isotope_to_plot[i] and 'g' not in isotope_to_plot[i].split('-')[1]: #if its not 'NEUt and not an isomer'
+					tmp.append(self.elements_names[int(z[i])]+'-'+str(int(a[i])))
+				
 			isotope_to_plot=tmp
-			abunds=tmp1
+			isotope_to_plot.sort()
+			isotope_to_plot.sort(self.comparator)
+			print isotope_to_plot
+			tmp=[]
+			'''
+			for i in xrange(len(self.elements_names)):
+				if i == 0 :
+					continue
+				for j in xrange(len(isotope_to_plot)):
+					
+					if self.elements_names[i] == isotope_to_plot[j].split('-')[0]: 	
+						tmp.append(isotope_to_plot[j])
+			'''
+			print isotope_to_plot
+				
+			abunds=[]
+			for i in xrange(len(isotope_to_plot)):
+					abunds.append(self.get(isotope_to_plot[i],cycle)[3])
 			print abunds
+			
 		else:
 			print 'This method, iso_abund, is not supported by this class'
 			print 'Returning None'
@@ -425,7 +464,6 @@ class DataPlot:
 		#if not self.se.cycles.count(str(cycle)):
 		#    print 'You entered an cycle that doesn\'t exist in this dataset:', cycle
 		#    print 'I will try and correct your format.'
-		#    cyc_len = len(self.se.cycles[-1])
 		
 		#    print cyc_len, len(str(cycle))
 		#
