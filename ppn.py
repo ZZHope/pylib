@@ -18,7 +18,7 @@ Of the values in the final column, the name column, the first two are letters
 specifying the element name, and the rest are spaces or numbers (in that strict
 order), exceft for the element names: Neut and Prot
 All the profile files in the directory have the same cycle attributes.	
-The cycle numbers of the selemxxxxx start at 0.
+The cycle numbers of the 'filename'+xxxxx start at 0.
 """
 
 from numpy import *
@@ -197,12 +197,14 @@ class abu_vector(DataPlot,Utils):
 	dcols=[]  # list of the column attributes
 	index=0   # index of were column data begins in the file
 	files=[]  # list of files
-	def __init__(self,sldir='./'):
+	def __init__(self,sldir='./', filenames='iso_massf'):
 		''' 
 		initial method of this class
 		Input:
 			fname - The .DAT file the user is looking at.
 			sldir - where fname exists
+			filenames - the default finenames of the abundence vectors
+				    Defaults to iso_massf
 		Output: 
 			A PPn instance
 		
@@ -217,8 +219,9 @@ class abu_vector(DataPlot,Utils):
 			return None
 		f=os.listdir(sldir) # reads the directory
 		for i in range(len(f)):  
-			# Removes any files that are not YProfile files
-		    	if 'selem' in f[i] and 'DAT' in f[i] and '~' not in f[i] and len(f[i])>9 and 'restart' not in f[i]:
+			# Removes any files that are not ppn files
+			filelength=len(filenames)+4
+		    	if filenames in f[i] and 'DAT' in f[i] and '~' not in f[i] and len(f[i])>filelength and 'restart' not in f[i]:
 		    		self.files.append(f[i])
 		   
 		self.files.sort()
