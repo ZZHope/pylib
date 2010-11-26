@@ -170,7 +170,7 @@ class xtime(DataPlot):
         legend()
         '''
         
-class ppn_profile(DataPlot,Utils):
+class abu_vector(DataPlot,Utils):
 	'''
 	Class for reading selem00xxxx.DAT files
 	Example run through:

@@ -47,7 +47,7 @@ class DataPlot:
 			tmp='mesa.star_log'
 		elif 'ppn.xtime' == c:
 			tmp='xtime'
-		elif 'ppn.ppn_profile' == c:
+		elif 'ppn.abu_vector' == c:
 			tmp='PPN'
 		
 		return tmp
@@ -449,12 +449,13 @@ class DataPlot:
 					if self.elements_names[i] == isotope_to_plot[j].split('-')[0]: 	
 						tmp.append(isotope_to_plot[j])
 			'''
-			print isotope_to_plot
+			
 				
 			abunds=[]
 			for i in xrange(len(isotope_to_plot)):
 					abunds.append(self.get(isotope_to_plot[i],cycle)[3])
-			print abunds
+			#print isotope_to_plot
+			#print abunds
 			
 		else:
 			print 'This method, iso_abund, is not supported by this class'
