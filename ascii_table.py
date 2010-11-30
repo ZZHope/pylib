@@ -62,10 +62,10 @@ class AsciiTable(DataPlot):
 		dataType: What type of ascii table  you are reading and or writeing
 			  The only two options currently are 'normal' and 'trajectory'
 		Headers: A list of Header strings or if the file being writtin 
-			 is  of type trajectory, This is a dictionary of header 
+			 is  of type trajectory, this is a dictionary of header 
 			 attributes and their associated values
 		dcols: A list of data attributes
-		data:  A list of lists (or of numpy arrays).
+		data:  A list of lists (or of numpy arrays) of columns of data
 		headerLines: Additional list of strings of header data, only used
 			     in trajectory data Types.
 		'''
@@ -91,6 +91,9 @@ class AsciiTable(DataPlot):
 		Method for writeing Ascii files.
 		Note the attribute name at position i in dcols will be associated
 		with the column data at index i in data.
+		Also the number of data columns(in data) must equal the number
+		of data attributes (in dcols)
+		Also all the lengths of that columns must all be the same.
 		Input:
 		fileName: The file where this data will be written.
 		Headers: A list of Header strings or if the file being writtin 
@@ -122,6 +125,18 @@ class AsciiTable(DataPlot):
 			print 'No Selected'
 			print 'Returning None'
 			return None
+		
+		if len(data)!=len(dcols):
+			print 'The number of data columns does not equal the number of Data attributes'
+			print 'returning none'
+			return None
+		
+		for i in xrange(len(data)):
+			if len(data[i])!=len(data[i-1]:
+				print 'The length of all data columns are not equal'
+				print 'returning none'
+				return None
+		
 		if self.dataType=='trajectory':
 			
 			keys=Headers.keys()
