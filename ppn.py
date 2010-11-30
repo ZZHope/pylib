@@ -175,8 +175,8 @@ class abu_vector(DataPlot,Utils):
 	Class for reading selem00xxxx.DAT files
 	Example run through:
 	>>> import ppn
-	>>> p=ppn.ppn_profile(,'run')
-	18 numbers found in selem00017.DAT
+	>>> p=ppn.abu_vector('./run/')
+	18 numbers found in run
 	>>> p.get('Z')
 	array([1, 2, 2, 4, 5, 3, 6, 6, 7, 7, 6, 7, 8, 8, 8, 9, 9, 9])
 	>>> p.get('abundance_yps')
@@ -227,7 +227,7 @@ class abu_vector(DataPlot,Utils):
 		self.files.sort()
 		if len(self.files)==0: 
 			# If there are no selem Files in thes Directory
-		    	print 'Error: no YProfile named files exist in Directory'
+		    	print 'Error: no '+filenames+ ' named files exist in Directory'
 		    	print 'Now returning None'
 		    	return None
 		fname=self.files[len(self.files)-1]
