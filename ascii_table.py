@@ -22,7 +22,7 @@ Python 2.6.4 (r264:75706, Jun  4 2010, 18:20:16)
 [GCC 4.4.4 20100503 (Red Hat 4.4.4-2)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
 >>> from ppm import *
->>> p=AsciiTable('c12cg.dat')
+>>> p=ascii_table('c12cg.dat')
 >>> p.hattrs
 ['1 12  6  1  1  1  0  0  0  1 13  7  0', '55   1.943', 'c12pg']
 >>> a.dcols
@@ -38,9 +38,9 @@ import matplotlib.pylab as pyl
 import matplotlib.pyplot as pl
 import os
 
-class AsciiTable(DataPlot):
+class ascii_table(DataPlot):
 	'''
-	Data structure to read simple data tables	
+	Data structure to read simple data tables and trajectory data tables	
 	'''
 	files = []
 	sldir = ''
@@ -49,9 +49,13 @@ class AsciiTable(DataPlot):
 	data ={}
 	dataType=''
 	headerLines=[]
-	def __init__(self,fileName,sldir='.',sep='  ', dataType='normal',Headers=[],dcols=[],data=[],read=True,headerLines=[]):
+	def __init__(self,fileName,sldir='.',sep='  ', dataType='normal',headers=[],dcols=[],data=[],read=True,headerLines=[]):
 		'''
-		Init method
+		Init method that reads in ascii type files and trajectory type files.
+		By default this method reads ascii type files.  If the user wants
+		a trajectory file read, either the file must have 'trajectory'
+		in the filename or the user must set the dataType='trajectory'
+		
 		Input:
 		sldir: Standard directory of fileName
 		fileName: The name of the file we are looking at, or writeing to
@@ -80,13 +84,13 @@ class AsciiTable(DataPlot):
 			self.hattrs,self.data=self._readFile(sldir,fileName,sep)
 			self.dcols=self.data.keys()
 		else:
-			a=self.write(fileName,Headers,dcols,data,headerLines,sldir,sep)
+			a=self.write(fileName,headers,dcols,data,headerLines,sldir,sep)
 			if a ==None:
 				return None
 			self.hattrs,self.data=self._readFile(sldir,fileName,sep)
 		self.dcols=self.data.keys()
 		
-	def write(self, fileName,Headers,dcols,data,headerLines,sldir='.',sep='  '):
+	def write(self, fileName,headers,dcols,data,headerLines,sldir='.',sep='  '):
 		'''
 		Method for writeing Ascii files.
 		Note the attribute name at position i in dcols will be associated
@@ -114,17 +118,18 @@ class AsciiTable(DataPlot):
 		lines=[]#list of the data lines
 		lengthList=[]# list of the longest element (data or column name)
 			     # in each column
-		
-		print 'Warning this method will overwrite '+ fileName
-		print 'Would you like to continue? (y)es or (n)no?'
-		s = raw_input('--> ')
-		if s=='Y' or s=='y' or s=='Yes' or s=='yes':
-			print 'Yes selected'
-			print 'Continuing as normal'
-		else:
-			print 'No Selected'
-			print 'Returning None'
-			return None
+			     
+		if os.path.exists(fileName):
+			print 'Warning this method will overwrite '+ fileName
+			print 'Would you like to continue? (y)es or (n)no?'
+			s = raw_input('--> ')
+			if s=='Y' or s=='y' or s=='Yes' or s=='yes':
+				print 'Yes selected'
+				print 'Continuing as normal'
+			else:
+				print 'No Selected'
+				print 'Returning None'
+				return None
 		
 		if len(data)!=len(dcols):
 			print 'The number of data columns does not equal the number of Data attributes'
@@ -132,14 +137,14 @@ class AsciiTable(DataPlot):
 			return None
 		
 		for i in xrange(len(data)):
-			if len(data[i])!=len(data[i-1]:
+			if len(data[i])!=len(data[i-1]):
 				print 'The length of all data columns are not equal'
 				print 'returning none'
 				return None
 		
 		if self.dataType=='trajectory':
 			
-			keys=Headers.keys()
+			keys=headers.keys()
 			sep=' '
 		for i in xrange(len(Headers)):
 			if self.dataType!='trajectory':
@@ -188,15 +193,15 @@ class AsciiTable(DataPlot):
 			
 		f=open(fileName,'w')
 		if self.dataType!='trajectory':
-			for i in xrange(len(Headers)):
-				f.write(Headers[i])
+			for i in xrange(len(headers)):
+				f.write(headers[i])
 			f.write(dcols)
 		else:
 			f.write(dcols)
 			for i in xrange(len(headerLines)):
 				f.write('# '+headerLines[i]+'\n')
-			for i in xrange(len(Headers)):
-				f.write(Headers[i])
+			for i in xrange(len(headers)):
+				f.write(headers[i])
 		for i in xrange(len(lines)):
 			f.write(lines[i])
 		

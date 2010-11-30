@@ -3,7 +3,7 @@ from asserts import *
 
 def main():
 	print '\nAscii Table test\n'
-	a=AsciiTable('c12pg.dat','ascii')
+	a=ascii_table('c12pg.dat','ascii')
 	initTest(a)
 	dataTest(a)
 	'''
@@ -16,7 +16,7 @@ def main():
 	a.plot('upper','ado/CA88',plotType='ATable', shape='-')
 	a.plot('CA88','ado/fit',plotType='ATable', shape='-')
 	'''
-	a=AsciiTable('c12.dat','ascii',sep=';')
+	a=ascii_table('c12.dat','ascii',sep=';')
 	initTest(a)
 	dataTest(a)
 	'''

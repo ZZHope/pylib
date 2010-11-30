@@ -35,9 +35,9 @@ class DataPlot:
 		
 		c=str(self.__class__)
 		tmp=''
-		if 'ppm.YProfile' == c:
+		if 'ppm.yprofile' == c:
 			tmp='YProfile'
-		elif 'ascii_table.AsciiTable' == c:
+		elif 'ascii_table.ascii_table' == c:
 			tmp='AsciiTable'
 		elif 'mppnp.se' == c:
 			tmp='se'

@@ -62,7 +62,7 @@ Python 2.6.4 (r264:75706, Jun  4 2010, 18:20:16)
 [GCC 4.4.4 20100503 (Red Hat 4.4.4-2)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
 >>> from ppm import *
->>> p=YProfile()
+>>> p=y_profile()
 >>> head= p.hattri
 >>> cols= p.dcols
 >>> cyc=p.cattri
@@ -95,7 +95,7 @@ import matplotlib.pylab as pyl
 import matplotlib.pyplot as pl
 import os
 
-class YProfile(DataPlot):
+class yprofile(DataPlot):
 	"""
 	Data structure for holding data in the  YProfile.bobaaa files
 	Input
