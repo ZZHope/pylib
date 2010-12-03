@@ -728,6 +728,7 @@ class DataPlot:
 			age=self.se.get(keystring,'age')    
 			mass=self.se.get(keystring,'mass')    
 			Xspecies=self.se.get(keystring,'iso_massf',species)
+			
 			mod=keystring
 		elif plotType=='mesa_profile':
 			tot_mass=self.header_attr['star_mass'] 
@@ -738,7 +739,9 @@ class DataPlot:
 		else:
 			print 'This method is not supported for '+str(self.__class__)
 			return
-		pyl.plot(mass,log10(Xspecies),'-',label=keystring)
+		x,y=self.logarithm(Xspecies,mass,True,False,10)
+		print x
+		pyl.plot(y,x,'-',label=str(keystring))
 		pyl.xlim(xlim1,xlim2)
 		pyl.ylim(ylim1,ylim2)
 		pyl.legend()

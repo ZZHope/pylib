@@ -77,6 +77,7 @@ class se(DataPlot,Utils):
         
         slist = os.listdir(sedir)
         expr = re.compile(pattern)
+       
         sefiles=filter(expr.search,slist)
         
         self.se = []         # main data dictionary

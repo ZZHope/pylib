@@ -89,124 +89,7 @@ class ascii_table(DataPlot):
 				return None
 			self.hattrs,self.data=self._readFile(sldir,fileName,sep)
 		self.dcols=self.data.keys()
-		
-	def write(self, fileName,headers,dcols,data,headerLines,sldir='.',sep='  '):
-		'''
-		Method for writeing Ascii files.
-		Note the attribute name at position i in dcols will be associated
-		with the column data at index i in data.
-		Also the number of data columns(in data) must equal the number
-		of data attributes (in dcols)
-		Also all the lengths of that columns must all be the same.
-		Input:
-		fileName: The file where this data will be written.
-		Headers: A list of Header strings or if the file being writtin 
-			 is  of type trajectory, This is a dictionary of header 
-			 attributes and their associated values
-		dcols: A list of data attributes
-		data:  A list of lists (or of numpy arrays).
-		headerLines: Additional list of strings of header data, only used
-			     in trajectory data Types.
-		sldir: Where this fill will be written.
-		sep: What seperatesa the data column attributes
-		'''
-		if sldir.endswith('/'):
-			fileName = str(sldir)+str(fileName)
-		else:
-			fileName = str(sldir)+'/'+str(fileName)
-		tmp=[] #temp variable
-		lines=[]#list of the data lines
-		lengthList=[]# list of the longest element (data or column name)
-			     # in each column
-			     
-		if os.path.exists(fileName):
-			print 'Warning this method will overwrite '+ fileName
-			print 'Would you like to continue? (y)es or (n)no?'
-			s = raw_input('--> ')
-			if s=='Y' or s=='y' or s=='Yes' or s=='yes':
-				print 'Yes selected'
-				print 'Continuing as normal'
-			else:
-				print 'No Selected'
-				print 'Returning None'
-				return None
-		
-		if len(data)!=len(dcols):
-			print 'The number of data columns does not equal the number of Data attributes'
-			print 'returning none'
-			return None
-		
-		for i in xrange(len(data)):
-			if len(data[i])!=len(data[i-1]):
-				print 'The length of all data columns are not equal'
-				print 'returning none'
-				return None
-		
-		if self.dataType=='trajectory':
-			
-			keys=headers.keys()
-			sep=' '
-		for i in xrange(len(Headers)):
-			if self.dataType!='trajectory':
-				tmp.append('H '+Headers[i]+'\n')
-			else:
-				tmp.append(str(keys[i])+ ' = '+str(Headers[keys[i]])+'\n')
-		Headers=tmp
-		tmp=''
-		
-		for i in xrange(len(data)): #Line length stuff
-			length=len(dcols[i])
-			for j in xrange(len(data[i])):
-				if len(str(data[i][j]))>length:
-					length=len(str(data[i][j]))
-			lengthList.append(length)
-		
-		tmp=''
-		tmp1=''
-		if self.dataType=='trajectory':
-			tmp='#'
-		for i in xrange(len(dcols)):
-			tmp1=dcols[i]
-			if self.dataType!='trajectory':
-				if len(dcols[i]) < lengthList[i]:
-					j=lengthList[i]-len(dcols[i])
-					for k in xrange(j):
-						tmp1+=' '
-				tmp+=sep+tmp1
-			else:
-				tmp+=' '+dcols[i]
-		tmp+='\n'
-		dcols=tmp
-		tmp=''
-		
-		
-		for i in xrange(len(data[0])):
-			for j in xrange(len(data)):
-				tmp1=str(data[j][i])
-				if len(str(data[j][i])) < lengthList[j]:
-					l=lengthList[j]-len(str(data[j][i]))
-					for k in xrange(l):
-						tmp1+=' '
-				tmp+=sep+tmp1
-			lines.append(tmp+'\n')
-			tmp=''
-			
-		f=open(fileName,'w')
-		if self.dataType!='trajectory':
-			for i in xrange(len(headers)):
-				f.write(headers[i])
-			f.write(dcols)
-		else:
-			f.write(dcols)
-			for i in xrange(len(headerLines)):
-				f.write('# '+headerLines[i]+'\n')
-			for i in xrange(len(headers)):
-				f.write(headers[i])
-		for i in xrange(len(lines)):
-			f.write(lines[i])
-		
-		f.close()
-		return None
+
 	def get(self, attri):
 		'''
 		Method that dynamically determines the type of attribute that is 
@@ -329,3 +212,118 @@ class ascii_table(DataPlot):
 			tmp=[]
 			
 		return header,dataCols
+
+#Global methods
+
+		
+def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajectory=False):
+		'''
+		Method for writeing Ascii files.
+		Note the attribute name at position i in dcols will be associated
+		with the column data at index i in data.
+		Also the number of data columns(in data) must equal the number
+		of data attributes (in dcols)
+		Also all the lengths of that columns must all be the same.
+		Input:
+		fileName: The file where this data will be written.
+		Headers: A list of Header strings or if the file being writtin 
+			 is  of type trajectory, This is a dictionary of header 
+			 attributes and their associated values
+		dcols: A list of data attributes
+		data:  A list of lists (or of numpy arrays).
+		headerLines: Additional list of strings of header data, only used
+			     in trajectory data Types.
+		sldir: Where this fill will be written.
+		sep: What seperatesa the data column attributes
+		trajectory: Boolean of if we are writeing a trajectory type file
+		'''
+		if sldir.endswith('/'):
+			fileName = str(sldir)+str(fileName)
+		else:
+			fileName = str(sldir)+'/'+str(fileName)
+		tmp=[] #temp variable
+		lines=[]#list of the data lines
+		lengthList=[]# list of the longest element (data or column name)
+			     # in each column
+			     
+		if os.path.exists(fileName):
+			print 'Warning this method will overwrite '+ fileName
+			print 'Would you like to continue? (y)es or (n)no?'
+			s = raw_input('--> ')
+			if s=='Y' or s=='y' or s=='Yes' or s=='yes':
+				print 'Yes selected'
+				print 'Continuing as normal'
+			else:
+				print 'No Selected'
+				print 'Returning None'
+				return None
+		
+		if len(data)!=len(dcols):
+			print 'The number of data columns does not equal the number of Data attributes'
+			print 'returning none'
+			return None
+		if trajectory:
+			
+			keys=headers.keys()
+			sep=' '
+		for i in xrange(len(headers)):
+			if not trajectory:
+				tmp.append('H '+headers[i]+'\n')
+			else:
+				tmp.append(str(keys[i])+ ' = '+str(headers[keys[i]])+'\n')
+		headers=tmp
+		tmp=''
+		
+		for i in xrange(len(data)): #Line length stuff
+			length=len(dcols[i])
+			for j in xrange(len(data[i])):
+				if len(str(data[i][j]))>length:
+					length=len(str(data[i][j]))
+			lengthList.append(length)
+		
+		tmp=''
+		tmp1=''
+		if trajectory:
+			tmp='#'
+		for i in xrange(len(dcols)):
+			tmp1=dcols[i]
+			if not trajectory:
+				if len(dcols[i]) < lengthList[i]:
+					j=lengthList[i]-len(dcols[i])
+					for k in xrange(j):
+						tmp1+=' '
+				tmp+=sep+tmp1
+			else:
+				tmp+=' '+dcols[i]
+		tmp+='\n'
+		dcols=tmp
+		tmp=''
+		
+		
+		for i in xrange(len(data[0])):
+			for j in xrange(len(data)):
+				tmp1=str(data[j][i])
+				if len(str(data[j][i])) < lengthList[j]:
+					l=lengthList[j]-len(str(data[j][i]))
+					for k in xrange(l):
+						tmp1+=' '
+				tmp+=sep+tmp1
+			lines.append(tmp+'\n')
+			tmp=''
+			
+		f=open(fileName,'w')
+		if not trajectory:
+			for i in xrange(len(headers)):
+				f.write(headers[i])
+			f.write(dcols)
+		else:
+			f.write(dcols)
+			for i in xrange(len(headerLines)):
+				f.write('# '+headerLines[i]+'\n')
+			for i in xrange(len(headers)):
+				f.write(headers[i])
+		for i in xrange(len(lines)):
+			f.write(lines[i])
+		
+		f.close()
+		return None
