@@ -135,17 +135,51 @@ class DataPlot:
 			print tmpX
 			print tmpY
 			return tmpX, tmpY
+			
+	def plotMulti(self,atriX,atriY, cycList,title,legend=None ,logX=False, logY=False, base=10,sparse=1,pdf=False,xMin=None,xMax=None,yMin=None,Ymax=None):
+		'''
+		Method for superimposing multiple plots and saving it to a png or PDF
+		input:
 		
+		'''
+		if str(legend.__class__)!="<type 'list'>":# Determines the legend is a list
+			legendList=False
+		else:
+			legendList=True
+			
+		if legendList and len(cycList) !=len(legend): #if it is a list, make sure there is an entry for each cycle
+			print 'Please input a proper legend, with correct length, aborting plot'
+			return None
+		for i in xrange(len(cycList)):
+			if legendList:
+				self.plot(atriX,atriY,cycList[i], legend=legend[i],base=base,sparse=sparse, logX=logX,logY=logY,show=False)
+			else:
+				self.plot(atriX,atriY,cycList[i], legend=legend,base=base,sparse=sparse, logX=logX,logY=logY,show=False)
+		
+		pl.title(title)
+		self.clear()
+		
+		
+		if xMin!=None and xMax!=None and yMin!=None and yMax!=None:
+			pl.xlim(xMin,xMax)
+			pl.ylim(yMin,yMax)
+			
+		if not pdf:
+			pl.savefig(title+'.png', dpi=100)
+		else:
+			pl.savefig(title+'.pdf', dpi=100)
+			
+		return None
+	
 	def plot(self,atriX,atriY, FName=None,numType='ndump',legend=None,labelX=None, labelY=None ,
-		indexX=None, indexY=None, title=None, shape='.',logX=False, logY=False, base=10,sparse=1):
+		indexX=None, indexY=None, title=None, shape='.',logX=False, logY=False, base=10,sparse=1, show=True):
 		"""
 		Simple function that plots atriY as a function of atriX
 		This method will automatically find and plot the requested data.
 		Input:
 		atriX, The name of the attribute you want on the x axis
 		atriY, The name of the attribute you want on the Y axis
-		Fname: Be the filename, Ndump or time, Defaults to the last 
-		       NDump
+		Fname: Be the filename, Ndump or time, or cycle
 		numType: designates how this function acts and how it interprets 
 			 FName. Defaults to file
 		if numType is 'file', this function will get the desird 
@@ -190,8 +224,8 @@ class DataPlot:
 			print 'This method is not supported for '+str(self.__class__)
 			return
 		else :
-			listY=self.get(atriY,)
-			listX=self.get(atriX,)
+			listY=self.get(atriY,FName)
+			listX=self.get(atriX,FName)
 		
 		
 		
@@ -352,12 +386,13 @@ class DataPlot:
 		else:
 			legend=labelY+' vs '+labelX	
 			
-		pyl.plot(listX,listY,shape,label=legend)
-		pyl.legend()
-		pyl.title(title)
-		pyl.xlabel(labelX)
-		pyl.ylabel(labelY)
-		pyl.show()
+		pl.plot(listX,listY,shape,label=legend)
+		pl.legend()
+		pl.title(title)
+		pl.xlabel(labelX)
+		pl.ylabel(labelY)
+		if show:
+			pl.show()
 		
 		
 	def clear(self, title=True, xlabel=True, ylabel=True):

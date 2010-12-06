@@ -311,10 +311,10 @@ class abu_vector(DataPlot,Utils):
 			
 		for i in range(len(lines)):
 			
-			if index==4 and len(lines[i])==6:
+			if index==5 and len(lines[i])==7:
 				data.append(str(lines[i][index].capitalize())+'-'\
 				+str(lines[i][index+1]))
-			elif index==4 and len(lines[i])!=6:
+			elif index==5 and len(lines[i])!=7:
 				tmp=str(lines[i][index])
 				if tmp[len(tmp)-1].isdigit():
 					tmp1=tmp[0]+tmp[1]
@@ -364,11 +364,12 @@ class abu_vector(DataPlot,Utils):
 		abd=[]	   #Variable for holding the array of Abundance
 		data=[]	   #variable for the final list of data
 
-		element=self.get('Name',fname,numType)
-		number=self.get('Number',fname,numType)
-		z=self.get('Z',fname,numType)
-		a=self.get('A',fname,numType)
-		abd=self.get('yps',fname,numType)
+		element=self.get(self.dcols[5],fname,numType)
+		number=self.get(self.dcols[0],fname,numType)
+		z=self.get(self.dcols[1],fname,numType)
+		a=self.get(self.dcols[2],fname,numType)
+		isom=self.get(self.dcols[3],fname,numType)
+		abd=self.get(self.dcols[4],fname,numType)
 		
 		index=0 #Variable for determing the index in the data columns
 		
@@ -434,7 +435,9 @@ class abu_vector(DataPlot,Utils):
 			lines[i]=lines[i].strip()
 			
 		
-		cols=[]
+		cols=lines[0].strip('H')
+		cols=cols.strip()
+		cols=cols.split()
 		for i in range(len(lines)):
 			if lines[i].startswith('#'): 
 				# if it is a cycle attribute line
@@ -450,11 +453,13 @@ class abu_vector(DataPlot,Utils):
 				while j <len(tmp):
 					cattrs.append(tmp[j])
 					j+=2
-			else:
+					
+			
+			elif not lines[i].startswith('H'):
 				index = i-1
 				break
 				
-		cols=['Number','Z','A','yps', 'Name']
+		
 		'''
 		
 		cols=[]
