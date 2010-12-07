@@ -73,7 +73,7 @@ class se(DataPlot,Utils):
     se = []         # main data dictionary
     pattern=''
 
-    def __init__(self, sedir, pattern):
+    def __init__(self, sedir='*', pattern='.h5'):
         
         slist = os.listdir(sedir)
         expr = re.compile(pattern)
@@ -89,7 +89,25 @@ class se(DataPlot,Utils):
     def __del__(self):
         print 'Closing plot_tools'
         
-
+    def get(self, cycle_list,dataitem=None,isotope=None):
+    	'''
+    	Simple function that simply calls h5T.py get method.
+        There are three ways to call this function
+            option 1
+            get(dataitem)
+                fetches the dataitem for all cycles, interperates the argument 
+                cycle list, as Data Item
+           option 2
+           get(cycle_list, dataitem)
+                fetches the dataitem from the list of cycles. If Dataitem is an 
+                isotope, it then returns self.get(cycle_list,'iso_massf',dataitem)
+           option 3
+            get(cycle_list, 'iso_massf', isotope)
+               isotope Must be in the form 'H-2'
+                fetches the isotope data for a list of cycles
+        '''
+        return self.se.get(cycle_list,dataitem,isotope)
+        
     def plot_prof_1(self,mod,species,xlim1,xlim2,ylim1,ylim2):
 
         ''' plot one species for cycle between xlim1 and xlim2
@@ -161,34 +179,6 @@ class se(DataPlot,Utils):
         pyl.ylim(ylim1,ylim2)
         pyl.legend()
 
-
-    def frames_spaghetti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2):
-
-        ''' create a movie with mass fractions vs mass coordinate 
-        between xlim1 and xlim2, ylim1 and ylim2. 
-
-        ini          - initial model
-        end          - final model 
-        delta        - sparsity factor of the frames
-        what_specie  - array with species in the plot
-        xlim1, xlim2 - mass coordinate range 
-        ylim1, ylim2 - mass fraction coordinate range
-  
-        '''
-        sparse=10
-        for i in range(ini,end+1,delta):
-            step = int(i)
-            print step
-            for j in range(len(what_specie)):
-                self.plot_prof_1(step,what_specie[j],xlim1,xlim2,ylim1,ylim2)
-            #          
-            filename = str('%03d' % step)+'_test.png'             
-            pl.savefig(filename, dpi=100) 
-            print 'wrote file ', filename
-            #
-            pl.close()
-
-
     def trajectory(self,ini,end,delta,mass_coo):
         
         ''' create a trajectory out of a stellar model 
@@ -223,6 +213,7 @@ class se(DataPlot,Utils):
                                 except IndexError:
                                         mass_coo_new = mass[i]
                                         zone = int(i)
+                                        
 
                 string = str(step)+'  '+str(age)+'  '+str(temperature[zone])+'  '+str(rho[zone]) 
                 f.write(string+"\n")

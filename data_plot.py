@@ -139,8 +139,21 @@ class DataPlot:
 	def plotMulti(self,atriX,atriY, cycList,title,legend=None ,logX=False, logY=False, base=10,sparse=1,pdf=False,xMin=None,xMax=None,yMin=None,Ymax=None):
 		'''
 		Method for superimposing multiple plots and saving it to a png or PDF
-		input:
-		
+		Input:
+		atriX: The name of the attribute you want on the x axis
+		atriY: The name of the attribute you want on the Y axis
+		cycList: List of cycles that you would like plotted
+		title: The title of the grapgh and the name of the file.
+		Legend: A list of legends for each of your cycles, or one legend 
+			for all of the cycles
+		pdf: A boolean of if the image should be saved to a pdf file.
+			xMin,xMax, yMin, YMax:  plot coopdinates.	
+		logX: A boolean of weather the user wants the x axis logarithmically
+		logY: A boolean of weather the user wants the Y axis logarithmically
+		base: The base of the logarithm. Default = 10
+		sparse: Argument that skips every so many data points. For 
+			example if this argument was 5, This method would plot
+			the 0th, 5th, 10th ... elements.
 		'''
 		if str(legend.__class__)!="<type 'list'>":# Determines the legend is a list
 			legendList=False
@@ -205,6 +218,8 @@ class DataPlot:
 		sparse: Argument that skips every so many data points. For 
 			example if this argument was 5, This method would plot
 			the 0th, 5th, 10th ... elements.
+		show: A boolean of if the plot should be displayed> usefull with
+			the multiPlot method
 		WARNING: Unstable if get returns a list with only one element (x=[0])
 		"""
 		
@@ -223,9 +238,19 @@ class DataPlot:
 		elif plotType=='se':
 			print 'This method is not supported for '+str(self.__class__)
 			return
-		else :
-			listY=self.get(atriY,FName)
-			listX=self.get(atriX,FName)
+		elif plotType=='PPN' :
+			if FName==None:
+				FName=len(self.files)-1
+			if numType=='ndump':
+				numType='cycNum'
+			listY=self.get(atriY,FName,numType)
+			listX=self.get(atriX,FName,numType)
+		elif plotType=='xtime' or plotType=='mesa_profile' or plotType=='AsciiTable' or plotType=='mesa.star_log':
+			listY=self.get(atriY)
+			listX=self.get(atriX)
+		else:
+			listY=self.get(atriY)
+			listX=self.get(atriX)
 		
 		
 		
@@ -461,19 +486,23 @@ class DataPlot:
 			masses.sort()
 			mass_range.sort()
 		elif plotType=='PPN':
-			isotope_to_plot = self.get('Name', cycle)
+			isotope_to_plot = self.get('ISOTP', cycle)
 			z=self.get('Z', cycle) #charge
 			a=self.get('A', cycle) #mass
+			isomers=self.get('ISOM', cycle)
 			tmp1=[]
 			tmp=[]
+			isom=[]
 			for i in range (len(isotope_to_plot)):
 				if isotope_to_plot[i] != 'NEUT' and '*' not in isotope_to_plot[i] and 'g' not in isotope_to_plot[i].split('-')[1]: #if its not 'NEUt and not an isomer'
 					tmp.append(self.elements_names[int(z[i])]+'-'+str(int(a[i])))
 				
+				elif 'm' in isotope_to_plot[i]:
+					isom.append(isotope_to_plot[i])	
 			isotope_to_plot=tmp
 			isotope_to_plot.sort()
 			isotope_to_plot.sort(self.comparator)
-			print isotope_to_plot
+			#print isotope_to_plot
 			tmp=[]
 			'''
 			for i in xrange(len(self.elements_names)):
@@ -488,7 +517,7 @@ class DataPlot:
 				
 			abunds=[]
 			for i in xrange(len(isotope_to_plot)):
-					abunds.append(self.get(isotope_to_plot[i],cycle)[3])
+					abunds.append(self.get(isotope_to_plot[i],cycle)[4])
 			#print isotope_to_plot
 			#print abunds
 			
@@ -656,11 +685,11 @@ class DataPlot:
 	        				
 	        		abund_plot.append(tmp)
 		#print cycle
-		print abund_plot
+		#print abund_plot
 		
 		#temp3 = []
 		mass_num = []
-		print index
+		#print index
 		for j in xrange(len(index)):
 		
 		    temp = []
@@ -747,6 +776,32 @@ class DataPlot:
 		pl.grid()
 		pl.show()
 		return
+	
+	def frames_spaghetti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2):
+	
+		''' create a movie with mass fractions vs mass coordinate 
+		between xlim1 and xlim2, ylim1 and ylim2. 
+	
+		ini          - initial model
+		end          - final model 
+		delta        - sparsity factor of the frames
+		what_specie  - array with species in the plot
+		xlim1, xlim2 - mass coordinate range 
+		ylim1, ylim2 - mass fraction coordinate range
+	  
+		'''
+		
+		for i in range(ini,end+1,delta):
+		    step = int(i)
+		    print step
+		    for j in range(len(what_specie)):
+			self.plot_prof_1(step,what_specie[j],xlim1,xlim2,ylim1,ylim2)
+		    #          
+		    filename = str('%03d' % step)+'_test.png'             
+		    pl.savefig(filename, dpi=100) 
+		    print 'wrote file ', filename
+		    #
+		    pl.close()
 
 	# From mesa_profile
     	def plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2):
@@ -754,7 +809,8 @@ class DataPlot:
 		''' plot one species for cycle between xlim1 and xlim2                               
 		
 		species      - which species to plot
-		keystring    - label that appears in the plot
+		keystring    - label that appears in the plot or in the cas of se,
+			       A cycle or list of cycles
 		xlim1, xlim2 - mass coordinate range                                                 
 		ylim1, ylim2 - mass fraction coordinate range '''
 		plotType=self.classTest()

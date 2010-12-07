@@ -383,6 +383,7 @@ class abu_vector(DataPlot,Utils):
 		data.append(number[index])
 		data.append(z[index])
 		data.append(a[index])
+		data.append(isom[index])
 		data.append(abd[index])
 		
 		return array(data)
@@ -407,10 +408,10 @@ class abu_vector(DataPlot,Utils):
 			return self.getCycleData(attri,fname,numtype)
 		elif attri in self.dcols:
 			return self.getColData(attri,fname,numtype)
-		elif attri in self.get('Name',fname,numtype):
+		elif attri in self.get('ISOTP',fname,numtype):
 			return self.getElement(attri,fname,numtype)
 		else:
-			print 'Attribute does not exist'
+			print 'Attribute '+attri+ ' does not exist'
 			print 'Returning none'
 			return None
 			
