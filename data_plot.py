@@ -21,6 +21,7 @@ import matplotlib.pylab as pyl
 import matplotlib.pyplot as pl
 import os
 import threading
+import time
 
 class DataPlot:
 	
@@ -77,8 +78,8 @@ class DataPlot:
 		elif logYER:
 			for i in range(len(tmpY)):
 				if tmpY[i]>0:
-					tmpX.append( tmpX[i])
-					tmpY.append(tmpY[i])
+					tmX.append( tmpX[i])
+					tmY.append(tmpY[i])
 			tmpX=tmX
 			tmpY=tmY
 		
@@ -439,6 +440,26 @@ class DataPlot:
 		''' reverse xrange'''
 		xmax,xmin=pyl.xlim()
 		pyl.xlim(xmin,xmax)
+		
+	def compar(self,x, y):
+		'''
+		simple comparator method
+		'''
+		
+		indX=0
+		indY=0
+		
+		a= int(x[0].split('-')[1])
+		
+		b= int(y[0].split('-')[1])
+		
+
+		if a>b:
+			return 1
+		if a==b:
+			return 0
+		if a<b:
+			return -1
 	
 	def comparator(self,x, y):
 		'''
@@ -448,9 +469,9 @@ class DataPlot:
 		indX=0
 		indY=0
 		for i in xrange(len(self.elements_names)):
-			if self.elements_names[i] == x.split('-')[0]:
+			if self.elements_names[i] == x[0].split('-')[0]:
 				indX=i
-			if self.elements_names[i] == y.split('-')[0]:
+			if self.elements_names[i] == y[0].split('-')[0]:
 				indY=i
 
 		if indX>indY:
@@ -490,36 +511,25 @@ class DataPlot:
 			z=self.get('Z', cycle) #charge
 			a=self.get('A', cycle) #mass
 			isomers=self.get('ISOM', cycle)
+			yps=self.get('ABUNDNACE_MF', cycle)
 			tmp1=[]
 			tmp=[]
 			isom=[]
-			for i in range (len(isotope_to_plot)):
-				if isotope_to_plot[i] != 'NEUT' and '*' not in isotope_to_plot[i] and 'g' not in isotope_to_plot[i].split('-')[1]: #if its not 'NEUt and not an isomer'
-					tmp.append(self.elements_names[int(z[i])]+'-'+str(int(a[i])))
-				
-				elif 'm' in isotope_to_plot[i]:
-					isom.append(isotope_to_plot[i])	
-			isotope_to_plot=tmp
-			isotope_to_plot.sort()
-			isotope_to_plot.sort(self.comparator)
-			#print isotope_to_plot
-			tmp=[]
-			'''
-			for i in xrange(len(self.elements_names)):
-				if i == 0 :
-					continue
-				for j in xrange(len(isotope_to_plot)):
-					
-					if self.elements_names[i] == isotope_to_plot[j].split('-')[0]: 	
-						tmp.append(isotope_to_plot[j])
-			'''
 			
-				
+			for i in range (len(isotope_to_plot)):
+				if isotope_to_plot[i] != 'NEUT' and isomers[i]==1: #if its not 'NEUt and not an isomer'
+					tmp.append([self.elements_names[int(z[i])]+'-'+str(int(a[i])),yps[i]])
+				elif isomers[i]==1: #if it is an isomer
+					isom.append([isotope_to_plot[i],yps[i]])	
+			
+			tmp.sort(self.compar)
+			tmp.sort(self.comparator)
+			
 			abunds=[]
-			for i in xrange(len(isotope_to_plot)):
-					abunds.append(self.get(isotope_to_plot[i],cycle)[4])
-			#print isotope_to_plot
-			#print abunds
+			isotope_to_plot=[]
+			for i in xrange(len(tmp)):
+				isotope_to_plot.append(tmp[i][0])
+				abunds.append(tmp[i][1])
 			
 		else:
 			print 'This method, iso_abund, is not supported by this class'
@@ -539,14 +549,12 @@ class DataPlot:
 		#    if not self.se.cycles.count(str(cycle)):
 		#        print 'I was unable to correct your cycle.  Please check that it exists in your dataset.'
 		
-	
-		
-		
 		print 'Using The following conditions:'
 		if  plotType=='se':
 			print '\tmass_range:', mass_range[0], mass_range[1]
 		print '\tcycle:', cycle
 		print '\tplot only stable:',stable
+		
 		
 		elem_list = ['' for x in xrange(len(self.elements_names)) ]
 		elem_index = [[-1] for x in xrange(len(self.elements_names))]
@@ -768,7 +776,7 @@ class DataPlot:
 			title = str('Abundance of Isotopes over range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
 				str(' for cycle %d' %int(cycle))
 		else:
-			title = str('Abundance of Isotopes')
+			title = str('Abundance of Isotopes for Cycle '+str(cycle))
 		pl.ylim([1e-13,10])
 		pl.title(title)
 		pl.xlabel('Mass Number')
@@ -777,7 +785,7 @@ class DataPlot:
 		pl.show()
 		return
 	
-	def frames_spaghetti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2):
+	def plotprofMulti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2):
 	
 		''' create a movie with mass fractions vs mass coordinate 
 		between xlim1 and xlim2, ylim1 and ylim2. 
@@ -790,21 +798,24 @@ class DataPlot:
 		ylim1, ylim2 - mass fraction coordinate range
 	  
 		'''
-		
-		for i in range(ini,end+1,delta):
-		    step = int(i)
-		    print step
-		    for j in range(len(what_specie)):
-			self.plot_prof_1(step,what_specie[j],xlim1,xlim2,ylim1,ylim2)
-		    #          
-		    filename = str('%03d' % step)+'_test.png'             
-		    pl.savefig(filename, dpi=100) 
-		    print 'wrote file ', filename
-		    #
-		    pl.close()
-
+		plotType=self.classTest()
+		if plotType=='se'or plotType=='mesa_profile':
+			for i in range(ini,end+1,delta):
+			    step = int(i)
+			    print step
+			    for j in range(len(what_specie)):
+				self.plot_prof_1(what_specie[j],step,xlim1,xlim2,ylim1,ylim2, False)
+			    #          
+			    filename = str('%03d' % step)+'_test.png'             
+			    pl.savefig(filename, dpi=100) 
+			    print 'wrote file ', filename
+			    #
+			    pl.close()
+		else:
+			print 'This method is not supported for '+str(self.__class__)
+			return
 	# From mesa_profile
-    	def plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2):
+    	def plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2, show=True):
 	
 		''' plot one species for cycle between xlim1 and xlim2                               
 		
@@ -832,14 +843,16 @@ class DataPlot:
 			return
 		x,y=self.logarithm(Xspecies,mass,True,False,10)
 		print x
-		pyl.plot(y,x,'-',label=str(keystring))
-		pyl.xlim(xlim1,xlim2)
-		pyl.ylim(ylim1,ylim2)
-		pyl.legend()
+		pl.plot(y,x,'-',label=str(keystring))
+		pl.xlim(xlim1,xlim2)
+		pl.ylim(ylim1,ylim2)
+		pl.legend()
 	
 		pl.xlabel('$Mass$ $coordinate$', fontsize=20)
 		pl.ylabel('$X_{i}$', fontsize=20)
 		pl.title('Mass='+str(tot_mass)+', Time='+str(age)+' years, cycle='+str(mod))
+		if show:
+			pl.show()
 	
 	# From mesa.star_log
 	

@@ -145,17 +145,22 @@ class xtime(DataPlot):
             data_column[i]=self.data[i][self.col_num[col_str]]
         return data_column
     
-    def plot_xtime(self,Y,X='age',label='default',labelX=None, labelY=None , 
+    def plot_xtime(self,Y,X='t_y',label='default',labelX=None, labelY=None , 
     	title=None, shape='.',logX=False, logY=True, base=10):
         '''make a simple plot of two columns against each other
         Y         - column on Y-axis
-        X         - column on X-axis, defaults to "age"
+        X         - column on X-axis, defaults to "t_y"
         '''
         if label is 'default':
             lab_str=Y
         else:
             lab_str=label
         
+        try:
+        	self.get(X)
+        except KeyError:
+        	X='age'
+	
         DataPlot.plot(self,X,Y,legend=lab_str,labelX=labelX, labelY=labelY, 
         	      title=title, shape=shape,logX=logX, logY=logY, base=base)
         '''
