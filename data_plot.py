@@ -19,9 +19,15 @@ from numpy import *
 from math import *
 import matplotlib.pylab as pyl
 import matplotlib.pyplot as pl
+from matplotlib.mpl import colors,cm
+from matplotlib.patches import Rectangle, Arrow
+from matplotlib.collections import PatchCollection
+from matplotlib.offsetbox import AnchoredOffsetbox, TextArea
 import os
 import threading
 import time
+import sys
+import fdic
 
 class DataPlot:
 	
@@ -482,6 +488,255 @@ class DataPlot:
 			return -1
 			
 	#from mppnp.se
+	def abu_chart(self, cycle,ilabel = 1,imlabel = 1,imagic = 0,plotaxis=[0,0,0,0],format = 'pdf'):
+		'''
+		Plots an abundence chart
+		input:
+		cycle: The cycle we are looking in
+		ilabel: elemental labels off/on [0/1]
+		imlabel: label for isotopic masses off/on [0/1]
+		imagic:  turn lines for magic numbers off/on [0/1]
+		plotaxis: Set axis limit: If default [0,0,0,0] the complete 
+			  range in (N,Z) will be plotted
+			  format: What format will this be saved in ['pdf'/'png'] 
+		'''
+		#######################################################################
+		#### plot options
+		# Set axis limit: If default [0,0,0,0] the complete range in (N,Z) will 
+		# be plotted, i.e. all isotopes, else specify the limits in 
+		# plotaxis = [xmin,xmax,ymin,ymax] 
+		
+		#######################################################################
+		# check command line input
+		# plot handler abundance/flux/abundance+flux plot [0/1/2]
+		iplot = 0
+		
+		# read data file
+		#inpfile = cycle
+		#ff = fdic.ff(inpfile)
+		
+		
+		nin=self.get('A',cycle)
+		zin=self.get('Z',cycle)
+		yin=self.get('ABUNDNACE_MF',cycle)
+		nnmax = int(max(nin))+1
+		nzmax = int(max(zin))+1
+		nzycheck = zeros([nnmax,nzmax,3])
+		for i in range(len(nin)):
+		  ni = int(nin[i])
+		  zi = int(zin[i])
+		  nzycheck[ni,zi,0] = 1
+		  nzycheck[ni,zi,1] = yin[i]
+		
+		
+		print nzycheck
+		'''
+		try:
+		  flow = ff['flow']+1.e-99
+		  sort = flow.argsort()
+		  flow = flow[sort]
+		   	
+		  nin  = ff['nin'][sort]
+		  zin  = ff['zin'][sort] 
+		  yin  = ff['yin'][sort]
+		  nout = ff['nout'][sort]
+		  zout = ff['zout'][sort]
+		  yout = ff['yout'][sort]
+		  #maxflow = max(flow)
+		  nzmax = int(max(max(zin),max(zout)))+1
+		  nnmax = int(max(max(nin),max(nout)))+1
+		except KeyError:
+		  if iplot==1 or iplot==2: 
+		    sys.exit('The read file does not contain flow data!')
+		  nin  = ff['nin']
+		  zin  = ff['zin']
+		  yin  = ff['yin']
+		  nnmax = int(max(nin))+1
+		  nzmax = int(max(zin))+1
+		print nnmax 
+		nzycheck = zeros([nnmax,nzmax,3])
+		for i in range(len(nin)):
+		  ni = int(nin[i])
+		  zi = int(zin[i])
+		  nzycheck[ni,zi,0] = 1
+		  nzycheck[ni,zi,1] = yin[i]
+		'''  
+		  
+		  
+		
+		
+		 
+		#######################################################################
+		# elemental names: elname(i) is the name of element with Z=i 
+		elname=('none','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe',
+			'Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb',
+			'Te', 'I','Xe','Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta','W','Re','Os',
+			'Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu')
+		
+		#### create plot
+		
+		## define axis and plot style (colormap, size, fontsize etc.)
+		if plotaxis==[0,0,0,0]:
+		  xdim=10
+		  ydim=6
+		else:
+		  dx = plotaxis[1]-plotaxis[0]
+		  dy = plotaxis[3]-plotaxis[2]
+		  ydim = 6
+		  xdim = ydim*dx/dy
+		  
+		format = 'pdf'
+		params = {'axes.labelsize':  15,
+			  'text.fontsize':   15,
+			  'legend.fontsize': 15,
+			  'xtick.labelsize': 15,
+			  'ytick.labelsize': 15,
+			  'text.usetex': True}
+		pl.rcParams.update(params)
+		fig=pl.figure(figsize=(xdim,ydim),dpi=100)
+		axx = 0.10
+		axy = 0.10
+		axw = 0.85
+		axh = 0.8
+		ax=pl.axes([axx,axy,axw,axh])
+		
+		# color map choice for abundances
+		cmapa = cm.jet
+		# color map choice for arrows
+		cmapr = cm.autumn
+		# if a value is below the lower limit its set to white
+		cmapa.set_under(color='w')
+		cmapr.set_under(color='w')
+		# set value range for abundance colors (log10(Y))
+		norma = colors.Normalize(vmin=-20,vmax=0)
+		# set x- and y-axis scale aspect ratio to 1
+		ax.set_aspect('equal')
+		#print time,temp and density on top
+		temp = ' '#'%8.3e' %ff['temp']
+		time = ' '#'%8.3e' %ff['time']
+		dens = ' '#'%8.3e' %ff['dens']
+		
+		box1 = TextArea("t : " + time + " s~~/~~T$_{9}$ : " + temp + "~~/~~$\\rho_{b}$ : " \
+			      + dens + ' g/cm$^{3}$', textprops=dict(color="k"))
+		anchored_box = AnchoredOffsetbox(loc=3,
+				child=box1, pad=0.,
+				frameon=False,
+				bbox_to_anchor=(0., 1.02),
+				bbox_transform=ax.transAxes,
+				borderpad=0.,
+				)
+		ax.add_artist(anchored_box)
+		
+		## only abundance plotted
+		if iplot==0:
+		  patches = []
+		  color = []
+		
+		  for i in range(nzmax):
+		    for j in range(nnmax):
+		      if nzycheck[j,i,0]==1:
+			xy = j-0.5,i-0.5
+			rect = Rectangle(xy,1,1,ec='k')
+			# abundance 
+			yab = nzycheck[j,i,1]
+			if yab == 0:
+				
+				yab=1e-99
+				
+			
+			col =log10(yab)
+		
+			patches.append(rect)
+			color.append(col)
+		
+		
+		  p = PatchCollection(patches, cmap=cmapa, norm=norma)
+		  p.set_array(array(color))
+		  p.set_zorder(1)
+		  ax.add_collection(p)
+		  cb = pl.colorbar(p)
+		  
+		  # colorbar label
+		  cb.set_label('log$_{10}$(Y)')
+		  
+		  # plot file name
+		  graphname = 'abundance-chart.'+format
+		  
+		# Add black frames for stable isotopes
+		f = open('stable.dat')
+		
+		head = f.readline()
+		stable = []
+		
+		for line in f.readlines():
+		  tmp = line.split()
+		  zz = int(tmp[2])
+		  nn = int(tmp[3])
+		  xy = nn-0.5,zz-0.5
+		  rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=3.)
+		  rect.set_zorder(2)
+		  ax.add_patch(rect)
+		
+		
+		
+		# decide which array to take for label positions
+		iarr = 0
+		
+		# plot element labels
+		if ilabel==1:
+		  for z in range(nzmax):
+		    try:
+		      nmin = min(argwhere(nzycheck[:,z,iarr]))[0]-1
+		      ax.text(nmin,z,elname[z],horizontalalignment='center',verticalalignment='center',fontsize='medium',clip_on=True)
+		    except ValueError:
+		      continue
+		      
+		# plot mass numbers
+		if imlabel==1:
+		  for z in range(nzmax):
+		     for n in range(nnmax):
+			a = z+n
+			if nzycheck[n,z,iarr]==1:
+			  ax.text(n,z,a,horizontalalignment='center',verticalalignment='center',fontsize='small',clip_on=True)
+		
+		# plot lines at magic numbers
+		if imagic==1:
+		  ixymagic=[2, 8, 20, 28, 50, 82, 126]
+		  nmagic = len(ixymagic)
+		  for magic in ixymagic:
+		    if magic<=nzmax:
+		      try:
+			xnmin = min(argwhere(nzycheck[:,magic,iarr]))[0]
+			xnmax = max(argwhere(nzycheck[:,magic,iarr]))[0]
+			line = ax.plot([xnmin,xnmax],[magic,magic],lw=3.,color='r',ls='-')
+		      except ValueError:
+			dummy=0
+		    if magic<=nnmax:
+		      try:
+			yzmin = min(argwhere(nzycheck[magic,:,iarr]))[0]
+			yzmax = max(argwhere(nzycheck[magic,:,iarr]))[0]
+			line = ax.plot([magic,magic],[yzmin,yzmax],lw=3.,color='r',ls='-')
+		      except ValueError:
+			dummy=0
+		
+		# set axis limits
+		if plotaxis==[0,0,0,0]:
+		  if iplot==2 or iplot==0: 
+		    xmax=max(nin)
+		    ymax=max(zin)
+		  ax.axis([-0.5,xmax+0.5,-0.5,ymax+0.5])
+		else:
+		  ax.axis(plotaxis)
+		
+		# set x- and y-axis label
+		ax.set_xlabel('neutron number')
+		ax.set_ylabel('proton number')
+		
+		#fig.savefig(graphname)
+		print graphname,'is done'
+		
+		pl.show()
+		
 	def iso_abund(self,  cycle, stable=False,mass_range=None):
 		''' plot the abundance of all the chemical species
 		inputs:
@@ -568,7 +823,7 @@ class DataPlot:
 			#print self.se.isotopes[x].split('-')[0], x
 			elem_index[self.elements_names.index(isotope_to_plot[x].split('-')[0])].append(x)
 			if elem_list.count(isotope_to_plot[x].split('-')[0]) == 0:
-			    elem_list[self.elements_names.index(isotope_to_plot[x].split('-')[0])] += \
+				elem_list[self.elements_names.index(isotope_to_plot[x].split('-')[0])] += \
 								     isotope_to_plot[x].split('-')[0]
 		
 		
