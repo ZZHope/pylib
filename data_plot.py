@@ -488,7 +488,7 @@ class DataPlot:
 			return -1
 			
 	#from mppnp.se
-	def abu_chart(self, cycle,ilabel = 1,imlabel = 1,imagic = 0,plotaxis=[0,0,0,0],format = 'pdf'):
+	def abu_chart(self, cycle, mass_range=None ,ilabel = 1,imlabel = 1,imagic = 0,plotaxis=[0,0,0,0],format = 'pdf'):
 		'''
 		Plots an abundence chart
 		input:
@@ -498,7 +498,15 @@ class DataPlot:
 		imagic:  turn lines for magic numbers off/on [0/1]
 		plotaxis: Set axis limit: If default [0,0,0,0] the complete 
 			  range in (N,Z) will be plotted
-			  format: What format will this be saved in ['pdf'/'png'] 
+			  format: What format will this be saved in ['pdf'/'png']
+		mass_range - a 1x2 array containing the lower and upper mass range.
+		    		 If this is an instance of abu_vector this will 
+		    		 only plot isotopes that have an atominc mass 
+		    		 within this range. This will throw an error if
+		    		 this range does not make sence ie [45,2]
+			 	if None, it will plot over the entire range
+				Defaults to None
+				
 		'''
 		#######################################################################
 		#### plot options
@@ -507,71 +515,97 @@ class DataPlot:
 		# plotaxis = [xmin,xmax,ymin,ymax] 
 		
 		#######################################################################
-		# check command line input
-		# plot handler abundance/flux/abundance+flux plot [0/1/2]
-		iplot = 0
 		
 		# read data file
 		#inpfile = cycle
 		#ff = fdic.ff(inpfile)
 		
+		plotType=self.classTest()
 		
-		nin=self.get('A',cycle)
-		zin=self.get('Z',cycle)
-		yin=self.get('ABUNDNACE_MF',cycle)
+		
+		if mass_range!=None and mass_range[0]>mass_range[1]:
+			print 'Please input a proper mass range'
+			print 'Returning None'
+			return None
+		
+		if plotType=='se':
+			nin=self.se.A
+			zin=self.se.Z
+			yin=self.get(cycle, 'iso_massf')
+			isom=self.se.isomeric_states
+			
+			masses = self.se.get(cycle,'mass')
+			if mass_range != None:
+				masses = self.se.get(cycle,'mass')
+				masses.sort()
+			
+			if mass_range != None:
+				tmpyps=[] 
+				masses = self.se.get(cycle,'mass')
+				masses = self.se.get(cycle,'mass')
+				masses.sort()
+				for i in xrange(len(masses)):
+					if (masses[i] >mass_range[0] and masses[i]<mass_range[1]) or (masses[i]==mass_range[0] or masses[i]==mass_range[1]):
+						
+						tmpyps.append(yin[i])
+				yin=tmpyps
+			
+			
+			tmp=zeros(len(yin[0]))
+			for i in xrange(len(yin)):
+				for j in xrange(len(yin[i])):
+					tmp[j]+=yin[i][j]
+			
+			tmp=tmp/len(yin)
+			
+			yin=tmp
+			
+		elif plotType=='PPN':
+			
+			nin=self.get('A',cycle)
+			zin=self.get('Z',cycle)
+			yin=self.get('ABUNDNACE_MF',cycle)
+			isom=self.get('ISOM',cycle)
+			
+			if mass_range != None:
+				tmpA=[]
+				tmpZ=[]
+				tmpIsom=[]
+				tmpyps=[]
+				for i in xrange(len(nin)):
+					if (nin[i] >mass_range[0] and nin[i]<mass_range[1]) or (nin[i]==mass_range[0] or nin[i]==mass_range[1]):
+						tmpA.append(nin[i])
+						tmpZ.append(zin[i])
+						tmpIsom.append(isom[i])
+						tmpyps.append(yin[i])
+				zin=tmpZ
+				nin=tmpA
+				yin=tmpyps
+				isom=tmpIsom
+			
+		else:
+			print 'This method, abu_chart, is not supported by this class'
+			print 'Returning None'
+			return None
+			
 		nnmax = int(max(nin))+1
 		nzmax = int(max(zin))+1
 		nzycheck = zeros([nnmax,nzmax,3])
 		for i in range(len(nin)):
-		  ni = int(nin[i])
-		  zi = int(zin[i])
-		  nzycheck[ni,zi,0] = 1
-		  nzycheck[ni,zi,1] = yin[i]
+			if isom[i]==1:
+				ni = int(nin[i])
+				zi = int(zin[i])
+				
+				nzycheck[ni,zi,0] = 1
+				nzycheck[ni,zi,1] = yin[i]
 		
 		
-		print nzycheck
-		'''
-		try:
-		  flow = ff['flow']+1.e-99
-		  sort = flow.argsort()
-		  flow = flow[sort]
-		   	
-		  nin  = ff['nin'][sort]
-		  zin  = ff['zin'][sort] 
-		  yin  = ff['yin'][sort]
-		  nout = ff['nout'][sort]
-		  zout = ff['zout'][sort]
-		  yout = ff['yout'][sort]
-		  #maxflow = max(flow)
-		  nzmax = int(max(max(zin),max(zout)))+1
-		  nnmax = int(max(max(nin),max(nout)))+1
-		except KeyError:
-		  if iplot==1 or iplot==2: 
-		    sys.exit('The read file does not contain flow data!')
-		  nin  = ff['nin']
-		  zin  = ff['zin']
-		  yin  = ff['yin']
-		  nnmax = int(max(nin))+1
-		  nzmax = int(max(zin))+1
-		print nnmax 
-		nzycheck = zeros([nnmax,nzmax,3])
-		for i in range(len(nin)):
-		  ni = int(nin[i])
-		  zi = int(zin[i])
-		  nzycheck[ni,zi,0] = 1
-		  nzycheck[ni,zi,1] = yin[i]
-		'''  
-		  
-		  
 		
-		
-		 
+ 
 		#######################################################################
 		# elemental names: elname(i) is the name of element with Z=i 
-		elname=('none','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe',
-			'Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb',
-			'Te', 'I','Xe','Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta','W','Re','Os',
-			'Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu')
+		
+		elname=self.elements_names
 		
 		#### create plot
 		
@@ -628,11 +662,11 @@ class DataPlot:
 		ax.add_artist(anchored_box)
 		
 		## only abundance plotted
-		if iplot==0:
-		  patches = []
-		  color = []
 		
-		  for i in range(nzmax):
+		patches = []
+		color = []
+		
+		for i in range(nzmax):
 		    for j in range(nnmax):
 		      if nzycheck[j,i,0]==1:
 			xy = j-0.5,i-0.5
@@ -650,32 +684,47 @@ class DataPlot:
 			color.append(col)
 		
 		
-		  p = PatchCollection(patches, cmap=cmapa, norm=norma)
-		  p.set_array(array(color))
-		  p.set_zorder(1)
-		  ax.add_collection(p)
-		  cb = pl.colorbar(p)
+		p = PatchCollection(patches, cmap=cmapa, norm=norma)
+		p.set_array(array(color))
+		p.set_zorder(1)
+		ax.add_collection(p)
+		cb = pl.colorbar(p)
 		  
-		  # colorbar label
-		  cb.set_label('log$_{10}$(Y)')
+		# colorbar label
+		cb.set_label('log$_{10}$(Y)')
 		  
-		  # plot file name
-		  graphname = 'abundance-chart.'+format
+		# plot file name
+		graphname = 'abundance-chart.'+format
 		  
 		# Add black frames for stable isotopes
+		'''
 		f = open('stable.dat')
 		
 		head = f.readline()
 		stable = []
+		'''
+		for i in xrange(len(self.stable_el)):
+			if i == 0:
+				continue
+			
+			
+			tmp = self.stable_el[i]
+			try:
+				zz= self.elements_names.index(tmp[0]) #charge
+			except:
+				continue
+					
+			for j in xrange(len(tmp)):
+				if j == 0:
+					continue
+				
+				nn = int(tmp[j]) #atomic mass
+				
+				xy = nn-0.5,zz-0.5
+				rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=3.)
+				rect.set_zorder(2)
+				ax.add_patch(rect)
 		
-		for line in f.readlines():
-		  tmp = line.split()
-		  zz = int(tmp[2])
-		  nn = int(tmp[3])
-		  xy = nn-0.5,zz-0.5
-		  rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=3.)
-		  rect.set_zorder(2)
-		  ax.add_patch(rect)
 		
 		
 		
@@ -721,9 +770,9 @@ class DataPlot:
 		
 		# set axis limits
 		if plotaxis==[0,0,0,0]:
-		  if iplot==2 or iplot==0: 
-		    xmax=max(nin)
-		    ymax=max(zin)
+		  
+		  xmax=max(nin)
+		  ymax=max(zin)
 		  ax.axis([-0.5,xmax+0.5,-0.5,ymax+0.5])
 		else:
 		  ax.axis(plotaxis)
@@ -736,22 +785,33 @@ class DataPlot:
 		print graphname,'is done'
 		
 		pl.show()
+		return
 		
-	def iso_abund(self,  cycle, stable=False,mass_range=None):
+	def iso_abund(self,  cycle, stable=False,mass_range=None,ylim=[1e-13,10]):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
 		    cycle       - a string/integer of the cycle of interest.
 		    stable     - a boolean of whether to filter out the unstables.
 		    		Defaults to False
-		    mass_range - a 1x2 array containing the lower and upper mass range.  
+		    mass_range - a 1x2 array containing the lower and upper mass range.
+		    		 If this is an instance of abu_vector this will 
+		    		 only plot isotopes that have an atominc mass 
+		    		 within this range. This will throw an error if
+		    		 this range does not make sence ie [45,2]
 			 	if None, it will plot over the entire range
 				Defaults to None	     
+		    ylim - A 1x2 array containing the lower and upper Y limits.
+		    	   Defaults to 1e-13 and 10
 		'''
 		elem_list = []
 		elem_index = []
 		masses = []
 		plotType=self.classTest()
+		if mass_range!=None and mass_range[0]>mass_range[1]:
+			print 'Please input a proper mass range'
+			print 'Returning None'
+			return None
 		if plotType=='se':
 			isotope_to_plot = self.se.isotopes
 			abunds = self.se.get(cycle,'iso_massf')
@@ -767,12 +827,30 @@ class DataPlot:
 			a=self.get('A', cycle) #mass
 			isomers=self.get('ISOM', cycle)
 			yps=self.get('ABUNDNACE_MF', cycle)
+			if mass_range != None:
+				tmpA=[]
+				tmpZ=[]
+				tmpIso=[]
+				tmpIsom=[]
+				tmpyps=[]
+				for i in xrange(len(a)):
+					if (a[i] >mass_range[0] and a[i]<mass_range[1]) or (a[i]==mass_range[0] or a[i]==mass_range[1]):
+						tmpA.append(a[i])
+						tmpZ.append(z[i])
+						tmpIso.append(isotope_to_plot[i])
+						tmpIsom.append(isomers[i])
+						tmpyps.append(yps[i])
+				isotope_to_plot=tmpIso
+				z=tmpZ
+				a=tmpA
+				isomers=tmpIsom
+				yps=tmpyps
 			tmp1=[]
 			tmp=[]
 			isom=[]
 			
 			for i in range (len(isotope_to_plot)):
-				if isotope_to_plot[i] != 'NEUT' and isomers[i]==1: #if its not 'NEUt and not an isomer'
+				if z[i]!=0 and isomers[i]==1: #if its not 'NEUt and not an isomer'
 					tmp.append([self.elements_names[int(z[i])]+'-'+str(int(a[i])),yps[i]])
 				elif isomers[i]==1: #if it is an isomer
 					isom.append([isotope_to_plot[i],yps[i]])	
@@ -913,7 +991,6 @@ class DataPlot:
 						    #    abundance += 1e-20
 						
 						    try:
-							print abunds[l][elem_index[index[j]][k]],abs(masses[l+1]-masses[l])
 							abundance += (abunds[l][elem_index[index[j]][k]])*abs(masses[l+1]-masses[l])
 						    except IndexError:    #  The last step requires us to interpolate to the next highest step
 							abundance += (abunds[l][elem_index[index[j]][k]])*abs(round(masses[l])-masses[l])
@@ -934,6 +1011,7 @@ class DataPlot:
 			    #time_step.append(temp)
 			    #print time_step
 			    abund_plot.append(temp)
+			
 	        elif plotType=='PPN':
 	        	
 	        	for i in xrange(len(elem_list)):
@@ -1031,8 +1109,12 @@ class DataPlot:
 			title = str('Abundance of Isotopes over range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
 				str(' for cycle %d' %int(cycle))
 		else:
-			title = str('Abundance of Isotopes for Cycle '+str(cycle))
-		pl.ylim([1e-13,10])
+			if mass_range ==None:
+				title = str('Abundance of Isotopes for Cycle '+str(cycle))
+			else:
+				title = str('Abundance of Isotopes with A between '+str(mass_range[0])+' and '+str(mass_range[1])+' for Cycle '+str(cycle))
+				pl.xlim([mass_range[0]-.5,mass_range[1]+.5])
+		pl.ylim(ylim)
 		pl.title(title)
 		pl.xlabel('Mass Number')
 		pl.ylabel('Relative Abundance')

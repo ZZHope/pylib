@@ -19,6 +19,7 @@ specifying the element name, and the rest are spaces or numbers (in that strict
 order), exceft for the element names: Neut and Prot
 All the profile files in the directory have the same cycle attributes.	
 The cycle numbers of the 'filename'+xxxxx start at 0.
+PPN files allways end in .DAT and are not allowed any '.'
 """
 
 from numpy import *
@@ -255,6 +256,7 @@ class abu_vector(DataPlot,Utils):
 			 if it is 'cycNum' it will then  interpret it as a cycle 
 			 number
 		"""
+		
 		fname=self.findFile(fname,numType)
 		f=open(fname,'r')
 		lines=f.readlines()
@@ -263,7 +265,6 @@ class abu_vector(DataPlot,Utils):
 			
 		for i in range(len(lines)):
 			if lines[i].startswith('#'):
-				
 				lines[i]=lines[i].strip('#')
 				tmp=lines[i].split()
 				tmp1=[]
@@ -271,13 +272,15 @@ class abu_vector(DataPlot,Utils):
 					if tmp[j] != '=' or '':
 						tmp1.append(tmp[j])
 				tmp=tmp1
-				print tmp
 				for j in range(len(tmp)):
 					if tmp[j]== attri:
 						try:
 							return float(tmp[j+1])
 						except ValueError:
 							return str(tmp[j+1])
+
+			elif lines[i].startswith('H'):
+				abc=1+1 #do nothing
 			else:
 				print 'This cycle attribute does not exist'
 				print 'Returning None'
@@ -393,7 +396,7 @@ class abu_vector(DataPlot,Utils):
 		
 		return array(data)
 			
-	def get(self,attri,fname,numtype='cycNum'):
+	def get(self,attri,fname=None,numtype='cycNum'):
 		'''
 		In this method a column of data for the associated attribute is
 		returned
@@ -409,16 +412,44 @@ class abu_vector(DataPlot,Utils):
 		Output: Data in the form of a numpy array
 		
 		'''
-		if attri in self.cattrs:
-			return self.getCycleData(attri,fname,numtype)
-		elif attri in self.dcols:
-			return self.getColData(attri,fname,numtype)
-		elif attri in self.get('ISOTP',fname,numtype):
-			return self.getElement(attri,fname,numtype)
+		if str(fname.__class__)=="<type 'list'>":
+			isList=True
 		else:
-			print 'Attribute '+attri+ ' does not exist'
-			print 'Returning none'
-			return None
+			isList=False
+		
+		data=[]
+		
+		if fname==None:
+			fname=self.files
+			numtype='file'
+			isList=True
+		if isList:
+			
+			for i in xrange(len(fname)):
+				if attri in self.cattrs:
+					data.append(self.getCycleData(attri,fname[i],numtype))
+				elif attri in self.dcols:
+					data.append(self.getColData(attri,fname[i],numtype))
+				elif attri in self.get('ISOTP',fname,numtype):
+					data.append(self.getElement(attri,fname[i],numtype))
+				else:
+					print 'Attribute '+attri+ ' does not exist'
+					print 'Returning none'
+					return None
+		
+		else:
+			if attri in self.cattrs:
+				return self.getCycleData(attri,fname,numtype)
+			elif attri in self.dcols:
+				return self.getColData(attri,fname,numtype)
+			elif attri in self.get('ISOTP',fname,numtype):
+				return self.getElement(attri,fname,numtype)
+			else:
+				print 'Attribute '+attri+ ' does not exist'
+				print 'Returning none'
+				return None
+		
+		return data
 			
 	def _readFile(self,fname,sldir):
 		'''
@@ -430,11 +461,12 @@ class abu_vector(DataPlot,Utils):
 		
 		'''
 		cattrs=[]
-		if sldir.endswith('/'): 
+		if sldir.endswith(os.sep): 
 			#Making sure fname will be formated correctly
 			fname = str(sldir)+str(fname)
 		else:
-			fname = str(sldir)+'/'+str(fname)
+			fname = str(sldir)+os.sep+str(fname)
+			self.sldir+=os.sep
 		f=open(fname,'r')
 		lines=f.readlines()
 		for i in range(len(lines)):
@@ -464,59 +496,7 @@ class abu_vector(DataPlot,Utils):
 			elif not lines[i].startswith('H'):
 				index = i-1
 				break
-				
 		
-		'''
-		
-		cols=[]
-		for i in range(len(lines)):
-			if lines[i].startswith('#'):
-				
-				lines[i]=lines[i].strip('#')
-				tmp=lines[i].split()
-				tmp1=[]
-				for j in range(len(tmp)):
-					if tmp[j] != '=' or '':
-						tmp1.append(tmp[j])
-				tmp=tmp1
-				
-				j=0
-				while j <len(tmp):
-					cattrs[tmp[j]]=tmp[j+1]
-					j+=2
-			else:
-				cols.append(lines[i].split())
-		number=[]
-		z=[]
-		a=[]
-		yps=[]
-		name=[]
-		for i in range(len(cols)):
-			for j in range(len(cols[i])):
-				if j== 0:
-					number.append(int(float(cols[i][j])))
-				elif j== 1:
-					z.append(int(float(cols[i][j])))
-				elif j== 2:
-					a.append(int(float(cols[i][j])))
-				elif j== 3:
-					yps.append(float(cols[i][j]))
-				elif j== 4 and len(cols[i])==6:
-					name.append(str(cols[i][j])+' '+str(cols[i][j+1]))
-				elif j== 4 and len(cols[i])==5:
-					name.append(str(cols[i][j]))
-		number=array(number)
-		z=array(z)
-		a=array(a)
-		yps=array(yps)
-		
-		cols={}
-		cols['number']=number
-		cols['Z']=z
-		cols['A']=a
-		cols['abundance_yps']=yps
-		cols['element_name']=name
-		'''
 		
 		return cattrs,cols, index
 		
@@ -538,7 +518,7 @@ class abu_vector(DataPlot,Utils):
 		if numType=='FILE':
 			
 			#do nothing
-			return str(fname)
+			return self.sldir+fname
 		
 		elif numType=='CYCNUM':
 			try:
