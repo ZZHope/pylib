@@ -174,7 +174,7 @@ class DataPlot:
 				self.plot(atriX,atriY,cycList[i], legend=legend,base=base,sparse=sparse, logX=logX,logY=logY,show=False)
 		
 			pl.title(title)
-			self.clear()
+			
 			
 			
 			if xMin!=None and xMax!=None and yMin!=None and yMax!=None:
@@ -182,10 +182,10 @@ class DataPlot:
 				pl.ylim(yMin,yMax)
 			
 			if not pdf:
-				pl.savefig(title+'.png', dpi=100)
+				pl.savefig(title+str(cycList[i])+'.png', dpi=100)
 			else:
-				pl.savefig(title+'.pdf', dpi=100)
-				
+				pl.savefig(title+cycList[i]+'.pdf', dpi=100)
+			pl.clf()
 		return None
 	
 	def plot(self,atriX,atriY, FName=None,numType='ndump',legend=None,labelX=None, labelY=None ,
@@ -1181,11 +1181,18 @@ class DataPlot:
 			title = str('Abundance of Isotopes over range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
 				str(' for cycle %d' %int(cycle))
 		else:
-			if mass_range ==None:
-				title = str('Abundance of Isotopes for Cycle '+str(cycle))
+			if ref==-1:
+				if mass_range ==None:
+					title = str('Abundance of Isotopes for Cycle '+str(cycle))
+				else:
+					title = str('Abundance of Isotopes with A between '+str(mass_range[0])+' and '+str(mass_range[1])+' for Cycle '+str(cycle))
+					pl.xlim([mass_range[0]-.5,mass_range[1]+.5])
 			else:
-				title = str('Abundance of Isotopes with A between '+str(mass_range[0])+' and '+str(mass_range[1])+' for Cycle '+str(cycle))
-				pl.xlim([mass_range[0]-.5,mass_range[1]+.5])
+				if mass_range ==None:
+					title = str('Abundance of Isotopes for Cycle '+str(cycle))
+				else:
+					title = str('Abundance of Isotopes with A between '+str(mass_range[0])+' and '+str(mass_range[1])+' for Cycle '+str(cycle))
+					pl.xlim([mass_range[0]-.5,mass_range[1]+.5])
 		pl.ylim(ylim)
 		pl.title(title)
 		pl.xlabel('Mass Number')
@@ -1219,7 +1226,7 @@ class DataPlot:
 			    pl.savefig(filename, dpi=100) 
 			    print 'wrote file ', filename
 			    #
-			    pl.close()
+			    pl.clf()
 		else:
 			print 'This method is not supported for '+str(self.__class__)
 			return
