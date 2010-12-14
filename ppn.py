@@ -20,6 +20,7 @@ order), exceft for the element names: Neut and Prot
 All the profile files in the directory have the same cycle attributes.	
 The cycle numbers of the 'filename'+xxxxx start at 0.
 PPN files allways end in .DAT and are not allowed any '.'
+The can not be any blank lines in the data files
 """
 
 from numpy import *

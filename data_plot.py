@@ -27,7 +27,6 @@ import os
 import threading
 import time
 import sys
-import fdic
 
 class DataPlot:
 	
@@ -139,8 +138,6 @@ class DataPlot:
 				if (i%sparse)==0:
 					tmpX.append(x[i])
 					tmpY.append(y[i])
-			print tmpX
-			print tmpY
 			return tmpX, tmpY
 			
 	def plotMulti(self,atriX,atriY, cycList,title,legend=None ,logX=False, logY=False, base=10,sparse=1,pdf=False,xMin=None,xMax=None,yMin=None,Ymax=None):
@@ -176,19 +173,19 @@ class DataPlot:
 			else:
 				self.plot(atriX,atriY,cycList[i], legend=legend,base=base,sparse=sparse, logX=logX,logY=logY,show=False)
 		
-		pl.title(title)
-		self.clear()
-		
-		
-		if xMin!=None and xMax!=None and yMin!=None and yMax!=None:
-			pl.xlim(xMin,xMax)
-			pl.ylim(yMin,yMax)
+			pl.title(title)
+			self.clear()
 			
-		if not pdf:
-			pl.savefig(title+'.png', dpi=100)
-		else:
-			pl.savefig(title+'.pdf', dpi=100)
 			
+			if xMin!=None and xMax!=None and yMin!=None and yMax!=None:
+				pl.xlim(xMin,xMax)
+				pl.ylim(yMin,yMax)
+			
+			if not pdf:
+				pl.savefig(title+'.png', dpi=100)
+			else:
+				pl.savefig(title+'.pdf', dpi=100)
+				
 		return None
 	
 	def plot(self,atriX,atriY, FName=None,numType='ndump',legend=None,labelX=None, labelY=None ,
@@ -301,12 +298,6 @@ class DataPlot:
 			print 'Sorry that indexX does not exist, returning None'
 			return None
 								
-		'''
-		elif indexX==None and len(listX)==1:
-			tmpX=listX
-		'''
-		
-		
 		#Determining if listY is a list or a list of lists
 		try:
 			j=listY[0][0]
@@ -371,6 +362,7 @@ class DataPlot:
 			print 'It seems that the selected lists are of different\nsize, now returning none'
 			return None
 		# Sparse stuff
+		
 		tmpX,tmpY=self.sparse(tmpX,tmpY, sparse)
 		
 		# Logarithm stuff
@@ -787,7 +779,7 @@ class DataPlot:
 		pl.show()
 		return
 		
-	def iso_abund(self,  cycle, stable=False,mass_range=None,ylim=[1e-13,10]):
+	def iso_abund(self,  cycle, stable=False,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
@@ -803,6 +795,11 @@ class DataPlot:
 				Defaults to None	     
 		    ylim - A 1x2 array containing the lower and upper Y limits.
 		    	   Defaults to 1e-13 and 10
+		    ref  - reference cycle, If it is not -1, this method will 
+		    plot the abundences of cycle devided by the .
+		    	   The default is -1, it will do nothing
+		    Shape -The Shape of the dataplots, will default to circles 
+		    	  
 		'''
 		elem_list = []
 		elem_index = []
@@ -814,6 +811,10 @@ class DataPlot:
 			return None
 		if plotType=='se':
 			isotope_to_plot = self.se.isotopes
+			
+			z=self.se.Z #charge
+			a=self.se.A #mass
+			isomers=self.se.isomeric_states
 			abunds = self.se.get(cycle,'iso_massf')
 			masses = self.se.get(cycle,'mass')
 			if mass_range == None:
@@ -821,18 +822,31 @@ class DataPlot:
 			    mass_range = [min(masses),max(masses)]    
 			masses.sort()
 			mass_range.sort()
+			isom=[]
+			tmp=[]
+			for i in range (len(isotope_to_plot)):
+				if z[i]!=0 and isomers[i]==1: #if its not 'NEUt and not an isomer'
+					tmp.append(self.elements_names[int(z[i])]+'-'+str(int(a[i])),)
+				elif isomers[i]!=1: #if it is an isomer
+					isom.append(self.elements_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)))	
+						
+			
+			
 		elif plotType=='PPN':
 			isotope_to_plot = self.get('ISOTP', cycle)
 			z=self.get('Z', cycle) #charge
 			a=self.get('A', cycle) #mass
 			isomers=self.get('ISOM', cycle)
 			yps=self.get('ABUNDNACE_MF', cycle)
+			if ref >-1:
+				ypsRef=self.get('ABUNDNACE_MF', ref)
 			if mass_range != None:
 				tmpA=[]
 				tmpZ=[]
 				tmpIso=[]
 				tmpIsom=[]
 				tmpyps=[]
+				tmpypsRef=[]
 				for i in xrange(len(a)):
 					if (a[i] >mass_range[0] and a[i]<mass_range[1]) or (a[i]==mass_range[0] or a[i]==mass_range[1]):
 						tmpA.append(a[i])
@@ -840,11 +854,25 @@ class DataPlot:
 						tmpIso.append(isotope_to_plot[i])
 						tmpIsom.append(isomers[i])
 						tmpyps.append(yps[i])
+						if ref >-1:
+							tmpypsRef.append(ypsRef[i])
 				isotope_to_plot=tmpIso
 				z=tmpZ
 				a=tmpA
 				isomers=tmpIsom
 				yps=tmpyps
+				ypsRef=tmpypsRef
+				
+			if ref >-1 and len(yps)!=len(ypsRef):
+				print 'Refrence Cycle mismatch, Aborting plot'
+				return None
+			
+			for i in xrange(len(yps)):
+				if ref >-1:
+					if ypsRef[i]!=0:
+						yps[i]=yps[i]/ypsRef[i]
+					else:
+						yps[i]=yps[i]/1e-99
 			tmp1=[]
 			tmp=[]
 			isom=[]
@@ -852,8 +880,14 @@ class DataPlot:
 			for i in range (len(isotope_to_plot)):
 				if z[i]!=0 and isomers[i]==1: #if its not 'NEUt and not an isomer'
 					tmp.append([self.elements_names[int(z[i])]+'-'+str(int(a[i])),yps[i]])
-				elif isomers[i]==1: #if it is an isomer
-					isom.append([isotope_to_plot[i],yps[i]])	
+				elif isomers[i]!=1: #if it is an isomer
+					
+					if yps[i]==0:
+						
+						isom.append([self.elements_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)),1e-99])
+					else:
+						isom.append([self.elements_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)),yps[i]])	
+					
 			
 			tmp.sort(self.compar)
 			tmp.sort(self.comparator)
@@ -883,7 +917,7 @@ class DataPlot:
 		#        print 'I was unable to correct your cycle.  Please check that it exists in your dataset.'
 		
 		print 'Using The following conditions:'
-		if  plotType=='se':
+		if  plotType=='se' or mass_range != None:
 			print '\tmass_range:', mass_range[0], mass_range[1]
 		print '\tcycle:', cycle
 		print '\tplot only stable:',stable
@@ -1026,20 +1060,22 @@ class DataPlot:
 	        				
 	        		abund_plot.append(tmp)
 		#print cycle
-		#print abund_plot
+		
 		
 		#temp3 = []
 		mass_num = []
-		#print index
-		for j in xrange(len(index)):
 		
+		
+		#for j in xrange(len(index)):
+		for j in xrange(len(elem_index)):
+		    
 		    temp = []
 		    #temp2 = []    
 		    try:
 			
-			for k in xrange(len(elem_index[index[j]])):
-			
-			    temp.append(float(isotope_to_plot[elem_index[index[j]][k]].split('-')[1]))
+			for k in xrange(len(elem_index[j])):
+				
+				temp.append(float(isotope_to_plot[elem_index[j][k]].split('-')[1]))
 	
 			mass_num.append(temp)
 		    #temp3.append(temp2)
@@ -1058,8 +1094,6 @@ class DataPlot:
 		
 		l1 = []
 		l2 = []        
-		#print len(index)
-		
 		
 		#print abund_plot,mass_num
 		for j in xrange(len(abund_plot)):        #Loop through the elements of interest
@@ -1067,7 +1101,7 @@ class DataPlot:
 		    #print 'processing line'
 		    for l in xrange(len(abund_plot[j])):
 			if abund_plot[j][l] == 0:
-			    abund_plot[j][l] = 1e-20
+			    abund_plot[j][l] = 1e-99
 			    
 			    
 		    
@@ -1083,12 +1117,35 @@ class DataPlot:
 		    except IndexError:
 			None
 			#print 'div by zero'
-			    
+		    
 			
 		    try:
-			coordinates = [mass_num[j][abund_plot[j].index(max(abund_plot[j]))],max(abund_plot[j])]     
-			pl.text(coordinates[0],coordinates[1], elem_list[index[j]])
-			    #print self.parent.elem_list[self.index[j]],coordinates[0],coordinates[1]
+		    	
+		    	tmpList=[0,0]
+		    	for i in xrange(len(abund_plot[j])):
+		    		
+		    		coordinates=[mass_num[j][i],abund_plot[j][i]]
+		    		
+		    		
+				if coordinates[1]<=ylim[1] and coordinates[1]>=ylim[0]:
+					if coordinates[1]>tmpList[1]:
+						if mass_range !=None and plotType=='PPN' :
+							if coordinates[0]>=mass_range[0]-.5 and coordinates[0]<=mass_range[1]+.5:
+								tmpList=coordinates
+								
+						elif plotType=='PPN':
+							tmpList=coordinates
+							
+						elif plotType!='PPN':
+							tmpList=coordinates
+							
+				#print self.parent.elem_list[self.index[j]],coordinates[0],coordinates[1]
+			coordinates=tmpList
+			
+			if coordinates != [0,0]:
+				
+				pl.text(coordinates[0],coordinates[1], elem_list[j])
+		
 		    except ValueError:
 			None
 			#print 'Empty var:  ', abund_plot[j]
@@ -1097,14 +1154,29 @@ class DataPlot:
 			#print 'out of bounds: ', len(abund_plot), j
 			    
 		    try:
-			pl.semilogy(mass_num[j],abund_plot[j],'bo')
+			pl.semilogy(mass_num[j],abund_plot[j],'b'+shape)
 		    except OverflowError:
 			None
 			#print 'div by zero', len(mass_num[j]), len(abund_plot[j])
 		    except IndexError:
 			None
 			#print 'out of bounds II: ', len(mass_num),len(abund_plot),j
-			
+		pl_index = 0
+		
+		cl_index = 0
+		
+		for j in xrange(len(isom)):
+			pl.semilogy(isom[j][0].split('-')[1],isom[j][1],'r'+shape)#,str(colors[cl_index]+plot_type[pl_index])))
+			cl_index+=1
+			pl_index+=1
+			if pl_index > 2:
+			    pl_index = 0
+			if cl_index > 4:
+			    cl_index = 0
+			coordinates=[int(isom[j][0].split('-')[1]),isom[j][1]]
+			name=isom[j][0]
+
+			pl.text(coordinates[0],coordinates[1], name.split('-')[0]+'m'+name.split('-')[2])
 		if plotType=='se':
 			title = str('Abundance of Isotopes over range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
 				str(' for cycle %d' %int(cycle))

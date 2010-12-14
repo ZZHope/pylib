@@ -216,7 +216,7 @@ class ascii_table(DataPlot):
 #Global methods
 
 		
-def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajectory=False):
+def write(fileName,dcols,data,headers=None,headerLines=[],sldir='.',sep='  ',trajectory=False):
 		'''
 		Method for writeing Ascii files.
 		Note the attribute name at position i in dcols will be associated
@@ -226,8 +226,8 @@ def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajecto
 		Also all the lengths of that columns must all be the same.
 		Input:
 		fileName: The file where this data will be written.
-		Headers: A list of Header strings or if the file being writtin 
-			 is  of type trajectory, This is a dictionary of header 
+		Headers: A list of Header strings or if the file being written 
+			 is of type trajectory, this is a dictionary of header 
 			 attributes and their associated values
 		dcols: A list of data attributes
 		data:  A list of lists (or of numpy arrays).
@@ -263,7 +263,8 @@ def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajecto
 			print 'returning none'
 			return None
 		if trajectory:
-			
+			if headers ==None:
+				headers={}
 			keys=headers.keys()
 			sep=' '
 		for i in xrange(len(headers)):
