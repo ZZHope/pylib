@@ -159,7 +159,8 @@ class DataPlot:
 			
 	def plotMulti(self,atriX,atriY, cycList,title,legend=None,labelX=None, labelY=None,logX=False, logY=False, base=10,sparse=1,pdf=False,limits=None,):
 		'''
-		Method for superimposing multiple plots and saving it to a png or PDF
+		Method for plotting multiple plots and saving it to multiple pngs 
+		or PDFs
 		Input:
 		atriX: The name of the attribute you want on the x axis
 		atriY: The name of the attribute you want on the Y axis
@@ -178,6 +179,7 @@ class DataPlot:
 		limits: The length four list of the x and y limits. The order of
 			the list is xmin,xmax,ymin,ymax
 		'''
+		print 'This method may achieve speedup by calling this method from python or ipython, rather than ipython --pylab --q4thread'
 		if str(legend.__class__)!="<type 'list'>":# Determines the legend is a list
 			legendList=False
 		else:
@@ -505,7 +507,7 @@ class DataPlot:
 			return 0
 		if indX<indY:
 			return -1
-	def abu_chartMulti(self,cycList, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotaxis=[0,0,0,0],pdf=False):
+	def abu_chartMulti(self,cycList, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotAxis=[0,0,0,0],pdf=False,title=None):
 		'''
 		Method that plots figures and saves those figures to a .png file 
 		(by default). Plots a figure for each cycle in the argument cycle
@@ -517,22 +519,18 @@ class DataPlot:
 		plotaxis: Set axis limit: If default [0,0,0,0] the complete 
 			  range in (N,Z) will be plotted
 			  format: What format will this be saved in ['pdf'/'png']
-		mass_range - a 1x2 array containing the lower and upper mass range.
-		    		 If this is an instance of abu_vector this will 
-		    		 only plot isotopes that have an atominc mass 
-		    		 within this range. This will throw an error if
-		    		 this range does not make sence ie [45,2]
-			 	if None, it will plot over the entire range
-				Defaults to None
+		title: The title of the plots and the saved images
 		'''
-		title=None
-		if self.write('dvipng')==None:
+		print 'This method may achieve speedup calling this method from python or ipython, rather than ipython --pylab --q4thread'
+		
+		
+		if self.which('dvipng')==None:
 			print "This method needs the third party program dvipng to operate"
 			print 'It is located at http://sourceforge.net/projects/dvipng/'
 			print 'Returning None'
 			return None
 		for i in xrange(len(cycList)):
-			self.abu_chart( cycList[i], mass_range ,ilabel,imlabel,imagic,plotaxis)
+			self.abu_chart( cycList[i], mass_range ,ilabel,imlabel,imagic,plotAxis,False)
 			if title !=None:
 				pl.title(title)
 			else:
@@ -545,7 +543,7 @@ class DataPlot:
 		
 		return None
 	#from mppnp.se
-	def abu_chart(self, cycle, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotaxis=[0,0,0,0]):
+	def abu_chart(self, cycle, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotAxis=[0,0,0,0], show=True):
 		'''
 		Plots an abundence chart
 		input:
@@ -577,7 +575,7 @@ class DataPlot:
 		#inpfile = cycle
 		#ff = fdic.ff(inpfile)
 		if str(cycle.__class__)=="<type 'list'>":
-			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,plotaxis)
+			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,plotAxis)
 			return
 		plotType=self.classTest()
 		
@@ -669,12 +667,12 @@ class DataPlot:
 		#### create plot
 		
 		## define axis and plot style (colormap, size, fontsize etc.)
-		if plotaxis==[0,0,0,0]:
+		if plotAxis==[0,0,0,0]:
 		  xdim=10
 		  ydim=6
 		else:
-		  dx = plotaxis[1]-plotaxis[0]
-		  dy = plotaxis[3]-plotaxis[2]
+		  dx = plotAxis[1]-plotAxis[0]
+		  dy = plotAxis[3]-plotAxis[2]
 		  ydim = 6
 		  xdim = ydim*dx/dy
 		  
@@ -753,7 +751,7 @@ class DataPlot:
 		cb.set_label('log$_{10}$(Y)')
 		  
 		# plot file name
-		graphname = 'abundance-chart'
+		graphname = 'abundance-chart'+str(cycle)
 		  
 		# Add black frames for stable isotopes
 		'''
@@ -828,13 +826,13 @@ class DataPlot:
 			dummy=0
 		
 		# set axis limits
-		if plotaxis==[0,0,0,0]:
+		if plotAxis==[0,0,0,0]:
 		  
 		  xmax=max(nin)
 		  ymax=max(zin)
 		  ax.axis([-0.5,xmax+0.5,-0.5,ymax+0.5])
 		else:
-		  ax.axis(plotaxis)
+		  ax.axis(plotAxis)
 		
 		# set x- and y-axis label
 		ax.set_xlabel('neutron number')
@@ -842,11 +840,11 @@ class DataPlot:
 		
 		#fig.savefig(graphname)
 		print graphname,'is done'
-		
-		pl.show()
+		if show:
+			pl.show()
 		return
 		
-	def iso_abundMulti(self,cycList, stable=False,mass_range=None,
+	def iso_abundMulti(self,cycList, stable=False,Amass_range=None,mass_range=None,
 		ylim=[1e-13,10],shape='o',ref=-1,title=None,pdf=False):
 		'''
 		Method that plots figures and saves those figures to a .png file 
@@ -855,6 +853,10 @@ class DataPlot:
 		 cycle       - a string/integer of the cycle of interest.
 		 stable     - a boolean of whether to filter out the unstables.
 		    		Defaults to False
+		 Amass_range -a 1x2 array containing the lower and upper Atomic
+		    		 mass range. If not None this method will only 
+		    		 plot the isomers with an atomic mass that
+		    		 appears with in this range.
 		 mass_range - a 1x2 array containing the lower and upper mass range.
 		    		 If this is an instance of abu_vector this will 
 		    		 only plot isotopes that have an atominc mass 
@@ -891,26 +893,38 @@ class DataPlot:
 			pl.clf()
 		
 		return None
-	
-	
-	def iso_abund(self,cycle, stable=False,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True):
+		
+	def read(self,fileName,sldir)
+	'''
+	Method for reading very simple data files for refrence cycles.
+	The data files are just 3 columns, atomic mass, followed by isotope name
+	followed by the abundence
+	'''
+		None
+		
+	def iso_abund(self,cycle, stable=False,Amass_range=None,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
 		    cycle       - a string/integer of the cycle of interest.
 		    stable     - a boolean of whether to filter out the unstables.
 		    		Defaults to False
+		    Amass_range -a 1x2 array containing the lower and upper Atomic
+		    		 mass range. If not None this method will only 
+		    		 plot the isomers with an atomic mass that
+		    		 appears with in this range.
 		    mass_range - a 1x2 array containing the lower and upper mass range.
 		    		 If this is an instance of abu_vector this will 
 		    		 only plot isotopes that have an atominc mass 
 		    		 within this range. This will throw an error if
-		    		 this range does not make sence ie [45,2]
+		    		 this range does not make sense ie [45,2]
 			 	if None, it will plot over the entire range
 				Defaults to None	     
 		    ylim - A 1x2 array containing the lower and upper Y limits.
 		    	   Defaults to 1e-13 and 10
 		    ref  - reference cycle, If it is not -1, this method will 
-		    plot the abundences of cycle devided by the .
+		    	   plot the abundences of cycle devided by the refrence
+		    	   Cycle. Note Not working for se
 		    	   The default is -1, it will do nothing
 		    Shape -The Shape of the dataplots, will default to circles 
 		    
@@ -921,10 +935,14 @@ class DataPlot:
 		masses = []
 		plotType=self.classTest()
 		if str(cycle.__class__)=="<type 'list'>":
-			self.iso_abundMulti(cycle, stable,mass_range,ylim,shape,ref)
+			self.iso_abundMulti(cycle, stable,Amass_range,mass_rangeylim,shape,ref)
 			return
 		if mass_range!=None and mass_range[0]>mass_range[1]:
 			print 'Please input a proper mass range'
+			print 'Returning None'
+			return None
+		if Amass_range!=None and Amass_range[0]>Amass_range[1]:
+			print 'Please input a proper Atomic mass range'
 			print 'Returning None'
 			return None
 		if plotType=='se':
@@ -934,20 +952,73 @@ class DataPlot:
 			a=self.se.A #mass
 			isomers=self.se.isomeric_states
 			abunds = self.se.get(cycle,'iso_massf')
+			if ref >-1:
+				abundsRef=self.se.get(ref,'iso_massf')
 			masses = self.se.get(cycle,'mass')
 			if mass_range == None:
 			    print 'Using default mass range'
 			    mass_range = [min(masses),max(masses)]    
 			masses.sort()
 			mass_range.sort()
+			if Amass_range != None:
+				tmpA=[]
+				tmpZ=[]
+				tmpIso=[]
+				tmpIsom=[]
+				tmpyps=[]
+				if ref >-1:
+					tmpRef=[]
+				for i in xrange(len(abunds)):
+					tmpyps.append([])
+					if ref >-1:
+						tmpRef.append([])
+				for i in xrange(len(a)):
+					if (a[i] >=Amass_range[0] and a[i]<=Amass_range[1]):
+						tmpA.append(a[i])
+						tmpZ.append(z[i])
+						tmpIso.append(isotope_to_plot[i])
+						tmpIsom.append(isomers[i])
+						for j in xrange(len(abunds)):
+							tmpyps[j].append(abunds[j][i])
+							if ref >-1:
+								tmpRef[j].append(abunds[j][i])
+				isotope_to_plot=tmpIso
+				z=tmpZ
+				a=tmpA
+				isomers=tmpIsom
+				abunds=tmpyps
+				if ref >-1:
+					abundsRef=tmpRef
+			
 			isom=[]
 			tmp=[]
 			for i in range (len(isotope_to_plot)):
 				if z[i]!=0 and isomers[i]==1: #if its not 'NEUt and not an isomer'
-					tmp.append(self.elements_names[int(z[i])]+'-'+str(int(a[i])),)
+					tmp.append(self.elements_names[int(z[i])]+'-'+str(int(a[i])))
 				elif isomers[i]!=1: #if it is an isomer
 					isom.append(self.elements_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)))	
-						
+			isotope_to_plot=tmp
+			#tmp.sort(self.compar)
+			#tmp.sort(self.comparator)			
+			#for i in xrange(len(tmp)):
+			#	isotope_to_plot.append(tmp[i][0])
+			
+			if ref >-1 and len(abunds)!=len(abundsRef):
+				print 'Refrence Cycle mismatch, Aborting plot'
+				return None
+			if ref >-1:	
+				for i in xrange(len(abunds)):
+					if len(abunds[i])!=len(abundsRef[i]):
+						print 'Refrence Cycle mismatch, Aborting plot'
+						return None
+					for j in xrange(len(abunds[i])):
+						if abundsRef[i][j]!=0:
+							
+							abunds[i][j]=abunds[i][j]/abundsRef[i][j]
+						else:
+							print i,j
+							abunds[i][j]=abunds[i][j]/1e-99
+				
 			
 			
 		elif plotType=='PPN':
@@ -958,7 +1029,7 @@ class DataPlot:
 			yps=self.get('ABUNDNACE_MF', cycle)
 			if ref >-1:
 				ypsRef=self.get('ABUNDNACE_MF', ref)
-			if mass_range != None:
+			if Amass_range != None:
 				tmpA=[]
 				tmpZ=[]
 				tmpIso=[]
@@ -966,7 +1037,7 @@ class DataPlot:
 				tmpyps=[]
 				tmpypsRef=[]
 				for i in xrange(len(a)):
-					if (a[i] >mass_range[0] and a[i]<mass_range[1]) or (a[i]==mass_range[0] or a[i]==mass_range[1]):
+					if (a[i] >=Amass_range[0] and a[i]<=Amass_range[1]):
 						tmpA.append(a[i])
 						tmpZ.append(z[i])
 						tmpIso.append(isotope_to_plot[i])
@@ -984,12 +1055,13 @@ class DataPlot:
 			if ref >-1 and len(yps)!=len(ypsRef):
 				print 'Refrence Cycle mismatch, Aborting plot'
 				return None
-			
-			for i in xrange(len(yps)):
-				if ref >-1:
+				
+			if ref >-1:
+				for i in xrange(len(yps)):
 					if ypsRef[i]!=0:
 						yps[i]=yps[i]/ypsRef[i]
 					else:
+						print 'hello'
 						yps[i]=yps[i]/1e-99
 			tmp1=[]
 			tmp=[]
@@ -1035,8 +1107,10 @@ class DataPlot:
 		#        print 'I was unable to correct your cycle.  Please check that it exists in your dataset.'
 		
 		print 'Using The following conditions:'
-		if  plotType=='se' or mass_range != None:
+		if mass_range != None:
 			print '\tmass_range:', mass_range[0], mass_range[1]
+		if Amass_range != None:
+			print '\tAtomic mass_range:', Amass_range[0], Amass_range[1]
 		print '\tcycle:', cycle
 		print '\tplot only stable:',stable
 		
@@ -1179,7 +1253,6 @@ class DataPlot:
 	        		abund_plot.append(tmp)
 		#print cycle
 		
-		
 		#temp3 = []
 		mass_num = []
 		
@@ -1247,8 +1320,8 @@ class DataPlot:
 		    		
 				if coordinates[1]<=ylim[1] and coordinates[1]>=ylim[0]:
 					if coordinates[1]>tmpList[1]:
-						if mass_range !=None and plotType=='PPN' :
-							if coordinates[0]>=mass_range[0]-.5 and coordinates[0]<=mass_range[1]+.5:
+						if Amass_range !=None:
+							if coordinates[0]>=Amass_range[0]-.5 and coordinates[0]<=Amass_range[1]+.5:
 								tmpList=coordinates
 								
 						elif plotType=='PPN':
@@ -1298,19 +1371,21 @@ class DataPlot:
 		if plotType=='se':
 			title = str('Abundance of Isotopes over range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
 				str(' for cycle %d' %int(cycle))
+			if Amass_range !=None:
+				pl.xlim([Amass_range[0]-.5,Amass_range[1]+.5])
 		else:
 			if ref==-1:
-				if mass_range ==None:
+				if Amass_range ==None:
 					title = str('Abundance of Isotopes for Cycle '+str(cycle))
 				else:
-					title = str('Abundance of Isotopes with A between '+str(mass_range[0])+' and '+str(mass_range[1])+' for Cycle '+str(cycle))
-					pl.xlim([mass_range[0]-.5,mass_range[1]+.5])
+					title = str('Abundance of Isotopes with A between '+str(Amass_range[0])+' and '+str(Amass_range[1])+' for Cycle '+str(cycle))
+					pl.xlim([Amass_range[0]-.5,Amass_range[1]+.5])
 			else:
-				if mass_range ==None:
+				if Amass_range ==None:
 					title = str('Abundance of Isotopes for Cycle '+str(cycle))
 				else:
-					title = str('Abundance of Isotopes with A between '+str(mass_range[0])+' and '+str(mass_range[1])+' for Cycle '+str(cycle))
-					pl.xlim([mass_range[0]-.5,mass_range[1]+.5])
+					title = str('Abundance of Isotopes with A between '+str(Amass_range[0])+' and '+str(Amass_range[1])+' for Cycle '+str(cycle))
+					pl.xlim([Amass_range[0]-.5,Amass_range[1]+.5])
 		pl.ylim(ylim)
 		pl.title(title)
 		pl.xlabel('Mass Number')
