@@ -180,23 +180,23 @@ class xtime(DataPlot):
 class abu_vector(DataPlot,Utils):
 	'''
 	Class for reading selem00xxxx.DAT files
-	Example run through:
+	Example run through for cycle 0:
 	>>> import ppn
 	>>> p=ppn.abu_vector('./run/')
 	18 numbers found in run
-	>>> p.get('Z')
+	>>> p.get('Z',0)
 	array([1, 2, 2, 4, 5, 3, 6, 6, 7, 7, 6, 7, 8, 8, 8, 9, 9, 9])
-	>>> p.get('abundance_yps')
+	>>> p.get('ABUNDNACE_MF',0)
 	array([  1.43722000e-10,   1.00000000e-99,   9.81499000e-01,
          4.08738000e-20,   1.00000000e-99,   2.06944000e-21,
          3.42800000e-04,   9.62307000e-05,   1.05081000e-12,
          1.25518000e-02,   1.90131000e-08,   1.42230000e-07,
          4.98449000e-05,   4.80246000e-07,   4.24345000e-12,
          9.85201000e-17,   6.30866000e-16,   9.12726000e-11])
-        >>> p.getElement('C 14')
+        >>> p.getElement('C 14',0)
         array([  1.50000000e+01,   6.00000000e+00,   1.40000000e+01,
          1.90131000e-08])
-        >>> p.plot('abundance_yps', 'Z')
+        >>> p.plot('abundance_yps', 'Z',0)
 	plots data
 	'''
 	sldir=''  #Standard Directory
@@ -230,8 +230,9 @@ class abu_vector(DataPlot,Utils):
 			filelength=len(filenames)+4
 		    	if filenames in f[i] and 'DAT' in f[i] and '~' not in f[i] and len(f[i])>filelength and 'restart' not in f[i]:
 		    		self.files.append(f[i])
-		   
+		
 		self.files.sort()
+		
 		if len(self.files)==0: 
 			# If there are no selem Files in thes Directory
 		    	print 'Error: no '+filenames+ ' named files exist in Directory'

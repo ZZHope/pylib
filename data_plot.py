@@ -57,7 +57,26 @@ class DataPlot:
 			tmp='PPN'
 		
 		return tmp
+		
+	def which(self, program):
+	    '''
+	    Mimics which in the unix shell
+	    '''
+	    def is_exe(fpath):
+		return os.path.exists(fpath) and os.access(fpath, os.X_OK)
 	
+	    fpath, fname = os.path.split(program)
+	    if fpath:
+		if is_exe(program):
+		    return program
+	    else:
+		for path in os.environ["PATH"].split(os.pathsep):
+		    exe_file = os.path.join(path, program)
+		    if is_exe(exe_file):
+			return exe_file
+	
+	    return None
+
 	def logarithm(self,tmpX,tmpY,logX,logY,base):
 		logXER=False
 		logYER=False
@@ -132,15 +151,13 @@ class DataPlot:
 			
 			for i in range(len(x)):
 				if sparse == 1:
-					print x
-					print y
 					return x,y
 				if (i%sparse)==0:
 					tmpX.append(x[i])
 					tmpY.append(y[i])
 			return tmpX, tmpY
 			
-	def plotMulti(self,atriX,atriY, cycList,title,legend=None ,logX=False, logY=False, base=10,sparse=1,pdf=False,xMin=None,xMax=None,yMin=None,Ymax=None):
+	def plotMulti(self,atriX,atriY, cycList,title,legend=None,labelX=None, labelY=None,logX=False, logY=False, base=10,sparse=1,pdf=False,limits=None,):
 		'''
 		Method for superimposing multiple plots and saving it to a png or PDF
 		Input:
@@ -158,6 +175,8 @@ class DataPlot:
 		sparse: Argument that skips every so many data points. For 
 			example if this argument was 5, This method would plot
 			the 0th, 5th, 10th ... elements.
+		limits: The length four list of the x and y limits. The order of
+			the list is xmin,xmax,ymin,ymax
 		'''
 		if str(legend.__class__)!="<type 'list'>":# Determines the legend is a list
 			legendList=False
@@ -169,18 +188,11 @@ class DataPlot:
 			return None
 		for i in xrange(len(cycList)):
 			if legendList:
-				self.plot(atriX,atriY,cycList[i], legend=legend[i],base=base,sparse=sparse, logX=logX,logY=logY,show=False)
+				self.plot(atriX,atriY,cycList[i],'ndump',legend[i],labelX,labelY,base=base,sparse=sparse, logX=logX,logY=logY,show=False,limits=limits)
 			else:
-				self.plot(atriX,atriY,cycList[i], legend=legend,base=base,sparse=sparse, logX=logX,logY=logY,show=False)
-		
+				self.plot(atriX,atriY,cycList[i],'ndump',legend,labelX,labelY,base=base,sparse=sparse, logX=logX,logY=logY,show=False,limits=limits)
+			
 			pl.title(title)
-			
-			
-			
-			if xMin!=None and xMax!=None and yMin!=None and yMax!=None:
-				pl.xlim(xMin,xMax)
-				pl.ylim(yMin,yMax)
-			
 			if not pdf:
 				pl.savefig(title+str(cycList[i])+'.png', dpi=100)
 			else:
@@ -189,14 +201,17 @@ class DataPlot:
 		return None
 	
 	def plot(self,atriX,atriY, FName=None,numType='ndump',legend=None,labelX=None, labelY=None ,
-		indexX=None, indexY=None, title=None, shape='.',logX=False, logY=False, base=10,sparse=1, show=True):
+		indexX=None, indexY=None, title=None, shape='.',logX=False, logY=False, base=10,sparse=1, show=True,limits=None):
 		"""
 		Simple function that plots atriY as a function of atriX
 		This method will automatically find and plot the requested data.
 		Input:
 		atriX, The name of the attribute you want on the x axis
 		atriY, The name of the attribute you want on the Y axis
-		Fname: Be the filename, Ndump or time, or cycle
+		Fname: Be the filename, Ndump or time, or cycle,  If fname is a 
+		       list, this method will then save a png for each cycle in
+		       the list. Warning, this must be a list of cycles and only
+		       a list of cycles
 		numType: designates how this function acts and how it interprets 
 			 FName. Defaults to file
 		if numType is 'file', this function will get the desird 
@@ -225,8 +240,25 @@ class DataPlot:
 		show: A boolean of if the plot should be displayed> usefull with
 			the multiPlot method
 		WARNING: Unstable if get returns a list with only one element (x=[0])
+		limits: The length four list of the x and y limits. The order of
+			the list is xmin,xmax,ymin,ymax
 		"""
 		
+		#Setting the axis labels
+
+		if labelX== None :
+			labelX=atriX
+		if labelY== None :
+			labelY=atriY
+		
+		if title!=None:
+			title=title
+		else:
+			title=labelY+' vs '+labelX
+			
+		if str(FName.__class__)=="<type 'list'>":
+			self.plotMulti(atriX,atriY,FName,title,legend ,labelX,labelY,logX, logY, 10,1,limits=limits)
+			return
 		tmpX=[]
 		tmpY=[]
 		singleX=False
@@ -341,7 +373,6 @@ class DataPlot:
 			for i in range(len(listY)):
 				if not singleY and len(tmpX)==len(listY[i]):
 					tmpY=listY[i]
-					#print listY[i]
 					found=True
 
 			if not found:
@@ -362,7 +393,6 @@ class DataPlot:
 			print 'It seems that the selected lists are of different\nsize, now returning none'
 			return None
 		# Sparse stuff
-		
 		tmpX,tmpY=self.sparse(tmpX,tmpY, sparse)
 		
 		# Logarithm stuff
@@ -389,26 +419,18 @@ class DataPlot:
 		listY=tmpY
 		
 		#Setting the axis labels
-
-		if labelX== None :
-			labelX=atriX
-		if labelY== None :
-			labelY=atriY
 		
 		if logX:
 			labelX='log '+labelX
 		if logY:
 			labelY='log '+labelY
 		
-		if title!=None:
-			title=title
-		else:
-			title=labelY+' vs '+labelX
-		
 		if legend!=None:
 			legend=legend
 		else:
 			legend=labelY+' vs '+labelX	
+		
+		
 			
 		pl.plot(listX,listY,shape,label=legend)
 		pl.legend()
@@ -417,6 +439,11 @@ class DataPlot:
 		pl.ylabel(labelY)
 		if show:
 			pl.show()
+
+		if limits != None and len(limits)==4:
+			
+			pl.xlim(limits[0],limits[1])
+			pl.ylim(limits[2],limits[3])
 		
 		
 	def clear(self, title=True, xlabel=True, ylabel=True):
@@ -478,9 +505,47 @@ class DataPlot:
 			return 0
 		if indX<indY:
 			return -1
-			
+	def abu_chartMulti(self,cycList, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotaxis=[0,0,0,0],pdf=False):
+		'''
+		Method that plots figures and saves those figures to a .png file 
+		(by default). Plots a figure for each cycle in the argument cycle
+		input:
+		cycle: The cycle we are looking in
+		ilabel: elemental labels off/on [0/1]
+		imlabel: label for isotopic masses off/on [0/1]
+		imagic:  turn lines for magic numbers off/on [0/1]
+		plotaxis: Set axis limit: If default [0,0,0,0] the complete 
+			  range in (N,Z) will be plotted
+			  format: What format will this be saved in ['pdf'/'png']
+		mass_range - a 1x2 array containing the lower and upper mass range.
+		    		 If this is an instance of abu_vector this will 
+		    		 only plot isotopes that have an atominc mass 
+		    		 within this range. This will throw an error if
+		    		 this range does not make sence ie [45,2]
+			 	if None, it will plot over the entire range
+				Defaults to None
+		'''
+		title=None
+		if self.write('dvipng')==None:
+			print "This method needs the third party program dvipng to operate"
+			print 'It is located at http://sourceforge.net/projects/dvipng/'
+			print 'Returning None'
+			return None
+		for i in xrange(len(cycList)):
+			self.abu_chart( cycList[i], mass_range ,ilabel,imlabel,imagic,plotaxis)
+			if title !=None:
+				pl.title(title)
+			else:
+				name='AbuChart'
+			if not pdf:
+				pl.savefig(name+str(cycList[i])+'.png', dpi=100)
+			else:
+				pl.savefig(name+cycList[i]+'.pdf', dpi=100)
+			pl.clf()
+		
+		return None
 	#from mppnp.se
-	def abu_chart(self, cycle, mass_range=None ,ilabel = 1,imlabel = 1,imagic = 0,plotaxis=[0,0,0,0],format = 'pdf'):
+	def abu_chart(self, cycle, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotaxis=[0,0,0,0]):
 		'''
 		Plots an abundence chart
 		input:
@@ -511,7 +576,9 @@ class DataPlot:
 		# read data file
 		#inpfile = cycle
 		#ff = fdic.ff(inpfile)
-		
+		if str(cycle.__class__)=="<type 'list'>":
+			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,plotaxis)
+			return
 		plotType=self.classTest()
 		
 		
@@ -611,7 +678,7 @@ class DataPlot:
 		  ydim = 6
 		  xdim = ydim*dx/dy
 		  
-		format = 'pdf'
+		
 		params = {'axes.labelsize':  15,
 			  'text.fontsize':   15,
 			  'legend.fontsize': 15,
@@ -686,7 +753,7 @@ class DataPlot:
 		cb.set_label('log$_{10}$(Y)')
 		  
 		# plot file name
-		graphname = 'abundance-chart.'+format
+		graphname = 'abundance-chart'
 		  
 		# Add black frames for stable isotopes
 		'''
@@ -779,7 +846,54 @@ class DataPlot:
 		pl.show()
 		return
 		
-	def iso_abund(self,  cycle, stable=False,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1):
+	def iso_abundMulti(self,cycList, stable=False,mass_range=None,
+		ylim=[1e-13,10],shape='o',ref=-1,title=None,pdf=False):
+		'''
+		Method that plots figures and saves those figures to a .png file 
+		(by default). Plots a figure for each cycle in the argument cycle
+		input:
+		 cycle       - a string/integer of the cycle of interest.
+		 stable     - a boolean of whether to filter out the unstables.
+		    		Defaults to False
+		 mass_range - a 1x2 array containing the lower and upper mass range.
+		    		 If this is an instance of abu_vector this will 
+		    		 only plot isotopes that have an atominc mass 
+		    		 within this range. This will throw an error if
+		    		 this range does not make sence ie [45,2]
+			 	if None, it will plot over the entire range
+				Defaults to None	     
+		 ylim - A 1x2 array containing the lower and upper Y limits.
+		    	   Defaults to 1e-13 and 10
+		 ref  - reference cycle, If it is not -1, this method will 
+		    plot the abundences of cycle devided by the .
+		    	   The default is -1, it will do nothing
+		 shape -The Shape of the dataplots, will default to circles
+		 pdf - Boolean of if the output images will be pdf files
+		 Title - Title of the plot and the image file
+		 
+		 NOTE, This method will achieve a 33% speed up and a 25% sppedup
+		 when calling this method from python or ipython, rather than
+		 ipython --pylab --q4thread
+		'''
+		print 'This method will achieve a 33% speedup and a 25% speedupwhen calling this method from python or ipython, rather than ipython --pylab --q4thread'
+			
+		
+		for i in xrange(len(cycList)):
+			self.iso_abund(cycList[i],stable,mass_range,ylim,shape,ref,False)
+			if title !=None:
+				pl.title(title)
+			else:
+				name='IsoAbund'
+			if not pdf:
+				pl.savefig(name+str(cycList[i])+'.png', dpi=100)
+			else:
+				pl.savefig(name+cycList[i]+'.pdf', dpi=100)
+			pl.clf()
+		
+		return None
+	
+	
+	def iso_abund(self,cycle, stable=False,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
@@ -799,12 +913,16 @@ class DataPlot:
 		    plot the abundences of cycle devided by the .
 		    	   The default is -1, it will do nothing
 		    Shape -The Shape of the dataplots, will default to circles 
+		    
 		    	  
 		'''
 		elem_list = []
 		elem_index = []
 		masses = []
 		plotType=self.classTest()
+		if str(cycle.__class__)=="<type 'list'>":
+			self.iso_abundMulti(cycle, stable,mass_range,ylim,shape,ref)
+			return
 		if mass_range!=None and mass_range[0]>mass_range[1]:
 			print 'Please input a proper mass range'
 			print 'Returning None'
@@ -1198,7 +1316,8 @@ class DataPlot:
 		pl.xlabel('Mass Number')
 		pl.ylabel('Relative Abundance')
 		pl.grid()
-		pl.show()
+		if show:
+			pl.show()
 		return
 	
 	def plotprofMulti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2):
@@ -1215,7 +1334,7 @@ class DataPlot:
 	  
 		'''
 		plotType=self.classTest()
-		if plotType=='se'or plotType=='mesa_profile':
+		if plotType=='se':
 			for i in range(ini,end+1,delta):
 			    step = int(i)
 			    print step
@@ -1227,6 +1346,7 @@ class DataPlot:
 			    print 'wrote file ', filename
 			    #
 			    pl.clf()
+			
 		else:
 			print 'This method is not supported for '+str(self.__class__)
 			return
