@@ -894,13 +894,40 @@ class DataPlot:
 		
 		return None
 		
-	def read(self,fileName,sldir)
-	'''
-	Method for reading very simple data files for refrence cycles.
-	The data files are just 3 columns, atomic mass, followed by isotope name
-	followed by the abundence
-	'''
-		None
+	def read(self,fileName):
+		'''
+		Method for reading very simple data files for refrence cycles.
+		The data files are just 3 columns, atomic mass, followed by isotope name
+		followed by the abundence
+		Returns a dicionary with the keys, z, name, abu
+		input:
+		fileName: Fully specified path of filename
+		'''
+		z=[]
+		name=[]
+		abu=[]
+		f=open(fileName,'r')
+		lines=f.readlines()
+		for i in xrange(len(lines)):
+			lines[i]=lines[i].strip()
+			lines[i]=lines[i].split()
+		for i in xrange(len(lines)):
+			z.append(lines[i][0])
+			if len(lines[i])==4:
+				name.append(lines[i][1]+' '+lines[i][2])
+				abu.append(lines[i][3])
+			elif lines[i][1]=='PROT':
+				name.append('h 1')
+				abu.append(lines[i][2])
+			elif len(lines[i])==3:
+				name.append(lines[i][1][0]+lines[i][1][1]+' '+lines[i][1][2]+lines[i][1][3]+lines[i][1][4])
+				abu.append(lines[i][2])
+			else:
+				print 'Incompatable file, returning None'
+				return None
+		
+		dat={'z':z, 'name':name,'abu':abu}
+		return dat
 		
 	def iso_abund(self,cycle, stable=False,Amass_range=None,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True):
 		''' plot the abundance of all the chemical species
@@ -937,6 +964,13 @@ class DataPlot:
 		if str(cycle.__class__)=="<type 'list'>":
 			self.iso_abundMulti(cycle, stable,Amass_range,mass_rangeylim,shape,ref)
 			return
+			
+		if str(ref.__class__)=="<type 'str'>":
+			stringRef=True
+			fileName=ref
+			ref=-1
+		else:
+			stringRef=False
 		if mass_range!=None and mass_range[0]>mass_range[1]:
 			print 'Please input a proper mass range'
 			print 'Returning None'
@@ -954,6 +988,7 @@ class DataPlot:
 			abunds = self.se.get(cycle,'iso_massf')
 			if ref >-1:
 				abundsRef=self.se.get(ref,'iso_massf')
+				
 			masses = self.se.get(cycle,'mass')
 			if mass_range == None:
 			    print 'Using default mass range'
@@ -968,6 +1003,17 @@ class DataPlot:
 				tmpyps=[]
 				if ref >-1:
 					tmpRef=[]
+				if stringRef:
+					tmpRef=self.read(fileName)
+					for i in xrange(len(z)):
+						for j in xrange(len(tmpRef['z'])):
+							if isomers[i]==1 and z[i]==int(tmpRef['z'][j]) and a[i]==int(tmpRef['name'][j].split()[1]):
+								break
+							elif isomers[i]==1 and j ==len(tmpRef['z'])-1:
+								print 'Reference Mismatch, Isotopes in cycle differ from isotepes in '+fileName
+								print 'Returning None'
+								return None
+					ypsRef=ypsRef['abu']
 				for i in xrange(len(abunds)):
 					tmpyps.append([])
 					if ref >-1:
@@ -982,13 +1028,19 @@ class DataPlot:
 							tmpyps[j].append(abunds[j][i])
 							if ref >-1:
 								tmpRef[j].append(abunds[j][i])
+						
 				isotope_to_plot=tmpIso
 				z=tmpZ
 				a=tmpA
 				isomers=tmpIsom
 				abunds=tmpyps
-				if ref >-1:
+				if ref >-1 or stringRef:
 					abundsRef=tmpRef
+			
+			if ref >-1 and len(abundsRef)!=len(abunds):
+					print 'Reference Mismatch'
+					print 'Returning None'
+					return None
 			
 			isom=[]
 			tmp=[]
@@ -1003,21 +1055,6 @@ class DataPlot:
 			#for i in xrange(len(tmp)):
 			#	isotope_to_plot.append(tmp[i][0])
 			
-			if ref >-1 and len(abunds)!=len(abundsRef):
-				print 'Refrence Cycle mismatch, Aborting plot'
-				return None
-			if ref >-1:	
-				for i in xrange(len(abunds)):
-					if len(abunds[i])!=len(abundsRef[i]):
-						print 'Refrence Cycle mismatch, Aborting plot'
-						return None
-					for j in xrange(len(abunds[i])):
-						if abundsRef[i][j]!=0:
-							
-							abunds[i][j]=abunds[i][j]/abundsRef[i][j]
-						else:
-							print i,j
-							abunds[i][j]=abunds[i][j]/1e-99
 				
 			
 			
@@ -1029,6 +1066,17 @@ class DataPlot:
 			yps=self.get('ABUNDNACE_MF', cycle)
 			if ref >-1:
 				ypsRef=self.get('ABUNDNACE_MF', ref)
+			if stringRef:
+				ypsRef=self.read(fileName)
+				for i in xrange(len(z)):
+					for j in xrange(len(ypsRef['z'])):
+						if isomers[i]==1 and z[i]==int(ypsRef['z'][j]) and a[i]==int(ypsRef['name'][j].split()[1]):
+							break
+						elif isomers[i]==1 and j ==len(ypsRef['z'])-1:
+							print 'Reference Mismatch, Isotopes in cycle differ from isotepes in '+fileName
+							print 'Returning None'
+							return None
+				ypsRef=ypsRef['abu']
 			if Amass_range != None:
 				tmpA=[]
 				tmpZ=[]
@@ -1238,11 +1286,126 @@ class DataPlot:
 			    #print time_step
 			    abund_plot.append(temp)
 			
+			if ref > -1:
+				abund_plotRef=[]	
+				while len(abundsRef) == 1:
+					abundsRef = abundsRef[0]
+				for j in xrange(len(index)):    #    Loop through the elements
+				    temp = []
+			
+				    try:
+					x =  masses[0]
+					del x
+				    except IndexError:
+					masses = [masses]
+					
+					
+				    try:        
+					for k in xrange(len(elem_index[index[j]])):    #    Loop through the isotopes
+					    abundance = 0
+					    
+					    #print 'elemIndexKs',  self.elem_index[index[j]][k]                
+					    try:
+						for l in xrange(len(abundsRef)):
+						    #print mass_range[0], masses[l]  , mass_range[1], masses[l]
+						    try:
+							if mass_range[0] <=  masses[l]  and mass_range[1] >=  masses[l] :    
+							    #    Only collect data in between ranges.        
+							    #print abunds[i][l][self.elem_index[index[j]][k]]
+							    #if abunds[i][l][self.elem_index[index[j]][k]] < 1e-20:
+							    #    abundance += 1e-20
+							
+							    try:
+								abundance += (abundsRef[l][elem_index[index[j]][k]])*abs(masses[l+1]-masses[l])
+							    except IndexError:    #  The last step requires us to interpolate to the next highest step
+								abundance += (abundsRef[l][elem_index[index[j]][k]])*abs(round(masses[l])-masses[l])
+								#print abundance
+						    except IndexError:
+							None#print 'end of the line'
+						#print abundance/abs(ranges[1]-ranges[0])
+						if abundance < 1e-20:
+						    abundance = 1e-20
+						temp.append(abundance/abs(mass_range[1]-mass_range[0]))
+						#print abundance,temp
+					    except AttributeError:
+						print i
+					#mass_num.append(temp)
+				    except IndexError:
+					None
+					#print j, index[j], elem_index
+				    #time_step.append(temp)
+				    #print time_step
+				    abund_plotRef.append(temp)
+				    
+				if len(abund_plot)!=len(abund_plotRef):
+					print 'Error 1'
+				for i in xrange(len(abund_plot)):
+					if len(abund_plot[i])!=len(abund_plotRef[i]):
+						print 'Error 2'
+				    	    	print abund_plot[i],abund_plotRef[i]
+				    	    
+				    	for j in xrange(len(abund_plot[i])):
+						
+				    	    	if abund_plotRef[i][j]!=0:
+				    	    	    	abund_plot[i][j]=abund_plot[i][j]/abund_plotRef[i][j]
+				    	    	else:
+				    	    	    	abund_plot[i][j]=abund_plot[i][j]/1e-20
+			elif stringRef:
+				abund_plotRef=[]	
+				while len(abundsRef) == 1:
+					abundsRef = abundsRef[0]
+				for j in xrange(len(index)):    #    Loop through the elements
+				    temp = []
+			
+				    try:
+					x =  masses[0]
+					del x
+				    except IndexError:
+					masses = [masses]
+					
+					
+				    try:        
+					for k in xrange(len(elem_index[index[j]])):    #    Loop through the isotopes
+					    abundance = 0
+					    
+					    #print 'elemIndexKs',  self.elem_index[index[j]][k]                
+					    try:
+						for l in xrange(len(abundsRef)):
+						    #print mass_range[0], masses[l]  , mass_range[1], masses[l]
+						    try:
+							if mass_range[0] <=  masses[l]  and mass_range[1] >=  masses[l] :    
+							    #    Only collect data in between ranges.        
+							    #print abunds[i][l][self.elem_index[index[j]][k]]
+							    #if abunds[i][l][self.elem_index[index[j]][k]] < 1e-20:
+							    #    abundance += 1e-20
+							
+							    try:
+								abundance += (abundsRef[l][elem_index[index[j]][k]])*abs(masses[l+1]-masses[l])
+							    except IndexError:    #  The last step requires us to interpolate to the next highest step
+								abundance += (abundsRef[l][elem_index[index[j]][k]])*abs(round(masses[l])-masses[l])
+								#print abundance
+						    except IndexError:
+							None#print 'end of the line'
+						#print abundance/abs(ranges[1]-ranges[0])
+						if abundance < 1e-20:
+						    abundance = 1e-20
+						temp.append(abundance/abs(mass_range[1]-mass_range[0]))
+						#print abundance,temp
+					    except AttributeError:
+						print i
+					#mass_num.append(temp)
+				    except IndexError:
+					None
+					#print j, index[j], elem_index
+				    #time_step.append(temp)
+				    #print time_step
+				    abund_plotRef.append(temp)
+			
 	        elif plotType=='PPN':
 	        	
 	        	for i in xrange(len(elem_list)):
 	        		tmp=[]
-	        		yps=abunds
+	        		yps=stringRef
 	        		if elem_list[i]!='':
 	        			
 	        			for j in xrange(len(elem_index[i])):
