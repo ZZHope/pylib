@@ -225,7 +225,7 @@ class ascii_table(DataPlot):
 #Global methods
 
 		
-def write(fileName,dcols,data,headers=None,headerLines=[],sldir='.',sep='  ',trajectory=False):
+def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajectory=False):
 		'''
 		Method for writeing Ascii files.
 		Note the attribute name at position i in dcols will be associated
