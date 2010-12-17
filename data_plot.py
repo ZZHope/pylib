@@ -881,7 +881,7 @@ class DataPlot:
 			
 		
 		for i in xrange(len(cycList)):
-			self.iso_abund(cycList[i],stable,mass_range,ylim,shape,ref,False)
+			self.iso_abund(cycList[i],stable,Amass_range,mass_range,ylim,shape,ref,False)
 			if title !=None:
 				pl.title(title)
 			else:
@@ -962,7 +962,7 @@ class DataPlot:
 		masses = []
 		plotType=self.classTest()
 		if str(cycle.__class__)=="<type 'list'>":
-			self.iso_abundMulti(cycle, stable,Amass_range,mass_rangeylim,shape,ref)
+			self.iso_abundMulti(cycle, stable,Amass_range,mass_range,ylim,shape,ref)
 			return
 			
 		if str(ref.__class__)=="<type 'str'>":
@@ -1405,7 +1405,7 @@ class DataPlot:
 	        	
 	        	for i in xrange(len(elem_list)):
 	        		tmp=[]
-	        		yps=stringRef
+	        		yps=abunds
 	        		if elem_list[i]!='':
 	        			
 	        			for j in xrange(len(elem_index[i])):

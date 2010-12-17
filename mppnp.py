@@ -39,6 +39,15 @@
    6 : pt.plot_prof_1(23500,'H-1',0.1,0.9,0,1)
    7 : pt.plot_prof_1(23500,'He-4',0.1,0.9,0,1)
    8 : help pt.plot_prof_1 
+   use pt.get() to get data 
+   9 : pt.get(23500,'H-1')
+   10: pt.iso_abund(23500)
+   11: pt.abu_chart(23500)
+   One note about iso_abund and abu_chart, if instead of a single cycle the user 
+	inputs a list of cycles, the method will then, instead of plotting them, 
+	will then save a .png for each cycle. Also if you just want a singular 
+	plot saved, the user can input their cycle, in a list like [0]. And that 
+	will save their plot.
 
    The data of the instance is in pt.se
 '''
@@ -73,7 +82,7 @@ class se(DataPlot,Utils):
     se = []         # main data dictionary
     pattern=''
 
-    def __init__(self, sedir='*', pattern='.h5'):
+    def __init__(self, sedir='.', pattern='.h5'):
         
         slist = os.listdir(sedir)
         expr = re.compile(pattern)
@@ -111,7 +120,7 @@ class se(DataPlot,Utils):
     def plot_prof_1(self,mod,species,xlim1,xlim2,ylim1,ylim2):
 
         ''' plot one species for cycle between xlim1 and xlim2
-
+        If m
         species      - which species to plot
         mod          - model to plot
         xlim1, xlim2 - mass coordinate range 

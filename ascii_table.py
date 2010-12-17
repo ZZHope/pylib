@@ -31,6 +31,15 @@ Type "help", "copyright", "credits" or "license" for more information.
 [1.3400000000000001e-24, ... 1590.0]
 >>>a.plot('T9', 'ado/CA88')
 plots data
+
+Also there is a global method called write that will allow a user to write ascii
+Files and trajectory files.
+
+One Can call this method like 
+>>>write('file.txt',dcols,data,headers)
+Where Dcols is a list of data attributes, data is a list of lists of data and 
+headers is a list of strings that are each a header attribute.  To learn more 
+please look at the docstring associated with write()
 """
 from numpy import *
 from data_plot import *
@@ -227,8 +236,9 @@ def write(fileName,dcols,data,headers=None,headerLines=[],sldir='.',sep='  ',tra
 		Input:
 		fileName: The file where this data will be written.
 		Headers: A list of Header strings or if the file being written 
-			 is of type trajectory, this is a dictionary of header 
-			 attributes and their associated values
+			 is of type trajectory, this is a List of strings
+			 that contain header attributes and their associated 
+			 values which are seperated by a '='. 
 		dcols: A list of data attributes
 		data:  A list of lists (or of numpy arrays).
 		headerLines: Additional list of strings of header data, only used
@@ -237,10 +247,10 @@ def write(fileName,dcols,data,headers=None,headerLines=[],sldir='.',sep='  ',tra
 		sep: What seperatesa the data column attributes
 		trajectory: Boolean of if we are writeing a trajectory type file
 		'''
-		if sldir.endswith('/'):
+		if sldir.endswith(os.sep):
 			fileName = str(sldir)+str(fileName)
 		else:
-			fileName = str(sldir)+'/'+str(fileName)
+			fileName = str(sldir)+os.sep+str(fileName)
 		tmp=[] #temp variable
 		lines=[]#list of the data lines
 		lengthList=[]# list of the longest element (data or column name)
@@ -263,15 +273,12 @@ def write(fileName,dcols,data,headers=None,headerLines=[],sldir='.',sep='  ',tra
 			print 'returning none'
 			return None
 		if trajectory:
-			if headers ==None:
-				headers={}
-			keys=headers.keys()
 			sep=' '
 		for i in xrange(len(headers)):
 			if not trajectory:
 				tmp.append('H '+headers[i]+'\n')
 			else:
-				tmp.append(str(keys[i])+ ' = '+str(headers[keys[i]])+'\n')
+				tmp.append(headers[i]+'\n')
 		headers=tmp
 		tmp=''
 		

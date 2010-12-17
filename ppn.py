@@ -193,11 +193,27 @@ class abu_vector(DataPlot,Utils):
          1.25518000e-02,   1.90131000e-08,   1.42230000e-07,
          4.98449000e-05,   4.80246000e-07,   4.24345000e-12,
          9.85201000e-17,   6.30866000e-16,   9.12726000e-11])
+         
+        or if the user wants the data from the first 3 cycles:
+        >>> p.get('ABUNDNACE_MF',[0,1,2])
+        [array([  1.43722000e-10,   ...,   9.81499000e-01,],
+        array([  1.43722000e-10,   ...,   9.81499000e-01,],
+        array([  1.43722000e-10,   ...,   9.81499000e-01,]
         >>> p.getElement('C 14',0)
         array([  1.50000000e+01,   6.00000000e+00,   1.40000000e+01,
          1.90131000e-08])
         >>> p.plot('abundance_yps', 'Z',0)
 	plots data
+	>>> p.iso_abund(0)
+	Plots an isotope abundence chart
+	>>> p.abu_chart(0)
+	Plots an isotope abundence chart
+	
+	One note about the plot functions, if instead of a single cycle the user 
+	inputs a list of cycles, the method will then, instead of plotting them, 
+	will then save a .png for each cycle. Also if you just want a singular 
+	plot saved, the user can input their cycle, in a list like [0]. And that 
+	will save their plot.
 	'''
 	sldir=''  #Standard Directory
 	cattrs={} # cycle attributes
@@ -366,6 +382,7 @@ class abu_vector(DataPlot,Utils):
 		Output:
 			A numpy array of the four ellement attributes, number, Z, A
 			and abundance, in that order
+		Warnig
 		'''
 		element=[] #Variable for holding the list of element names
 		number=[]  #Variable for holding the array of numbers
@@ -373,14 +390,34 @@ class abu_vector(DataPlot,Utils):
 		a=[]	   #Variable for holding the array of a
 		abd=[]	   #Variable for holding the array of Abundance
 		data=[]	   #variable for the final list of data
-
-		element=self.get(self.dcols[5],fname,numType)
-		number=self.get(self.dcols[0],fname,numType)
-		z=self.get(self.dcols[1],fname,numType)
-		a=self.get(self.dcols[2],fname,numType)
-		isom=self.get(self.dcols[3],fname,numType)
-		abd=self.get(self.dcols[4],fname,numType)
 		
+		fname=self.findFile(fname,numType)
+		f=open(fname,'r')
+		for i in range(self.index+1):
+			f.readline()
+		lines=f.readlines()
+		for i in range(len(lines)):
+			lines[i]=lines[i].strip()
+			lines[i]=lines[i].split()
+		index=0
+		data=[]
+		
+		while index < len (self.dcols):
+			if attri== self.dcols[index]:
+				break
+			index+=1
+		
+		element=self.get(self.dcols[5],fname,numType)
+		number=[]
+		z=[]
+		a=[]
+		isom=[]
+		abd=[]
+		for i in range(len(lines)):
+			number.append(int(lines[i][0]))
+			z.append(float(lines[i][1]))
+			isom.append(float(lines[i][2]))
+			abd.append(float(lines[i][1]))
 		index=0 #Variable for determing the index in the data columns
 		
 		
@@ -401,11 +438,14 @@ class abu_vector(DataPlot,Utils):
 	def get(self,attri,fname=None,numtype='cycNum'):
 		'''
 		In this method a column of data for the associated attribute is
-		returned
+		returned or if fname is a list or None a list of each cycles in 
+		fname or all cycles is returned
 		Input: 
 		attri: The name of the attribute we are looking for.
 		Fname: The name of the file we are getting the data from or
-			the cycle number found in the filename.
+			the cycle number found in the filename. Or a List of 
+			cycles or filenames.  If this is None, the data from all
+			cycles is returned.
 		numtype: Determines whether fname is the name of a file or, the 
 			 Cycle number. If it is 'file' it will then  interpret 
 			 it as a file
