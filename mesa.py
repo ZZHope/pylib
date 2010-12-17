@@ -83,6 +83,7 @@
     profiles.index, and then get the mass and temperature out and
     finally plot them try:
 
+        In [9]: a1=ms.mesa_profile('LOGS',1)
         100 in profiles.index file..
         The 1. log.data file is 44
         reading ./log44.data ...
@@ -93,6 +94,11 @@
 
         In [12]: plot(mass,T)
         Out[12]: [<matplotlib.lines.Line2D object at 0x8456ed0>]
+
+    Or, you could have had it easier in the following way:
+        In [13]: a1.plot('mass','na23',logY=True)
+    where the superclass plot method interprets data column headers
+    correctly and does all the work for you.
 
     Of course, a1.cols etc are available here as well and many other
     things. E.g. a.model contains an array with all the models for
