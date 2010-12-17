@@ -196,9 +196,9 @@ class DataPlot:
 			
 			pl.title(title)
 			if not pdf:
-				pl.savefig(title+str(cycList[i])+'.png', dpi=100)
+				pl.savefig(title+str(cycList[i])+'.png', dpi=400)
 			else:
-				pl.savefig(title+cycList[i]+'.pdf', dpi=100)
+				pl.savefig(title+cycList[i]+'.pdf', dpi=400)
 			pl.clf()
 		return None
 	
@@ -277,7 +277,7 @@ class DataPlot:
 			print 'This method is not supported for '+str(self.__class__)
 			return
 		elif plotType=='PPN' :
-			if FName==None:
+			if FName==None and atriX not in self.cattrs and atriY not in self.cattrs:
 				FName=len(self.files)-1
 			if numType=='ndump':
 				numType='cycNum'
@@ -289,10 +289,6 @@ class DataPlot:
 		else:
 			listY=self.get(atriY)
 			listX=self.get(atriX)
-		
-		
-		
-			
 		tmpX=[]
 		tmpY=[]
 		if isinstance(listX[0], basestring) or isinstance(listY[0], basestring):
@@ -536,9 +532,9 @@ class DataPlot:
 			else:
 				name='AbuChart'
 			if not pdf:
-				pl.savefig(name+str(cycList[i])+'.png', dpi=100)
+				pl.savefig(name+str(cycList[i])+'.png', dpi=400)
 			else:
-				pl.savefig(name+cycList[i]+'.pdf', dpi=100)
+				pl.savefig(name+cycList[i]+'.pdf', dpi=400)
 			pl.clf()
 		
 		return None
@@ -574,6 +570,7 @@ class DataPlot:
 		# read data file
 		#inpfile = cycle
 		#ff = fdic.ff(inpfile)
+		
 		if str(cycle.__class__)=="<type 'list'>":
 			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,plotAxis)
 			return
@@ -586,8 +583,11 @@ class DataPlot:
 			return None
 		
 		if plotType=='se':
+			cycle=self.se.findCycle(cycle)
 			nin=self.se.A
 			zin=self.se.Z
+			for i in xrange(len(nin)):
+				nin[i]=nin[i]-zin[i]
 			yin=self.get(cycle, 'iso_massf')
 			isom=self.se.isomeric_states
 			
@@ -621,6 +621,8 @@ class DataPlot:
 			
 			nin=self.get('A',cycle)
 			zin=self.get('Z',cycle)
+			for i in xrange(len(nin)):
+				nin[i]=nin[i]-zin[i]
 			yin=self.get('ABUNDNACE_MF',cycle)
 			isom=self.get('ISOM',cycle)
 			
@@ -718,7 +720,7 @@ class DataPlot:
 				)
 		ax.add_artist(anchored_box)
 		
-		## only abundance plotted
+		## Colour bar plotted
 		
 		patches = []
 		color = []
@@ -776,6 +778,7 @@ class DataPlot:
 					continue
 				
 				nn = int(tmp[j]) #atomic mass
+				nn=nn-zz
 				
 				xy = nn-0.5,zz-0.5
 				rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=3.)
@@ -887,9 +890,9 @@ class DataPlot:
 			else:
 				name='IsoAbund'
 			if not pdf:
-				pl.savefig(name+str(cycList[i])+'.png', dpi=100)
+				pl.savefig(name+str(cycList[i])+'.png', dpi=400)
 			else:
-				pl.savefig(name+cycList[i]+'.pdf', dpi=100)
+				pl.savefig(name+cycList[i]+'.pdf', dpi=400)
 			pl.clf()
 		
 		return None
@@ -897,8 +900,12 @@ class DataPlot:
 	def read(self,fileName):
 		'''
 		Method for reading very simple data files for refrence cycles.
-		The data files are just 3 columns, atomic mass, followed by isotope name
-		followed by the abundence
+		The data files are just 3 columns, Charge, followed by 
+		isotope name followed by the abundence, each column seperated by
+		any number of spaces. Also there can be nospaces in the atomic 
+		mass or abundence. An example would look like:
+			1.0   H 1     0.728698   
+			1.0   H 2     2.77841e-12
 		Returns a dicionary with the keys, z, name, abu
 		input:
 		fileName: Fully specified path of filename
@@ -951,7 +958,12 @@ class DataPlot:
 		    	   Defaults to 1e-13 and 10
 		    ref  - reference cycle, If it is not -1, this method will 
 		    	   plot the abundences of cycle devided by the refrence
-		    	   Cycle. Note Not working for se
+		    	   Cycle. If any abundence in the refrence cycle is zero, 
+		    	   it will then interpret that abundence of 1e-99.
+		    	   If ref is a string then this is interpreted as 
+		    	   a filename.  It will then use the abundence column as
+		    	   a refrence cycle. The standards for reading this file 
+		    	   can be found in self.read()'s docstring  
 		    	   The default is -1, it will do nothing
 		    Shape -The Shape of the dataplots, will default to circles 
 		    
@@ -981,13 +993,28 @@ class DataPlot:
 			return None
 		if plotType=='se':
 			isotope_to_plot = self.se.isotopes
-			
+			cycle=self.se.findCycle(cycle)
 			z=self.se.Z #charge
 			a=self.se.A #mass
 			isomers=self.se.isomeric_states
 			abunds = self.se.get(cycle,'iso_massf')
 			if ref >-1:
+				ref=self.se.findCycle(ref)
 				abundsRef=self.se.get(ref,'iso_massf')
+			
+			if stringRef:
+				abundsRef=self.read(fileName )
+				tmpypsRef=zeros(len(yps))
+				for i in xrange(len(z)):
+					for j in xrange(len(ypsRef['z'])):
+						if isomers[i]==1 and z[i]==int(ypsRef['z'][j]) and a[i]==int(ypsRef['name'][j].split()[1]):
+							tmpypsRef[i]=ypsRef['abu']
+							break
+						elif isomers[i]==1 and j ==len(ypsRef['z'])-1:
+							print 'Reference Mismatch, Isotopes in cycle differ from isotepes in '+fileName
+							print 'Returning None'
+							return None
+				abundsRef=tmpypsRef
 				
 			masses = self.se.get(cycle,'mass')
 			if mass_range == None:
@@ -1003,17 +1030,7 @@ class DataPlot:
 				tmpyps=[]
 				if ref >-1:
 					tmpRef=[]
-				if stringRef:
-					tmpRef=self.read(fileName)
-					for i in xrange(len(z)):
-						for j in xrange(len(tmpRef['z'])):
-							if isomers[i]==1 and z[i]==int(tmpRef['z'][j]) and a[i]==int(tmpRef['name'][j].split()[1]):
-								break
-							elif isomers[i]==1 and j ==len(tmpRef['z'])-1:
-								print 'Reference Mismatch, Isotopes in cycle differ from isotepes in '+fileName
-								print 'Returning None'
-								return None
-					ypsRef=ypsRef['abu']
+				
 				for i in xrange(len(abunds)):
 					tmpyps.append([])
 					if ref >-1:
@@ -1026,8 +1043,9 @@ class DataPlot:
 						tmpIsom.append(isomers[i])
 						for j in xrange(len(abunds)):
 							tmpyps[j].append(abunds[j][i])
+						for j in xrange(len(abundsRef)):
 							if ref >-1:
-								tmpRef[j].append(abunds[j][i])
+								tmpRef[j].append(abundsRef[j][i])
 						
 				isotope_to_plot=tmpIso
 				z=tmpZ
@@ -1036,11 +1054,6 @@ class DataPlot:
 				abunds=tmpyps
 				if ref >-1 or stringRef:
 					abundsRef=tmpRef
-			
-			if ref >-1 and len(abundsRef)!=len(abunds):
-					print 'Reference Mismatch'
-					print 'Returning None'
-					return None
 			
 			isom=[]
 			tmp=[]
@@ -1067,16 +1080,23 @@ class DataPlot:
 			if ref >-1:
 				ypsRef=self.get('ABUNDNACE_MF', ref)
 			if stringRef:
-				ypsRef=self.read(fileName)
+				ypsRef=self.read(fileName )
+				tmpypsRef=zeros(len(yps))
 				for i in xrange(len(z)):
 					for j in xrange(len(ypsRef['z'])):
-						if isomers[i]==1 and z[i]==int(ypsRef['z'][j]) and a[i]==int(ypsRef['name'][j].split()[1]):
+						if isomers[i]==1 and z[i]==int(float((ypsRef['z'][j]))) and a[i]==int(float(ypsRef['name'][j].split()[1])):
+							tmpypsRef[i]=ypsRef['abu'][j]
 							break
+							'''
 						elif isomers[i]==1 and j ==len(ypsRef['z'])-1:
 							print 'Reference Mismatch, Isotopes in cycle differ from isotepes in '+fileName
 							print 'Returning None'
 							return None
-				ypsRef=ypsRef['abu']
+							'''
+							
+							
+				ypsRef=tmpypsRef
+				
 			if Amass_range != None:
 				tmpA=[]
 				tmpZ=[]
@@ -1091,7 +1111,7 @@ class DataPlot:
 						tmpIso.append(isotope_to_plot[i])
 						tmpIsom.append(isomers[i])
 						tmpyps.append(yps[i])
-						if ref >-1:
+						if ref >-1 or stringRef:
 							tmpypsRef.append(ypsRef[i])
 				isotope_to_plot=tmpIso
 				z=tmpZ
@@ -1103,13 +1123,14 @@ class DataPlot:
 			if ref >-1 and len(yps)!=len(ypsRef):
 				print 'Refrence Cycle mismatch, Aborting plot'
 				return None
+			
 				
-			if ref >-1:
+			if ref >-1 or stringRef:
 				for i in xrange(len(yps)):
 					if ypsRef[i]!=0:
 						yps[i]=yps[i]/ypsRef[i]
 					else:
-						print 'hello'
+						
 						yps[i]=yps[i]/1e-99
 			tmp1=[]
 			tmp=[]
@@ -1272,8 +1293,8 @@ class DataPlot:
 					    except IndexError:
 						None#print 'end of the line'
 					#print abundance/abs(ranges[1]-ranges[0])
-					if abundance < 1e-20:
-					    abundance = 1e-20
+					if abundance ==0:
+						    abundance = 1e-99
 					temp.append(abundance/abs(mass_range[1]-mass_range[0]))
 					#print abundance,temp
 				    except AttributeError:
@@ -1323,8 +1344,8 @@ class DataPlot:
 						    except IndexError:
 							None#print 'end of the line'
 						#print abundance/abs(ranges[1]-ranges[0])
-						if abundance < 1e-20:
-						    abundance = 1e-20
+						if abundance ==0:
+						    abundance = 1e-99
 						temp.append(abundance/abs(mass_range[1]-mass_range[0]))
 						#print abundance,temp
 					    except AttributeError:
@@ -1349,7 +1370,8 @@ class DataPlot:
 				    	    	if abund_plotRef[i][j]!=0:
 				    	    	    	abund_plot[i][j]=abund_plot[i][j]/abund_plotRef[i][j]
 				    	    	else:
-				    	    	    	abund_plot[i][j]=abund_plot[i][j]/1e-20
+				    	    		
+				    	    	    	abund_plot[i][j]=abund_plot[i][j]/1e-99
 			elif stringRef:
 				abund_plotRef=[]	
 				while len(abundsRef) == 1:
@@ -1387,8 +1409,8 @@ class DataPlot:
 						    except IndexError:
 							None#print 'end of the line'
 						#print abundance/abs(ranges[1]-ranges[0])
-						if abundance < 1e-20:
-						    abundance = 1e-20
+						if abundance ==0:
+						    abundance = 1e-99
 						temp.append(abundance/abs(mass_range[1]-mass_range[0]))
 						#print abundance,temp
 					    except AttributeError:
@@ -1537,22 +1559,22 @@ class DataPlot:
 			if Amass_range !=None:
 				pl.xlim([Amass_range[0]-.5,Amass_range[1]+.5])
 		else:
-			if ref==-1:
-				if Amass_range ==None:
-					title = str('Abundance of Isotopes for Cycle '+str(cycle))
-				else:
-					title = str('Abundance of Isotopes with A between '+str(Amass_range[0])+' and '+str(Amass_range[1])+' for Cycle '+str(cycle))
-					pl.xlim([Amass_range[0]-.5,Amass_range[1]+.5])
+			
+			if Amass_range ==None:
+				title = str('Abundance of Isotopes for Cycle '+str(cycle))
 			else:
-				if Amass_range ==None:
-					title = str('Abundance of Isotopes for Cycle '+str(cycle))
-				else:
-					title = str('Abundance of Isotopes with A between '+str(Amass_range[0])+' and '+str(Amass_range[1])+' for Cycle '+str(cycle))
-					pl.xlim([Amass_range[0]-.5,Amass_range[1]+.5])
+				title = str('Abundance of Isotopes with A between '+str(Amass_range[0])+' and '+str(Amass_range[1])+' for Cycle '+str(cycle))
+				pl.xlim([Amass_range[0]-.5,Amass_range[1]+.5])
+			
 		pl.ylim(ylim)
 		pl.title(title)
 		pl.xlabel('Mass Number')
-		pl.ylabel('Relative Abundance')
+		if ref>-1:
+			pl.ylabel('Relative Abundance / Refrence Abundance of Cycle '+str(int(ref)))
+		elif stringRef:
+			pl.ylabel('Relative Abundance / Refrence Abundance of '+str(fileName))
+		else:
+			pl.ylabel('Relative Abundance')
 		pl.grid()
 		if show:
 			pl.show()
@@ -1580,7 +1602,7 @@ class DataPlot:
 				self.plot_prof_1(what_specie[j],step,xlim1,xlim2,ylim1,ylim2, False)
 			    #          
 			    filename = str('%03d' % step)+'_test.png'             
-			    pl.savefig(filename, dpi=100) 
+			    pl.savefig(filename, dpi=400) 
 			    print 'wrote file ', filename
 			    #
 			    pl.clf()

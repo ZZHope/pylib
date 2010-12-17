@@ -12,6 +12,7 @@ Headers are always at the beginning of the file and start with a capital H
 The next line after the header lines, is a line of column attribute names.
 The column attribute names are separated by '  ' by default or whatever the 
 	user dictates to the class.
+Data columns are seperated by spaces and each data atgtribute contains no spaces
 All the data columns are of equal length.
 Any file name that has 'trajectory' or 'Trajectory' in it, is assumed to be a 
 	Trajectory type file
@@ -21,7 +22,7 @@ bash-4.1$ python
 Python 2.6.4 (r264:75706, Jun  4 2010, 18:20:16) 
 [GCC 4.4.4 20100503 (Red Hat 4.4.4-2)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
->>> from ppm import *
+>>> from ascii_table import *
 >>> p=ascii_table('c12cg.dat')
 >>> p.hattrs
 ['1 12  6  1  1  1  0  0  0  1 13  7  0', '55   1.943', 'c12pg']
@@ -192,7 +193,7 @@ class ascii_table(DataPlot):
 						header[str(tmp[0])]=str(tmp[1])
 				i+=1
 		while i<len(fileLines):
-			tmp=fileLines[i].split(sep)
+			tmp=fileLines[i].split() 
 			for j in xrange(len(tmp)):
 				tmp[j]=tmp[j].strip()
 			data.append(tmp)
@@ -207,8 +208,7 @@ class ascii_table(DataPlot):
 			data[j]=tmp
 			tmp=[]
 		tmp=[]
-		#print cols
-		#print data
+		
 		for j in range(len(cols)):
 			for k in range(len(data)):
 				tmp.append(float(data[k][j]))
