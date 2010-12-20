@@ -223,7 +223,40 @@ class ascii_table(DataPlot):
 		return header,dataCols
 
 #Global methods
-
+def writeTraj(fileName='trajectory.input',data=[], ageUnit=0,TUnit=0,RhoUnit=0, idNum=0):
+		'''
+		Method for writeing Trajectory type ascii files files.
+		Input:
+		fileName: The file where this data will be written.
+		data: A list of lists (or of numpy arrays).
+		ageUnit: If 1 ageunit = SEC, If 0 ageunit = YRS. Default is 0
+		TUnit:   If 1 TUNIT   = T9K, if 0 TUNIT   = T8K. Default is 0
+		RhoUnit: If 1 RHOUNIT = LOG, if 0 RHOUNIT = CGS. Default is 0
+		idNum:  An optional id argument
+		'''
+		if data==[]:
+			print 'Please input correct data'
+			print 'returning None'
+			return None
+		headers=[]
+		if ageUnit ==1:
+			headers.append('AGEUNIT = SEC')
+		elif ageUnit==0:
+			headers.append('AGEUNIT = YRS')
+		
+		if TUnit ==1:
+			headers.append('TUNIT   = T9K')
+		elif TUnit==0:
+			headers.append('TUNIT   = T8K')
+		
+		if RhoUnit ==1:
+			headers.append('RHOUNIT = LOG')
+		elif RhoUnit==0:
+			headers.append('RHOUNIT = CGS')
+		
+		headers.append('ID = '+str(idNum))
+		
+		write(fileName,headers,['time','T','rho'],data,['YRS/SEC; T8K/T9K; CGS/LOG',"FORMAT: '(10x,A3)'"],trajectory=True)
 		
 def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajectory=False):
 		'''
