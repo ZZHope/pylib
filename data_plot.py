@@ -212,8 +212,8 @@ class DataPlot:
 		atriY, The name of the attribute you want on the Y axis
 		Fname: Be the filename, Ndump or time, or cycle,  If fname is a 
 		       list, this method will then save a png for each cycle in
-		       the list. Warning, this must be a list of cycles and only
-		       a list of cycles
+		       the list. Warning, this must be a list of cycles and not
+		       a list of filenames
 		numType: designates how this function acts and how it interprets 
 			 FName. Defaults to file
 		if numType is 'file', this function will get the desird 
@@ -505,10 +505,10 @@ class DataPlot:
 			return -1
 	def abu_chartMulti(self,cycList, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotAxis=[0,0,0,0],pdf=False,title=None):
 		'''
-		Method that plots figures and saves those figures to a .png file 
+		Method that plots abundence chart and saves those figures to a .png file 
 		(by default). Plots a figure for each cycle in the argument cycle
 		input:
-		cycle: The cycle we are looking in
+		cycList: The list of cycles we are plotting
 		ilabel: elemental labels off/on [0/1]
 		imlabel: label for isotopic masses off/on [0/1]
 		imagic:  turn lines for magic numbers off/on [0/1]
@@ -543,7 +543,9 @@ class DataPlot:
 		'''
 		Plots an abundence chart
 		input:
-		cycle: The cycle we are looking in
+		cycle: The cycle we are looking in. It it is a list of cycles, 
+			this method will then do a plot for each of theses cycles 
+			and save them all to a file
 		ilabel: elemental labels off/on [0/1]
 		imlabel: label for isotopic masses off/on [0/1]
 		imagic:  turn lines for magic numbers off/on [0/1]
@@ -686,7 +688,7 @@ class DataPlot:
 			  'xtick.labelsize': 15,
 			  'ytick.labelsize': 15,
 			  'text.usetex': True}
-		pl.rcParams.update(params)
+		#pl.rcParams.update(params) #May cause Error, someting to do with tex
 		fig=pl.figure(figsize=(xdim,ydim),dpi=100)
 		axx = 0.10
 		axy = 0.10
@@ -710,8 +712,10 @@ class DataPlot:
 		time = ' '#'%8.3e' %ff['time']
 		dens = ' '#'%8.3e' %ff['dens']
 		
-		box1 = TextArea("t : " + time + " s~~/~~T$_{9}$ : " + temp + "~~/~~$\\rho_{b}$ : " \
-			      + dens + ' g/cm$^{3}$', textprops=dict(color="k"))
+		#May cause Error, someting to do with tex
+		'''
+		#box1 = TextArea("t : " + time + " s~~/~~T$_{9}$ : " + temp + "~~/~~$\\rho_{b}$ : " \
+		#	      + dens + ' g/cm$^{3}$', textprops=dict(color="k"))
 		anchored_box = AnchoredOffsetbox(loc=3,
 				child=box1, pad=0.,
 				frameon=False,
@@ -720,7 +724,7 @@ class DataPlot:
 				borderpad=0.,
 				)
 		ax.add_artist(anchored_box)
-		
+		'''
 		## Colour bar plotted
 		
 		patches = []
@@ -841,7 +845,7 @@ class DataPlot:
 		# set x- and y-axis label
 		ax.set_xlabel('neutron number')
 		ax.set_ylabel('proton number')
-		
+		pl.title('Abu Chart for cycle '+str(int(cycle)))
 		#fig.savefig(graphname)
 		print graphname,'is done'
 		if show:
@@ -942,6 +946,9 @@ class DataPlot:
 		inputs:
 		    
 		    cycle       - a string/integer of the cycle of interest.
+		    		  It it is a list of cycles, this method will 
+		    		  then do a plot for each of theses cycles and 
+				  save them all to a file
 		    stable     - a boolean of whether to filter out the unstables.
 		    		Defaults to False
 		    Amass_range -a 1x2 array containing the lower and upper Atomic
@@ -1543,7 +1550,7 @@ class DataPlot:
 	def plotprofMulti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2):
 	
 		''' create a movie with mass fractions vs mass coordinate 
-		between xlim1 and xlim2, ylim1 and ylim2. 
+		between xlim1 and xlim2, ylim1 and ylim2. Only works with instances of se 
 	
 		ini          - initial model
 		end          - final model 
@@ -1573,7 +1580,8 @@ class DataPlot:
 	# From mesa_profile
     	def plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2, show=True):
 	
-		''' plot one species for cycle between xlim1 and xlim2                               
+		''' plot one species for cycle between xlim1 and xlim2 
+		    Only works with instances of se and mesa _profile
 		
 		species      - which species to plot
 		keystring    - label that appears in the plot or in the cas of se,

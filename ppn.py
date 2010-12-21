@@ -11,16 +11,18 @@ Header attributes are separated from their value by white space or by white spac
 	surrounding an equals sign.
 An Header attribute is separated by the previous Header attribute by white space
 	or a line break.
-There are only 5 data columns. The first being the number, second being Z, third 
-	A fourth abundance_yps and finally the element name.
-The first four columns consist purely of numbers, no strings are allowed. 
+There are only 6 data columns. The first being the number, second being Z, third being A, Fourth isomere state
+	A fifth abundance_yps and finally the element name.
+The first Five columns consist purely of numbers, no strings are allowed. 
 Of the values in the final column, the name column, the first two are letters 
 specifying the element name, and the rest are spaces or numbers (in that strict
-order), exceft for the element names: Neut and Prot
+order), except for the element names: Neut and Prot
 All the profile files in the directory have the same cycle attributes.	
 The cycle numbers of the 'filename'+xxxxx start at 0.
 PPN files allways end in .DAT and are not allowed any '.'
-The can not be any blank lines in the data files
+The can not be any blank lines in the data files.
+No cycle numbers are skipped, ie if cycle 0 and 3 are present, 1 and 2 must be 
+	here aswell.
 """
 
 from numpy import *
@@ -149,9 +151,22 @@ class xtime(DataPlot):
     
     def plot_xtime(self,Y,X='t_y',label='default',labelX=None, labelY=None , 
     	title=None, shape='.',logX=False, logY=True, base=10):
-        '''make a simple plot of two columns against each other
+        '''make a simple plot of two columns against each other.
+        An example would be instance.plot_xtime('PB206', label='PB206 vs t_y'
+        Recomend using the plot function DataPlot.plot() it has more functionality 
         Y         - column on Y-axis
         X         - column on X-axis, defaults to "t_y"
+        label	  - Legend label
+        labelX: The label on the X axis
+	labelY: The label on the Y axis
+	title: The Title of the Graph
+	logX: A boolean of weather the user wants the x axis logarithmically
+	logY: A boolean of weather the user wants the Y axis logarithmically
+	base: The base of the logarithm. Default = 10
+	shape: What shape and colour the user would like their plot in.
+	Please see 
+	http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot
+	for all possable choices
         '''
         if label is 'default':
             lab_str=Y
@@ -183,7 +198,16 @@ class abu_vector(DataPlot,Utils):
 	Example run through for cycle 0:
 	>>> import ppn
 	>>> p=ppn.abu_vector('./run/')
-	18 numbers found in run
+	39 cycle numbers found in ./run/
+	Rangeing from 0 to 38
+
+	To find the cycle attributes:
+	>>> p.cattrs
+	['mod', 'dzeit', 'agej', 't9', 'rho', 'densn', 'densp', 'densa']
+	
+	To find the data column attributes
+	>>> p.dcols
+	['NUM', 'Z', 'A', 'ISOM', 'ABUNDNACE_MF', 'ISOTP']
 	>>> p.get('Z',0)
 	array([1, 2, 2, 4, 5, 3, 6, 6, 7, 7, 6, 7, 8, 8, 8, 9, 9, 9])
 	>>> p.get('ABUNDNACE_MF',0)
@@ -438,7 +462,7 @@ class abu_vector(DataPlot,Utils):
 	def get(self,attri,fname=None,numtype='cycNum'):
 		'''
 		In this method a column of data for the associated attribute is
-		returned or if fname is a list or None a list of each cycles in 
+		returned. If fname is a list or None a list of each cycles in 
 		fname or all cycles is returned
 		Input: 
 		attri: The name of the attribute we are looking for.

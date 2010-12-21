@@ -89,9 +89,13 @@ Plot one species for cycle between xlim1 and xlim2. This plot function if for th
 	species      - which species to plot \newline
 	keystring    - label that appears in the plot, if the subclass is h5TPlotTools this gets interpereted as the model number \newline
 	xlim1, xlim2 - mass coordinate range\newline                                                 
-	ylim1, ylim2 - mass fraction coordinate range\newline
+	ylim1, ylim2 - mass fraction coordinate range\newline\newline
 
-
+\begin{verbatim}
+plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2)
+\end{verbatim}
+Create a movie with mass fractions vs mass coordinate 
+		between xlim1 and xlim2, ylim1 and ylim. Only works with instances of se.\newline\newline
 \begin{verbatim}
 classTest()
 \end{verbatim}
@@ -144,14 +148,26 @@ sparse: Argument that skips every so many data points\newline\newline
 \begin{verbatim}
 iso_abund(self, mass_range, cycle, stable):
 \end{verbatim}
-plot the abundance of all the chemical species, Only works for mppnp.py and ppn .py, at this time
-inputs:
-mass_range - a 1x2 array containing the lower and upper mass range. If None, it will plot over the entire range, This argument does nothing unless it is an isntance of se.\newline
-cycle       - a string/integer of the cycle of interest. \newline
-stable     - a boolean of whether to filter out the unstables. \newline\newline
+plot the abundance of all the chemical species, Only works for mppnp.py and ppn .py.\newline\newline
+\begin{verbatim}
+iso_abundMulti(self,cycList, stable=False,Amass_range=None,mass_range=None,
+		ylim=[1e-13,10],shape='o',ref=-1,title=None,pdf=False)
+\end{verbatim}
+Method that plots figures and saves those figures to a .png file 
+(by default). Plots a figure for each cycle in the argument cycle, Only works for mppnp.py and ppn .py.\newline\newline
+\begin{verbatim}
+abu_chart(self, cycle, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotAxis=[0,0,0,0], show=True):
+\end{verbatim}
+Plots an abundence chart\newline \newline
+\begin{verbatim}
+def abu_chartMulti(self,cycList, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotAxis=[0,0,0,0],pdf=False,title=None):
+\end{verbatim}
+Method that plots abundence chart and saves those figures to a .png file 
+		(by default). Plots a figure for each cycle in the argument cycle\newline\newline
+		
 \subsection{utils.py}
 The current iteration currenly only has the class variables elements\_names and stable\_el.
-They are, respectively, a list of element names and stable elements for mppnp.py.
+They are, respectively, a list of element names and stable elements.
 
 \section{Extention and Modification}
 
@@ -168,7 +184,7 @@ C. To properly use DataTable's methods properly one will need these methods:
 	atri which is the name of the data one is looking for.\newline\newline
 
 \subsection{Modification}
-The only reason that one would need to modify plot\_tools is that your class that is being extended, is that plot_tools might fit your classes functionality.  For example
+The only reason that one would need to modify plot\_tools is that your class that is being extended, is that plot\_tools might fit your classes functionality.  For example
 instead of get(attri) your class has get(attri,someOtherArg) the methods in plot\_tools need to reflect that requirement:
 If you want to modify plot\_tool.py, thing can get a bit tricky so there are couple key factors to take into account.
 Firstly at there is a method called classTest, it returns a string that is usually the name of your class.  Firsly you must go into that class
@@ -189,8 +205,9 @@ This document history complements the svn log.
 Authors & yymmdd & Comment \\
 \hline
 DAC & 101115 & generate template and input documentation\\
-DAC & 101123 & Added descriptions for the iso_abund and sparce methods.\\
+DAC & 101123 & Added descriptions for the iso\_abund and sparce methods.\\
 DAC & 101123 & Also finished Modification section\\
+DAC & 101220 & Updated methods section\\
 \hline
 \end{tabular*}
 \subsection{To Do}

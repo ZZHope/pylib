@@ -1,6 +1,6 @@
-pdflatex ppm-chapter
-pdflatex ppm-chapter
-makeindex ppm-chapter
-bibtex ppm-chapter
-pdflatex ppm-chapter
-pdflatex ppm-chapter
+pdflatex ppn-chapter
+pdflatex ppn-chapter
+makeindex ppn-chapter
+bibtex ppn-chapter
+pdflatex ppn-chapter
+pdflatex ppn-chapter
