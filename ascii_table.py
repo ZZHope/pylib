@@ -7,7 +7,7 @@ If the user find any bugs or errors, please email
 
 This module will read in simple ascii tables and store the data within them
 
-Assumptions:
+Assumptions for Ascii Files:
 Headers are always at the beginning of the file and start with a capital H
 The next line after the header lines, is a line of column attribute names.
 The column attribute names are separated by '  ' by default or whatever the 
@@ -17,30 +17,15 @@ All the data columns are of equal length.
 Any file name that has 'trajectory' or 'Trajectory' in it, is assumed to be a 
 	Trajectory type file
 
-Here is an example run through.
-bash-4.1$ python
-Python 2.6.4 (r264:75706, Jun  4 2010, 18:20:16) 
-[GCC 4.4.4 20100503 (Red Hat 4.4.4-2)] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
->>> from ascii_table import *
->>> p=ascii_table('c12cg.dat')
->>> p.hattrs
-['1 12  6  1  1  1  0  0  0  1 13  7  0', '55   1.943', 'c12pg']
->>> a.dcols
-['upper', 'lower', 'T9', 'ado(gs)', 'ado/CA88', 'tt/gs', 'ado/fit', 'CA88', 'fitted']
->>> a.get('upper')
-[1.3400000000000001e-24, ... 1590.0]
->>>a.plot('T9', 'ado/CA88')
-plots data
-
-Also there is a global method called write that will allow a user to write ascii
-Files and trajectory files.
-
-One Can call this method like 
->>>write('file.txt',dcols,data,headers)
-Where Dcols is a list of data attributes, data is a list of lists of data and 
-headers is a list of strings that are each a header attribute.  To learn more 
-please look at the docstring associated with write()
+Assumptions for Trajectory Files
+The first three lines start with a '#'. The first of these contains 'time', 'T' 
+	and 'rho', each seperated by a space. The second is '# YRS/SEC; T8K/T9K; 
+	CGS/LOG' which are the choices for the header attributes
+	AGEUNIT, TUNIT, and RHOUNIT can be. The third is something like 'FORMAT:'
+The four lines afther those three are the header attributes. Each line has one
+	header attribute, followd by a = and then followed after by the value.
+After these seven lines comes three columns of data, the first is is associated 
+	with 'time', the second with 'T' and the third with rho.
 """
 from numpy import *
 from data_plot import *
@@ -51,6 +36,30 @@ import os
 class ascii_table(DataPlot):
 	'''
 	Data structure to read simple data tables and trajectory data tables	
+	Here is an example run through.
+	bash-4.1$ python
+	Python 2.6.4 (r264:75706, Jun  4 2010, 18:20:16) 
+	[GCC 4.4.4 20100503 (Red Hat 4.4.4-2)] on linux2
+	Type "help", "copyright", "credits" or "license" for more information.
+	>>> from ascii_table import *
+	>>> p=ascii_table('c12cg.dat')
+	>>> p.hattrs
+	['1 12  6  1  1  1  0  0  0  1 13  7  0', '55   1.943', 'c12pg']
+	>>> a.dcols
+	['upper', 'lower', 'T9', 'ado(gs)', 'ado/CA88', 'tt/gs', 'ado/fit', 'CA88', 'fitted']
+	>>> a.get('upper')
+	[1.3400000000000001e-24, ... 1590.0]
+	>>>a.plot('T9', 'ado/CA88')
+	plots data
+	
+	Also there is a global method called write that will allow a user to write ascii
+	Files and trajectory files.
+	
+	One Can call this method like 
+	>>>write('file.txt',dcols,data,headers)
+	Where Dcols is a list of data attributes, data is a list of lists of data and 
+	headers is a list of strings that are each a header attribute.  To learn more 
+	please look at the docstring associated with write()
 	'''
 	files = []
 	sldir = ''

@@ -105,7 +105,7 @@
     which log.data are available. You may initiate a profile object
     with a model number:
 
-        In [14]: a2=ms.profile('.',55000,num_type='model')
+        In [14]: a2=ms.mesa_profile('.',55000,num_type='model')
         100 in profiles.index file ...
         reading ./log87.data ...
 
@@ -122,7 +122,9 @@ class mesa_profile(DataPlot):
     ''' read profiles.index and prepare reading MESA profile files
 
     starts with reading profiles.index and creates hash array
-    log.data can then be accessed via prof_plot'''
+    log.data can then be accessed via prof_plot
+    
+    '''
 
     sldir = ''
     
@@ -260,7 +262,7 @@ class star_log(DataPlot):
     sldir  = ''
     slname = ''
     header_attr = []
-    cols = []
+    cols = [] 
     
     def __init__(self,sldir,slname='star.log'):
         self.sldir = sldir

@@ -1,8 +1,8 @@
 % *********** Document name and reference:
 % Title of document
-\renewcommand{\ndoctitle}{ascii_table.py: Simple Ascii Table Data Structure} 
+\renewcommand{\ndoctitle}{mesa.py: Mesa Data Structure} 
 % Document category acronym 
-\renewcommand{\ndocname}{ppm}                      
+\renewcommand{\ndocname}{mesa}                      
 % svn dir
 \renewcommand{\svndir}{svn://forum.astro.keele.ac.uk/utils/pylib}  
 % Contributors to this document
@@ -17,38 +17,38 @@ Contributors: \ndoccontribs\\
 
 
 {  \textbf{Abstract:} \slshape
-A simple lession and tuitorial on using ascii_table.py in an effective and efficient manner
+A simple lession and tuitorial on using mesa.py in an effective and efficient manner
 }
 %##############################################################
 %# Section: Introduction
 %##############################################################
 
 \section{Introduction}
-\index{ppm}Welcome to the Ascii Table User Guide.  The purpose of ascii\_table.py is
+\index{mesa}Welcome to the Ascii Table User Guide.  The purpose of mesa.py is
 to provide a simple data structure to help the user work with simple data files. 
-PPM.py contains the class YProfile in which we work with the required data.
+mesa.py contains the classes mesa\_profile and star\_log.
 This document will provide the user with a 
-tutorial and walk through of the tools contained within ascii\_table.py and
+tutorial and walkthrough of the tools contained within mesa\_profile and star\_log and
 how a typical user would go about using and working with this python module.
-\subsection{Nature of Ascii Files}
-There are a couple key identifiers to ascii table files \newline
-A)Lines of header attributes begin with a capital H \newline
-B) 
+\subsection{Disclaimer}
+Programmers have a bad habbit of not updating documentation, espically then it is in  a .tex file.
+It is then recommeded that the user look at the docstring contained within the pyhton script, there the information is more likely to be accurite up to date
+, more about accessing that later
 \section{Tutorial and Walkthough}
 
 \subsection{Downloading and configuring}
-Before the user can start working with ppm.py, they first must download the python 
+Before the user can start working with mesa.py, they first must download the python 
 module from svn:/ /forum.astro.keele.ac.uk/utils/pylib.  Also the user must download the python module data\_plot.py and utils.py. Once the package is placed in the filesystem, the user must add the location
-of ppm.py to their python path.  What this means is that the user is telling python where to look when importing modules.
+of mesa.py to their python path.  What this means is that the user is telling python where to look when importing modules.
 To do this:
 \newline
-A) Navigate to the location of ppm.py in a terminal and type,
+A) Navigate to the location of mesa.py in a terminal and type,
 
 \begin{verbatim}
 pwd
 \end{verbatim}
 
-What should output is the location of ppm.py.
+What should output is the location of mesa.py.
 \newline
 B) In a unix environment, open up your .bashrc file that is usually located in your home directory.  If it is not there, do not worry, it is a hidden file.
 in the users home directory and open it.  If it does not exist, create it using a text editor.
@@ -58,83 +58,72 @@ Now in this .bashrc there may or may not be a line like:
 export PYTHONPATH=/directory/:
 \end{verbatim}
 
-If there is add the location of ppm.py to the end of the line and a semi-colon.  It now should look like:
+If there is add the location of mesa.py to the end of the line and a semi-colon.  It now should look like:
 
 \begin{verbatim}
-export PYTHONPATH=/directory/:/location/of/ppm.py:
+export PYTHONPATH=/directory/:/location/of/mesa.py:
 \end{verbatim}
 
 If that line did not already exist add this line to the .bashrc file.
 
 \begin{verbatim}
-export PYTHONPATH=$PYTHONPATH:/location/of/ppm.py:
+export PYTHONPATH=$PYTHONPATH:/location/of/mesa.py:
 \end{verbatim}
 
-Now we must repeat these steps with data\_plot.py and utils.py unless if they are in the same directory as ppm.py, in which case everything is ready to go.
+Now we must repeat these steps with data\_plot.py and utils.py unless if they are in the same directory as mesa.py, in which case everything is ready to go.
 
 
 \subsection{Getting Started}
-Here I will go about explaining how the user would go about using ppm.py for his or her purposes.
+Here I will go about explaining how the user would go about using mesa.py for his or her purposes.
 First in our python command line (accessed by typing the command 'python' in your terminal) or in a python script,
 type the command:
 \begin{verbatim}
->import ppm as pm
+>import mesa as ms
 \end{verbatim}
-Now, baring any errors ppm should be loaded into your command line or script, and the user can begin
-to work with ppm and its YProfile class. To create an instance of YProfile type:
+Now, baring any errors mesa should be loaded into your command line or script, 
 \begin{verbatim}
->p=pm.YProfile('DIRECTORY')
+>s=ms.star_log('DIRECTORY')
 \end{verbatim}
-'DIRECTORY' should be the directory where the YProfile files, that the user wants
-to work with, are located. If the user does not specify a directory by calling the class
-like: 
+Where directory is the location of the mesa data files.
+Now to create an instance of mesa_profile type:
 \begin{verbatim}
->pm.YProfile()
+>a1=ms.mesa_profile('DIRECTORY',55000,num_type='model')
+<100 in profiles.index file ...
+<reading ./log87.data ...
 \end{verbatim}
-the class will then default to the working directory.
-Now the user should be presented with some feedback, the number of YProfiles in the selected 
-directory,the range of NDumps in the directory and the range of times in the directory. For example:
-\begin{verbatim}
-There are 150 YProfile files in the . directory.
-Ndump values range from 0 to 149
-Time values range from 0.0 to 8962.31
-\end{verbatim}
-Now the user can use their YProfile instance as they see fit.
-
+Where directory is the location of the mesa data files, 55000 is the log.data available. please consult the docsting for more information.
 \subsection{Viewing Data}
 Once the user has instantiated their instance, they are ready to start working with it.
 One quick note, for the purposes of simplicity I will assume that the user has named
 their instance, p.
 \newline
-To view the files that are available:
+To view the Header data of star_log:
 \begin{verbatim}
->p.files
+>s.header_attr
+        Out[6]: 
+        {'burn_min1': 50.0,
+         'burn_min2': 1000.0,
+         'c12_boundary_limit': 0.0001,
+         'h1_boundary_limit': 0.0001,
+         'he4_boundary_limit': 0.0001,
+         'initial_mass': 2.0,
+         'initial_z': 0.01}
 \end{verbatim}
-To view the header attributes type:
+To view the Column data of star_log:
 \begin{verbatim}
->p.hattrs.keys()
+> s.cols
+        Out[7]: 
+        {'center_c12': 38,
+         'center_h1': 36,
+         'center_he4': 37,
+          ...
 \end{verbatim}
+Now lets get some data from a1
+\begin{verbatim}
+> T=a1.get('temperature')
 
-
-To view the Cycle attributes type
-\begin{verbatim}
->p.cattrs
+> mass=a1.get('mmid')
 \end{verbatim}
-To view the Data Column attributes type
-\begin{verbatim}
->p.dcols
-\end{verbatim}
-
-Now let us look at how to acquire data.
-\newline
-The basic way to acquire data is by the get function. The get method will dynamically determine what kind of attribute the user has passed in
-be it a header cycle or column attribute.  It returns a numpy array or a list of numpy arrays(if resolution ='a', more on that later).  In the most general way, it is called like:
-\begin{verbatim}
-data=p.get('attribute', cycleNumber)
-\end{verbatim}
-Where 'attribute' is what data the user wants, and cycleNumber is which cycle this data will be read from.  Ie if cycleNumber was 20, YProfile-01-0020.bobaaa would be read.
-This will satisfy most users needs, but if more detail is needed, please read further in the Methods And Functions subsection
-
 \subsection{Plotting Data}
 To plot data, this guide recommends the user to download and install ipython, it will let the user to use plotting more dynamically. To install it go do http://ipython.scipy.org/moin/ and follow the links.
 But before the user does this, check if your system has ipython already installed by typing ipython in a terminal.
@@ -145,8 +134,8 @@ ipython --pylab --q4thread
 \end{verbatim}
 (note: the argument --q4thread is a work around for a bug in ipyhthon 0.10.1, if a different version is in use, this may not be needed)
 \newline
-Now import ppm and create an instance as was documented in the Getting Started section.
-For YProfile, the DataPlot class in  data\_plot.py provides us with two methods plot() and clear().
+Now import mesa and create an instance as was documented in the Getting Started section.
+For mesa, the DataPlot class in  data\_plot.py provides us with plot().
 \newline
 To use the plot method
 \begin{verbatim}
@@ -156,95 +145,8 @@ Where attriX is the name of the attribute of what the user wants on the X axis a
 This method automatically generates the title, the legend and the X and Y axis lables.
 
 \subsection{Methods And Functions}
-Here, all the methods (public ones that is) that are available to ppn.py will be explained in detail.  Warning Here be Dragons!
-\newline
-{\bf getHattrs()}
-Returns a list of the header attribute names in sorted order. Same effect as the commands:
-\begin{verbatim}
-h=instance.hattrs.sorted()
-h.sort()
-\end{verbatim}
-{\bf getDCols()}
-Returns a list of the column attribute names. Same effect as the command:
-\begin{verbatim}
-instance.dcols
-\end{verbatim}
-{\bf getCattrs()}
-Returns a list of the cycle attribute names. Same effect as the command:
-\begin{verbatim}
-instance.cattrs
-\end{verbatim}
-
-{\bf get(attri, FName=None,numType='ndump',resolution='H').}
-\newline  
-Method that dynamically determines the type of attribute that is 
-passed into this method. Also it then returns that attribute's 
-associated data.
-The arguments are attri, fname, numType and rersolution.
-Input: \newline
-attri: The attribute we are looking for.\newline
-Fname: Be the filename, Ndump or time, Defaults to the last NDump\newline
-numType: designates how this function acts and how it interprets FName
-defaults to file\newline
-if numType is 'file', this function will get the desired attribute from
-that file\newline
-if numType is 'NDump' function will look at the cycle with that nDump\newline
-if numType is 'T' or 'time' function will find the \_cycle with the 
-closest time stamp\newline
-Resolution: Data you want from a file, for example if the file 
-contains two different sized columns of data for one attribute, the 
-argument 'a' will return them all,
-'h' will return the largest,
-l will return the lowest
-Default resolution is h\newline
-
-
-{\bf getHeaderData(self,attri)}
-\newline 
-Returns a String or int of Header data that is associated with the attri
-\newline
-Input: \newline attri: the name of the attribute.\newline
-
-
-{\bf getCycleData( attri,FName=None,numType='ndump',Single=False,resolution='H')}
-\newline 
-Returns a list (Datalist) of values for the given attribute or a single attribute in the file FName.
-\newline
-		Input:\newline
-		attri: What we are looking for\newline
-		Fname: Be the filename, Ndump or time, Defaults to the last NDump\newline
-		numType: designates how this function acts and how it interprets FName
-			 Defaults to file\newline
-		if numType is 'file', this function will get the desired attribute from that file\newline
-		if numType is 'NDump' function will look at the cycle with that nDump\newline
-		if numType is 'T' or 'time' function will find the \_cycle with the closest time stamp \newline
-		Single: A Boolean determining whether the user wants just the Attri contained
-		        in the specified ndump or all the dumps below that ndump. 
-		        Defaults to False\newline
-		Resolution: Data you want from a file, for example if the file 
-			    contains two different sized columns of data for one attribute, 
-			    the argument 'a' will return them all, 'h' will return the largest, 
-			    l will return the lowest
-			    Default resolution is h\newline
-			    
-			    
-{\bf getColData(attri, FName, numType='ndump' ,resolution='H', cycle=False)}
-\newline 
-Returns a list (Datalist) of values for the given attribute 
-\newline
-		Input: \newline
-		numType: designates how this function acts and how it interprets FName
-			 Defaults to file\newline
-		if numType is 'file', this function will get the desired attribute from that file\newline
-		if numType is 'NDump' function will look at the cycle with that nDump\newline
-		if numType is 'T' or 'time' function will find the \_cycle with the closest time stamp \newline
-		Fname: The name of the file we are looking or Ndump or time\newline
-		attri: Attri is the attribute we are loking for\newline
-		Resolution: Data you want from a file, for example if the file 
-			    contains two different sized columns of data for one attribute, 
-			    the argument 'a' will return them all, 'h' will return the largest, 
-			    l will return the lowest
-			    Default resolution is h\newline
+To view more info about the Methods And Functions please type help(ms) if ms is what
+the user imported mesa.py as.
 		
 \subsection{History} 
 This document history complements the svn log.
@@ -253,7 +155,7 @@ This document history complements the svn log.
 \hline
 Authors & yymmdd & Comment \\
 \hline
-DAC & 101112 & generate template \\
+DAC & 101221 & generate template \\
 
 \hline
 \end{tabular*}

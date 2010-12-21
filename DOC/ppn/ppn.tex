@@ -24,7 +24,7 @@ A simple lession and tuitorial on using ppn.py in an effective and efficient man
 %##############################################################
 
 \section{Introduction}
-\index{ppm}Welcome to the ppn.py User Guide.  The purpose of ppn.py is
+\index{ppn}Welcome to the ppn.py User Guide.  The purpose of ppn.py is
 to provide a simple data structure to help the user work with simple data files. 
 ppn.py contains the classes xtime and abu\_vector in which we work with the required data.
 xtime works with the xtime.dat file (by default) and abu\_vector with iso\_massf files (by default)
@@ -105,48 +105,48 @@ type the command:
 Now, type either help(pn.xtime) and then help(pn.abu\_vector) to find an example in the docstring.
 
 \subsection{Methods And Functions}
-Here, all the methods (public ones that is) that are available to xtime. To view more information 
+Here, all the methods (public ones that is) that are available to xtime and abu\_vector. To view more information 
 about any of them please consult the docstring by typeing help(pn.method), assuming
 the user imported this module as pn.\newline
 \newline
 {\bf First for class xtime}\newline
-{\bf get()}
+{\bf get()}\newline 
 Get one data column with the data.\newline
-{\bf plot\_xtime()}
+{\bf plot\_xtime()}\newline 
 Make a simple plot of two columns against each other.\newline
-{\bf plot()}
+{\bf plot()}\newline 
 Simple plot function.\newline
-{\bf getplotMulti()}
+{\bf getplotMulti()}\newline 
 Method for plotting multiple plots and saving it to multiple pngs.\newline
 \newline
 {\bf Now for class abu\_vector}\newline
-{\bf get()}
+{\bf get()}\newline 
 In this method a column of data for the associated attribute is
 returned. If fname is a list or None a list of each cycles in 
 fname or all cycles is returned\newline
-{\bf getElement()}
+{\bf getElement()}\newline 
 In this method instead of getting a particular column of data,
 the program gets a paticular row of data for a paticular 
 element name.\newline
-{\bf getCycleData()}
+{\bf getCycleData()}\newline 
 In this method a column of data for the associated cycle attribute is returned\newline
-{\bf getColData()}
+{\bf getColData()}\newline 
 In this method a column of data for the associated column attribute is returned\newline
-{\bf plot()}
+{\bf plot()}\newline 
 Simple plot function.\newline
-{\bf getplotMulti()}
+{\bf getplotMulti()}\newline 
 Method for plotting multiple plots and saving it to multiple pngs.\newline
-{\bf clear()}
+{\bf clear()}\newline 
 Method for removing the title and/or xlabel and/or Ylabel \newline
-{\bf abu\_chart()}
+{\bf abu\_chart()}\newline 
 Plots an abundence chart\newline
-{\bf abu\_chartMulti()}
+{\bf abu\_chartMulti()}\newline 
 Method that plots abundence charts and saves those figures to a .png file (by default). Plots a figure for each cycle in the argument cycle\newline
-{\bf iso\_abundMulti()}
+{\bf iso\_abundMulti()}\newline 
 Method that plots isotope abundence plots and saves those figures to a .png file (by default). Plots a figure for each cycle in the argument cycle\newline
-{\bf iso\_abund()}
+{\bf iso\_abund()}\newline 
 Plots the abundance of all the chemical isotopes
-{\bf get()}
+{\bf get()}\newline 
 		
 \subsection{History} 
 This document history complements the svn log.

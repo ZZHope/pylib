@@ -2,7 +2,7 @@
 % Title of document
 \renewcommand{\ndoctitle}{ascii\_table.py: Simple Ascii Table Data Structure} 
 % Document category acronym 
-\renewcommand{\ndocname}{ppm}                      
+\renewcommand{\ndocname}{ascii\_table}                      
 % svn dir
 \renewcommand{\svndir}{svn://forum.astro.keele.ac.uk/utils/pylib}  
 % Contributors to this document
@@ -19,13 +19,15 @@ Contributors: \ndoccontribs\\
 {  \textbf{Abstract:} \slshape
 A simple lession and tuitorial on using ascii\_table.py in an effective and efficient manner
 }
-%##############################################################
+%
+%#############################################################
 %# Section: Introduction
 %##############################################################
 
 \section{Introduction}
 \index{ascii\_table}Welcome to the Ascii Table User Guide.  The purpose of ascii\_table.py is
-to provide a simple data structure to help the user work with simple data files. 
+to provide a simple data structure to help the user work with simple Ascii data files
+and Trajectory Ascii files. 
 PPM.py contains the class YProfile in which we work with the required data.
 This document will provide the user with a 
 tutorial and walk through of the tools contained within ascii\_table.py and
@@ -38,21 +40,35 @@ C)The column attribute names are separated by '  ' by default or whatever the
 user dictates to the class by specifying sep.\newline
 D)All the data columns are of equal length.\newline
 E)Data columns are seperated by blank spaces.\newline
+\subsection{Nature of Trajectory Files}
+The first three lines start with a '\#'. The first of these contains 'time', 'T' 
+	and 'rho', each seperated by a space. The second is 'YRS/SEC; T8K/T9K; 
+	CGS/LOG' which are the choices for the header attributes
+	AGEUNIT, TUNIT, and RHOUNIT can be. The third is something like 'FORMAT:'\newline
+The four lines afther those three are the header attributes. Each line has one
+	header attribute, followd by a = and then followed after by the value.\newline
+After these seven lines comes three columns of data, the first is is associated 
+	with 'time', the second with 'T' and the third with rho.\newline
+\subsection{Disclaimer}
+Programmers have a bad habbit of not updating documentation, espically then it is in  a .tex file.
+It is then recommeded that the user look at the docstring contained within the pyhton script, there the information is more likely to be accurite up to date
+, more about accessing that later.
+
 \section{Tutorial and Walkthough}
 
 \subsection{Downloading and configuring}
-Before the user can start working with ppm.py, they first must download the python 
+Before the user can start working with ascii\_table.py, they first must download the python 
 module from svn:/ /forum.astro.keele.ac.uk/utils/pylib.  Also the user must download the python module data\_plot.py and utils.py. Once the package is placed in the filesystem, the user must add the location
-of ppm.py to their python path.  What this means is that the user is telling python where to look when importing modules.
+of ascii\_table.py to their python path.  What this means is that the user is telling python where to look when importing modules.
 To do this:
 \newline
-A) Navigate to the location of ppm.py in a terminal and type,
+A) Navigate to the location of ascii\_table.py in a terminal and type,
 
 \begin{verbatim}
 pwd
 \end{verbatim}
 
-What should output is the location of ppm.py.
+What should output is the location of ascii\_table.py.
 \newline
 B) In a unix environment, open up your .bashrc file that is usually located in your home directory.  If it is not there, do not worry, it is a hidden file.
 in the users home directory and open it.  If it does not exist, create it using a text editor.
@@ -62,7 +78,7 @@ Now in this .bashrc there may or may not be a line like:
 export PYTHONPATH=/directory/:
 \end{verbatim}
 
-Now add the location of ppm.py to the end of the line and a semi-colon.  It now should look like:
+Now add the location of ascii\_table.py to the end of the line and a semi-colon.  It now should look like:
 
 \begin{verbatim}
 export PYTHONPATH=/directory/:/location/of/ascii_table.py:
@@ -74,18 +90,19 @@ If that line did not already exist add this line to the .bashrc file.
 export PYTHONPATH=$PYTHONPATH:/location/of/ascii_table.py:
 \end{verbatim}
 
-Now we must repeat these steps with data\_plot.py and utils.py unless if they are in the same directory as ppm.py, in which case everything is ready to go.
+Now we must repeat these steps with data\_plot.py and utils.py unless if they are in the same directory as ascii\_table.py, in which case everything is ready to go.
 
 
 \section{Getting Started}
-Here I will go about explaining how the user would go about using ascii\_table.py for his or her purposes.
+Here I will go about explaining how the user would go about using ascii\_table.py to read a normal ascii file.
 First in our python command line (accessed by typing the command 'python' in your terminal) or in a python script,
 type the command:
 \begin{verbatim}
 >import ascii_table as a
 \end{verbatim}
-Now, baring any errors ppm should be loaded into your command line or script, and the user can begin
-to work with ppm and its YProfile class. To create an instance of YProfile type:
+\subsection{Normal Ascii files}
+Now, baring any errors ascii\_table should be loaded into your command line or script, and the user can begin
+to work with ascii\_table and its AsciiTable class. To create an instance of AsciiTable type:
 \begin{verbatim}
 >p=a.AsciiTable('file','Directory')
 \end{verbatim}
@@ -105,8 +122,17 @@ An actual, real life, example would be
 \begin{verbatim}
 >p=a.AsciiTable('C12.dat','./Run1/', sep=':')
 \end{verbatim}
-
 Now the user can use their AsciiTable instance as they see fit.
+\subsection{Trajectory Ascii files}
+To use it to read a Trajectory Ascii file all the user has to do is when making an instance is add the teajectory argument to equal true
+\begin{verbatim}
+>p=a.AsciiTable('file', trajectory=True)
+\end{verbatim}
+Also if 'trajectory' is in the filename, the user does not need to add this trajectory argument, 
+the program will realize that it is a trajectory file. So the user could then call it like:
+\begin{verbatim}
+>p=a.AsciiTable('filetrajectory.dat')
+\end{verbatim}
 
 \section{Viewing Data}
 Once the user has instantiated their instance, they are ready to start working with it.
@@ -145,7 +171,7 @@ ipython --pylab --q4thread
 \end{verbatim}
 (note: the argument --q4thread is a work around for a bug in ipyhthon 0.10.1, if a different version is in use, this may not be needed)
 \newline
-Now import ppm and create an instance as was documented in the Getting Started section.
+Now import ascii\_table and create an instance as was documented in the Getting Started section.
 For AsciiTable, the DataPlot class in  data\_plot.py provides us with two methods plot() and clear().
 \newline
 To use the plot method
@@ -155,17 +181,45 @@ p.plot(attriX, attriY)
 Where attriX is the name of the attribute of what the user wants on the X axis and attriY is the name of the attribute of what the user wants on the Y axis.
 This method automatically generates the title, the legend and the X and Y axis lables.
 
+\section{Writeing Ascii files}
+This module also allows us to write ascii files. One thing to note, these write 
+methods are global, they do not belong to any class, but the the module itself.
+\subsection{Normal Ascii files}
+Continueing from the example before we call:
+\begin{verbatim}
+a.write(FileName, headers, dcols, data)
+\end{verbatim}
+Where FileName is the name of the ascii file, headers is a list of strings, dcols
+is the list of the data column names and data is a list of lists (or numy arrays)
+of data. Warning, the length of data and dcols must be the same
+\subsection{Trajectory Ascii files}
+Continueing from the example before we call:
+\begin{verbatim}
+a.write(data=[a,b,c])
+\end{verbatim}
+Where a,b and c are each a list of data. Please see the docstring for this method
+for more information.
 \section{Methods And Functions}
-Here, all the methods (public ones that is) that are available to ppn.py will be explained in detail.
+Here, all the methods (public ones that is) that are available to ascii\_table.py will be explained.
+To view more information about any of them please consult the docstring by typeing help(asc.method), assuming
+the user imported this module as asc.
 \newline\newline
 {\bf get(attri).}
 \newline  
-
 Method that dynamically determines the type of attribute that is passed into this method. Also it then returns that attribute's
 associated data.\newline
 Input:\newline
 attri: The attribute we are looking for.\newline
-		
+{\bf plot()}\newline 
+Simple plot function.\newline
+{\bf getplotMulti()}\newline 
+Method for plotting multiple plots and saving it to multiple pngs.\newline
+{\bf clear()}\newline 
+Method for removing the title and/or xlabel and/or Ylabel \newline\newline
+{\bf writeTraj()}\newline 
+Method for writeing Trajectory type ascii files files.\newline\newline
+{\bf write()}\newline 
+Method for writeing Ascii files. \newline\newline
 \section{History} 
 This document history complements the svn log.
 
@@ -174,7 +228,7 @@ This document history complements the svn log.
 Authors & yymmdd & Comment \\
 \hline
 DAC & 101117 & generate template and imput data\\
-
+DAC & 101221 & Updated documentation\\
 \hline
 \end{tabular*}
 
