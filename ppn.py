@@ -281,6 +281,8 @@ class abu_vector(DataPlot,Utils):
 		fname=self.files[len(self.files)-1]
 		self.cattrs,self.dcols,self.index=self._readFile(fname,sldir)
 		
+		for i in xrange(len(self.files)):
+			self.files[i]=self.sldir+self.files[i]
 		print str(len(self.files))+' cycle numbers found in '+sldir
 		print 'Rangeing from 0 to '+str(len(self.files)-1)
 	

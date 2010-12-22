@@ -85,6 +85,7 @@ class se(DataPlot,Utils):
     def __init__(self, sedir='.', pattern='.h5'):
         
         slist = os.listdir(sedir)
+        self.pattern=pattern
         expr = re.compile(pattern)
        
         sefiles=filter(expr.search,slist)
