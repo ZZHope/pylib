@@ -4,3 +4,6 @@ python testppm.py
 python testATable.py
 python testmesaSL.py
 python testmesaprof.py
+python testMPPNP.py
+python testXtime.py
+python testAbu_vector.py

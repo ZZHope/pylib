@@ -1,9 +1,11 @@
 '''
 asserts.py
 
-a collection of assert statmentd for testing a program
+a collection of assert statments and testing tools for testing a program
 
 '''
+import inspect
+
 
 def assertEquals(actual,expected, msg='expected', test=''):
 	
@@ -27,3 +29,19 @@ def assertIn(actual,expected, msg='', test=''):
 			print 'Test passed'
 		else:
 			print test+ ' Test passed'
+
+def assertTrue(boo,msg='', test=''):
+	if boo:
+		if test=='':
+			print 'Test passed'
+		else:
+			print test+ ' Test passed'
+
+	else:
+		if msg=='':
+			print 'Assert failed: False'
+		else:
+			print 'Assert failed: '+str(msg)
+def lineno():
+	return str(inspect.currentframe().f_back.f_lineno)
+	
