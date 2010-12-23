@@ -274,8 +274,8 @@ class DataPlot:
 			listY=self.get(atriY,FName, numType,resolution='a')
 			listX=self.get(atriX,FName, numType,resolution='a')
 		elif plotType=='se':
-			print 'This method is not supported for '+str(self.__class__)
-			return
+			listY=self.get(FName, atriY)
+			listX=self.get(FName, atriX)
 		elif plotType=='PPN' :
 			if FName==None and atriX not in self.cattrs and atriY not in self.cattrs:
 				FName=len(self.files)-1
@@ -587,8 +587,11 @@ class DataPlot:
 		
 		if plotType=='se':
 			cycle=self.se.findCycle(cycle)
-			nin=self.se.A
-			zin=self.se.Z
+			nin=zeros(len(self.se.A))
+			zin=zeros(len(self.se.Z))
+			for i in xrange(len(nin)):
+				nin[i]=self.se.A[i]
+				zin[i]=self.se.Z[i]
 			for i in xrange(len(nin)):
 				nin[i]=nin[i]-zin[i]
 			yin=self.get(cycle, 'iso_massf')
