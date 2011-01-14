@@ -3,7 +3,6 @@ from asserts import *
 def main():
 	print '\nxtime test\n'
 	p=xtime('./ppn/')
-	c
 	
 	initTests(p)
 	

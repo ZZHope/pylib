@@ -239,7 +239,7 @@ class DataPlot:
 		sparse: Argument that skips every so many data points. For 
 			example if this argument was 5, This method would plot
 			the 0th, 5th, 10th ... elements.
-		show: A boolean of if the plot should be displayed> usefull with
+		show: A boolean of if the plot should be displayed usefull with
 			the multiPlot method
 		WARNING: Unstable if get returns a list with only one element (x=[0])
 		limits: The length four list of the x and y limits. The order of
@@ -503,7 +503,7 @@ class DataPlot:
 			return 0
 		if indX<indY:
 			return -1
-	def abu_chartMulti(self,cycList, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotAxis=[0,0,0,0],pdf=False,title=None):
+	def abu_chartMulti(self,cycList, mass_range=None ,ilabel = True,imlabel = True,imagic =  False,boxstable=True,lbound=20,plotAxis=[0,0,0,0],pdf=False,title=None):
 		'''
 		Method that plots abundence chart and saves those figures to a .png file 
 		(by default). Plots a figure for each cycle in the argument cycle
@@ -521,12 +521,11 @@ class DataPlot:
 		
 		
 		if self.which('dvipng')==None:
-			print "This method needs the third party program dvipng to operate"
+			print "This method may need the third party program dvipng to operate"
 			print 'It is located at http://sourceforge.net/projects/dvipng/'
-			print 'Returning None'
-			return None
+
 		for i in xrange(len(cycList)):
-			self.abu_chart( cycList[i], mass_range ,ilabel,imlabel,imagic,plotAxis,False)
+			self.abu_chart( cycList[i], mass_range ,ilabel,imlabel,imagic,boxstable,lbound,plotAxis,False)
 			if title !=None:
 				pl.title(title)
 			else:
@@ -539,16 +538,21 @@ class DataPlot:
 		
 		return None
 	#from mppnp.se
-	def abu_chart(self, cycle, mass_range=None ,ilabel = 1,imlabel = 1,imagic =  0,plotAxis=[0,0,0,0], show=True):
+	def abu_chart(self, cycle, mass_range=None ,ilabel = True,imlabel = True,imagic =  False,
+		boxstable=True,lbound=20,plotAxis=[0,0,0,0], show=True):
 		'''
 		Plots an abundence chart
 		input:
 		cycle: The cycle we are looking in. It it is a list of cycles, 
 			this method will then do a plot for each of theses cycles 
 			and save them all to a file
-		ilabel: elemental labels off/on [0/1]
-		imlabel: label for isotopic masses off/on [0/1]
-		imagic:  turn lines for magic numbers off/on [0/1]
+		ilabel: elemental labels off/on [False/True] defaults to True
+		imlabel: label for isotopic masses off/on [False/True], defaults to True
+		imagic:  turn lines for magic numbers off/on [False/True] defaults to False
+		boxstable: plot the black boxes around the stable elements, 
+			   defaults to true
+		lbound: The lower bound of the colour spectrum ploted. Defaults 
+			to 20
 		plotaxis: Set axis limit: If default [0,0,0,0] the complete 
 			range in (N,Z) will be plotted. It equates to 
 			[xMin,xMax,Ymin,Ymax]
@@ -560,7 +564,8 @@ class DataPlot:
 		    		 this range does not make sence ie [45,2]
 			 	if None, it will plot over the entire range
 				Defaults to None
-				
+		show:  boolean of if the plot should be displayed useful with
+		       saving multiple plots using abu_chartMulti		
 		'''
 		#######################################################################
 		#### plot options
@@ -575,7 +580,7 @@ class DataPlot:
 		#ff = fdic.ff(inpfile)
 		
 		if str(cycle.__class__)=="<type 'list'>":
-			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,plotAxis)
+			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,boxstable,lbound,plotAxis)
 			return
 		plotType=self.classTest()
 		
@@ -707,7 +712,7 @@ class DataPlot:
 		cmapa.set_under(color='w')
 		cmapr.set_under(color='w')
 		# set value range for abundance colors (log10(Y))
-		norma = colors.Normalize(vmin=-20,vmax=0)
+		norma = colors.Normalize(vmin=-lbound,vmax=0)
 		# set x- and y-axis scale aspect ratio to 1
 		ax.set_aspect('equal')
 		#print time,temp and density on top
@@ -737,7 +742,9 @@ class DataPlot:
 		    for j in range(nnmax):
 		      if nzycheck[j,i,0]==1:
 			xy = j-0.5,i-0.5
-			rect = Rectangle(xy,1,1,ec='k')
+			
+			rect = Rectangle(xy,1,1,)
+			
 			# abundance 
 			yab = nzycheck[j,i,1]
 			if yab == 0:
@@ -770,28 +777,29 @@ class DataPlot:
 		head = f.readline()
 		stable = []
 		'''
-		for i in xrange(len(self.stable_el)):
-			if i == 0:
-				continue
-			
-			
-			tmp = self.stable_el[i]
-			try:
-				zz= self.elements_names.index(tmp[0]) #charge
-			except:
-				continue
-					
-			for j in xrange(len(tmp)):
-				if j == 0:
+		if boxstable:
+			for i in xrange(len(self.stable_el)):
+				if i == 0:
 					continue
 				
-				nn = int(tmp[j]) #atomic mass
-				nn=nn-zz
 				
-				xy = nn-0.5,zz-0.5
-				rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=3.)
-				rect.set_zorder(2)
-				ax.add_patch(rect)
+				tmp = self.stable_el[i]
+				try:
+					zz= self.elements_names.index(tmp[0]) #charge
+				except:
+					continue
+						
+				for j in xrange(len(tmp)):
+					if j == 0:
+						continue
+					
+					nn = int(tmp[j]) #atomic mass
+					nn=nn-zz
+					
+					xy = nn-0.5,zz-0.5
+					rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=3.)
+					rect.set_zorder(2)
+					ax.add_patch(rect)
 		
 		
 		
@@ -800,7 +808,7 @@ class DataPlot:
 		iarr = 0
 		
 		# plot element labels
-		if ilabel==1:
+		if ilabel:
 		  for z in range(nzmax):
 		    try:
 		      nmin = min(argwhere(nzycheck[:,z,iarr]))[0]-1
@@ -809,7 +817,7 @@ class DataPlot:
 		      continue
 		      
 		# plot mass numbers
-		if imlabel==1:
+		if imlabel:
 		  for z in range(nzmax):
 		     for n in range(nnmax):
 			a = z+n
@@ -817,7 +825,7 @@ class DataPlot:
 			  ax.text(n,z,a,horizontalalignment='center',verticalalignment='center',fontsize='small',clip_on=True)
 		
 		# plot lines at magic numbers
-		if imagic==1:
+		if imagic:
 		  ixymagic=[2, 8, 20, 28, 50, 82, 126]
 		  nmagic = len(ixymagic)
 		  for magic in ixymagic:

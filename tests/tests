@@ -7,3 +7,4 @@ python testmesaprof.py
 python testMPPNP.py
 python testXtime.py
 python testAbu_vector.py
+echo All Tests Completed

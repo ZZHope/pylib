@@ -5,7 +5,7 @@ def main():
 	stddir='./YProfile'
 	
 	
-	p=YProfile(stddir)
+	p=yprofile(stddir)
 	headers= p.hattrs
 	cols= p.dcols
 	cyc=p.cattrs
