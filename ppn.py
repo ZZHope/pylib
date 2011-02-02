@@ -229,7 +229,7 @@ class abu_vector(DataPlot,Utils):
         >>> p.plot('abundance_yps', 'Z',0)
 	plots data
 	>>> p.iso_abund(0)
-	Plots an isotope abundence chart
+	Plots an isotope abundence distribution
 	>>> p.abu_chart(0)
 	Plots an isotope abundence chart
 	
