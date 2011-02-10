@@ -5,27 +5,28 @@ By Daniel Alexander Bertolino Conti
 Fall 2010
 If the user find any bugs or errors, please email 
 
-This module will read in simple ascii tables and store the data within them
+This module will read and write simple ascii tables and store the data
+within them.
 
-Assumptions for Ascii Files:
-Headers are always at the beginning of the file and start with a capital H
-The next line after the header lines, is a line of column attribute names.
-The column attribute names are separated by '  ' by default or whatever the 
-	user dictates to the class.
-Data columns are seperated by spaces and each data atgtribute contains no spaces
-All the data columns are of equal length.
-Any file name that has 'trajectory' or 'Trajectory' in it, is assumed to be a 
-	Trajectory type file
+Assumptions for ascii Files: Headers are always at the beginning of
+    the file and start with a capital H The next line after the header
+    lines, is a line of column attribute names.  The column attribute
+    names are separated by ' ' by default or whatever the user
+    dictates to the class. Data columns are seperated by spaces and
+    each data attribute contains no spaces. All the data columns are
+    of equal length.  Any file name that has 'trajectory' or
+    'Trajectory' in it, is assumed to be a trajectory type file
 
-Assumptions for Trajectory Files
-The first three lines start with a '#'. The first of these contains 'time', 'T' 
-	and 'rho', each seperated by a space. The second is '# YRS/SEC; T8K/T9K; 
-	CGS/LOG' which are the choices for the header attributes
-	AGEUNIT, TUNIT, and RHOUNIT can be. The third is something like 'FORMAT:'
-The four lines afther those three are the header attributes. Each line has one
-	header attribute, followd by a = and then followed after by the value.
-After these seven lines comes three columns of data, the first is is associated 
-	with 'time', the second with 'T' and the third with rho.
+Assumptions for Trajectory Files: The first three lines start with a
+    '#'. The first of these contains 'time', 'T' and 'rho', each
+    seperated by a space. The second is '# YRS/SEC; T8K/T9K; CGS/LOG'
+    which are the choices for the header attributes AGEUNIT, TUNIT,
+    and RHOUNIT can be. The third is something like 'FORMAT:' The four
+    lines afther those three are the header attributes. Each line has
+    one header attribute, followd by a = and then followed after by
+    the value.  After these seven lines comes three columns of data,
+    the first is is associated with 'time', the second with 'T' and
+    the third with rho.
 """
 from numpy import *
 from data_plot import *
