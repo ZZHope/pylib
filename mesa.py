@@ -355,10 +355,10 @@ class star_log(DataPlot):
 		h1_boundary_mass  = self.get('h1_boundary_mass')
 		he4_boundary_mass = self.get('he4_boundary_mass')
 		star_mass         = self.get('star_mass')
-		mx1_bot           = self.get('conv_mx1_bot')*star_mass
-		mx1_top           = self.get('conv_mx1_top')*star_mass
-		mx2_bot           = self.get('conv_mx2_bot')*star_mass
-		mx2_top           = self.get('conv_mx2_top')*star_mass
+		mx1_bot           = self.get('mx1_bot')*star_mass
+#		mx1_top           = self.get('mx1_top')*star_mass
+		mx2_bot           = self.get('mx2_bot')*star_mass
+		mx2_top           = self.get('mx2_top')*star_mass
 		surface_c12       = self.get('surface_c12')
 		surface_o16       = self.get('surface_o16')
 	
@@ -373,7 +373,7 @@ class star_log(DataPlot):
 		pyl.plot(xaxisarray,h1_boundary_mass,label='h1_boundary_mass')
 		pyl.plot(xaxisarray,he4_boundary_mass,label='he4_boundary_mass')
 		pyl.plot(xaxisarray,mx1_bot,',r',label='conv bound')
-		pyl.plot(xaxisarray,mx1_top,',r')
+#		pyl.plot(xaxisarray,mx1_top,',r')
 		pyl.plot(xaxisarray,mx2_bot,',r')
 		pyl.plot(xaxisarray,mx2_top,',r')
 		pyl.ylabel('mass coordinate')
@@ -383,6 +383,60 @@ class star_log(DataPlot):
 		    pyl.xlabel('model number')
 		pyl.plot(xaxisarray,star_mass,label='star_mass')
 		pyl.legend(loc=6)
+
+    def t_surfabu(self,num_frame,xax,t0_model=0):
+		''' t_surfabu plots surface abundance evolution as a function of time
+		
+		num_frame    number of frame to plot this plot into
+		xax          string that is either model or time to indicate what is to 
+			     be used on the x-axis
+                t0_model     model for the zero point in time, for AGB plots this would be
+                             usually the model of the 1st TP, which can be found with the 
+                             Kippenhahn plot
+                '''
+	
+		pyl.figure(num_frame)
+		
+		if xax == 'time':
+		    xaxisarray = self.get('star_age')
+		elif xax == 'model':
+		    xaxisarray = self.get('model_number')
+		else:
+		    print 't-surfabu error: invalid string for x-axis selction.'+\
+			  ' needs to be "time" or "model"'
+	    
+		star_mass         = self.get('star_mass')
+		surface_c12       = self.get('surface_c12')
+		surface_c13       = self.get('surface_c13')
+		surface_n14       = self.get('surface_n14')
+		surface_o16       = self.get('surface_o16')
+	
+		COratio=(surface_c12*4.)/(surface_o16*3.)
+                t0_mod=xaxisarray[t0_model]
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,COratio[t0_model:],'-k',label='CO ratio')
+		pyl.ylabel('C/O ratio')
+		pyl.legend(loc=4)
+	
+	
+		pyl.twinx()
+                log10_c12=np.log10(surface_c12[t0_model:])
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,log10_c12,\
+                             label='$^{12}\mathrm{C}$')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,np.log10(surface_c13[t0_model:]),\
+                             label='$^{13}\mathrm{C}$')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,np.log10(surface_n14[t0_model:]),\
+                             label='$^{14}\mathrm{N}$')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,np.log10(surface_o16[t0_model:]),\
+                             label='$^{16}\mathrm{O}$')
+
+
+		pyl.ylabel('mass fraction $\log X$')
+		if xax == 'time':
+		    pyl.xlabel('t / yrs')
+		elif xax == 'model':
+		    pyl.xlabel('model number')
+		pyl.legend(loc=2)
+# ... end t_surfabu
 
     def t_lumi(self,num_frame,xax):
 		''' Luminosity evolution as a function of time or model
