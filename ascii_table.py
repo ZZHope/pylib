@@ -1,12 +1,9 @@
 """
-Ascii_table.py
+Ascii_table.py: read and write simple ascii tables 
 
 By Daniel Alexander Bertolino Conti
 Fall 2010
-If the user find any bugs or errors, please email 
-
-This module will read and write simple ascii tables and store the data
-within them.
+If the user find any bugs or errors, please email fherwig@uvic.ca.
 
 Assumptions for ascii Files: Headers are always at the beginning of
     the file and start with a capital H The next line after the header

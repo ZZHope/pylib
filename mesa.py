@@ -31,8 +31,9 @@
     initiated within one session and data from different instances
     (i.e. models, tracks etc) can be overplotted.
 
-    Here is how a simple session could look like that is plotting an HRD
-    (I prefer to load ipython with matplotlib and numpy support via the alias
+    Here is how a simple session could look like that is plotting an
+    HRD (I prefer to load ipython with matplotlib and numpy support
+    via the alias
     alias mpython='ipython -pylab -p numpy -editor emacsclient')
 
         vortex$ mpython
@@ -254,8 +255,10 @@ class star_log(DataPlot):
     ''' read star.log MESA output and plot various things, including
     HRD, Kippenhahn etc
     
-    sldir  - which LOGS directory
-    slname - optional argument if star.log file has alternative name,
+    sldir              - which LOGS directory
+    slname='star.log'  - optional argument if star.log file has alternative name,
+    clean_starlog=True - request new cleaning of star.log, makes star.logsa which 
+                         is the file that is actually read and plotted
     use like this: another=ms.star_log('LOGS',slname='anothername')
     '''
 
@@ -264,9 +267,10 @@ class star_log(DataPlot):
     header_attr = []
     cols = [] 
     
-    def __init__(self,sldir,slname='star.log'):
-        self.sldir = sldir
+    def __init__(self,sldir,slname='star.log',clean_starlog=True):
+        self.sldir  = sldir
         self.slname = slname
+        self.clean_starlog  = clean_starlog
 
         if not os.path.exists(sldir+'/'+slname):
             print 'error: no star.log file found in '+sldir
@@ -283,15 +287,14 @@ class star_log(DataPlot):
         sldir   = self.sldir
         slname  = self.slname
         slaname = slname+'sa'
-        if os.path.exists(sldir+'/'+slaname):
+        if self.clean_starlog and os.path.exists(sldir+'/'+slaname):
             os.remove(sldir+'/'+slaname)
-        # create new star.logsa file        
-#        os.popen('cd '+sldir+';cleanstarlog.py '+slname+' > /dev/null')
-
-        cleanstarlog(sldir+'/'+slname)
             
         if not os.path.exists(sldir+'/'+slaname):
-            print 'Warning in read_starlog: no sa file produced.'
+            print 'No star.logsa file found, create new one from star.log.'
+            cleanstarlog(sldir+'/'+slname)
+        else:
+            print 'Using old star.logsa file ...'
             
         cmd=os.popen('wc '+sldir+'/'+slaname)    
         cmd_out=cmd.readline()
@@ -334,12 +337,25 @@ class star_log(DataPlot):
 		pyl.xlabel('log Teff')
 		pyl.ylabel('log L')
     
-    def kippenhahn(self,num_frame,xax):
+    def kippenhahn(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
+                       tp_agb=False):
 		''' Kippenhahn plot as a function of time or model
 		
-		num_frame    number of frame to plot this plot into
-		xax          string that is either model or time to indicate what is to 
-			     be used on the x-axis'''
+		num_frame    number of frame to plot this plot into 
+                xax          string that is either model or time to
+                             indicate what is to be used on the x-axis
+
+                t0_model     model for the zero point in time, for AGB
+                             plots this would be usually the model of
+                             the 1st TP, which can be found with the
+                             Kippenhahn plot 
+                title        figure title
+
+                tp_agb=False tp_agb mode will adjust the mass range to
+                             bracket the H-free core so that the
+                             evolution of the H-burning shell can be
+                             seen
+                '''
 	
 		pyl.figure(num_frame)
 		
@@ -351,12 +367,13 @@ class star_log(DataPlot):
 		    print 'kippenhahn_error: invalid string for x-axis selction.'+\
 			  ' needs to be "time" or "model"'
 		
+                t0_mod=xaxisarray[t0_model]
 	    
 		h1_boundary_mass  = self.get('h1_boundary_mass')
 		he4_boundary_mass = self.get('he4_boundary_mass')
 		star_mass         = self.get('star_mass')
 		mx1_bot           = self.get('mx1_bot')*star_mass
-#		mx1_top           = self.get('mx1_top')*star_mass
+		mx1_top           = self.get('mx1_top')*star_mass
 		mx2_bot           = self.get('mx2_bot')*star_mass
 		mx2_top           = self.get('mx2_top')*star_mass
 		surface_c12       = self.get('surface_c12')
@@ -364,35 +381,38 @@ class star_log(DataPlot):
 	
 		COratio=(surface_c12*4.)/(surface_o16*3.)
 	
-		pyl.plot(xaxisarray,COratio,'-k',label='CO ratio')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,COratio[t0_model:],'-k',label='CO ratio')
 		pyl.ylabel('C/O ratio')
 		pyl.legend(loc=4)
-	
-	
-		pyl.twinx()
-		pyl.plot(xaxisarray,h1_boundary_mass,label='h1_boundary_mass')
-		pyl.plot(xaxisarray,he4_boundary_mass,label='he4_boundary_mass')
-		pyl.plot(xaxisarray,mx1_bot,',r',label='conv bound')
-#		pyl.plot(xaxisarray,mx1_top,',r')
-		pyl.plot(xaxisarray,mx2_bot,',r')
-		pyl.plot(xaxisarray,mx2_top,',r')
-		pyl.ylabel('mass coordinate')
+
 		if xax == 'time':
 		    pyl.xlabel('t / yrs')
 		elif xax == 'model':
 		    pyl.xlabel('model number')
-		pyl.plot(xaxisarray,star_mass,label='star_mass')
-		pyl.legend(loc=6)
+	
+		pyl.twinx()
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,h1_boundary_mass[t0_model:],label='h1_boundary_mass')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,he4_boundary_mass[t0_model:],label='he4_boundary_mass')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx1_bot[t0_model:],',r',label='conv bound')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx1_top[t0_model:],',r')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_bot[t0_model:],',r')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_top[t0_model:],',r')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='star_mass')
+		pyl.ylabel('mass coordinate')
+		pyl.legend(loc=2)
 
-    def t_surfabu(self,num_frame,xax,t0_model=0):
+    def t_surfabu(self,num_frame,xax,t0_model=0,title='surface abundance'):
 		''' t_surfabu plots surface abundance evolution as a function of time
 		
-		num_frame    number of frame to plot this plot into
-		xax          string that is either model or time to indicate what is to 
-			     be used on the x-axis
-                t0_model     model for the zero point in time, for AGB plots this would be
-                             usually the model of the 1st TP, which can be found with the 
-                             Kippenhahn plot
+		num_frame    number of frame to plot this plot into 
+                xax          string that is either model or time to
+                             indicate what is to be used on the x-axis
+
+                t0_model     model for the zero point in time, for AGB
+                             plots this would be usually the model of
+                             the 1st TP, which can be found with the
+                             Kippenhahn plot 
+                title        figure title
                 '''
 	
 		pyl.figure(num_frame)
@@ -417,6 +437,10 @@ class star_log(DataPlot):
 		pyl.ylabel('C/O ratio')
 		pyl.legend(loc=4)
 	
+		if xax == 'time':
+		    pyl.xlabel('t / yrs')
+		elif xax == 'model':
+		    pyl.xlabel('model number')
 	
 		pyl.twinx()
                 log10_c12=np.log10(surface_c12[t0_model:])
@@ -429,13 +453,9 @@ class star_log(DataPlot):
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,np.log10(surface_o16[t0_model:]),\
                              label='$^{16}\mathrm{O}$')
 
-
 		pyl.ylabel('mass fraction $\log X$')
-		if xax == 'time':
-		    pyl.xlabel('t / yrs')
-		elif xax == 'model':
-		    pyl.xlabel('model number')
 		pyl.legend(loc=2)
+                pyl.title(title)
 # ... end t_surfabu
 
     def t_lumi(self,num_frame,xax):
