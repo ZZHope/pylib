@@ -351,10 +351,10 @@ class star_log(DataPlot):
                              Kippenhahn plot 
                 title        figure title
 
-                tp_agb=False tp_agb mode will adjust the mass range to
-                             bracket the H-free core so that the
-                             evolution of the H-burning shell can be
-                             seen
+                tp_agb       if <> 0 then 
+                             ylim=[h1_min*1.-tp_agb/100 : h1_max*1.+tp_agb/100] 
+                             with h1_min, h1_max the min and max H-free 
+                             core mass coordinate
                 '''
 	
 		pyl.figure(num_frame)
@@ -400,6 +400,12 @@ class star_log(DataPlot):
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='star_mass')
 		pyl.ylabel('mass coordinate')
 		pyl.legend(loc=2)
+                if tp_agb > 0:
+                    h1_min = min(h1_boundary_mass[t0_model:])
+                    h1_max = max(h1_boundary_mass[t0_model:])
+                    h1_min = h1_min*(1.-tp_agb/100.)
+                    h1_max = h1_max*(1.+tp_agb/100.)
+                    pyl.ylim(h1_min,h1_max)
 
     def t_surfabu(self,num_frame,xax,t0_model=0,title='surface abundance'):
 		''' t_surfabu plots surface abundance evolution as a function of time
