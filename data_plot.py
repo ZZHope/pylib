@@ -1631,4 +1631,308 @@ class DataPlot:
 	
 	# From mesa.star_log
 	
+def flux_chart(file_name,plotaxis,plot_type):
+	'''
+	Plots a chart with fluxes
+	input:
+	file_name: name of the file of fluxes we are looking at.
+        plotaxis: [xmin,xmax,ymin,ymax], where on x axis there is neutron number and on y axis there is Z. 
+        plot_types: 0 for standard flux plot, 1 if fluxes focused on one specie.
+        Note: the script is terribly slow, need to be improved. For now I put here in data_plot:
+        [1]: import data_plot
+        [2]: data_plot.flux_chart('file_name',[xmin,xmax,ymin,ymax],int)
+	The pdf is created, but an error bumped up and the gui is empty. not sure what it is.
+        Finally, no label on x axys is written, not sure why.
+        This need to be included in ppn.py I think, and set in multi option too, in case we want to read more flux files at the same time. 
+        Finally, you need to have stable.dat to read in to make it work....
+        '''
 
+	import numpy as np
+	import matplotlib.pyplot as plt
+	from matplotlib.mpl import colors,cm
+	from matplotlib.patches import Rectangle, Arrow
+	from matplotlib.collections import PatchCollection
+	from matplotlib.offsetbox import AnchoredOffsetbox, TextArea
+	import sys
+
+    	f = open(file_name)
+    	lines = f.readline()
+        lines = f.readlines()
+    	f.close()
+        
+        # starting point of arrow
+        coord_x_1 = []
+        coord_y_1 = []
+        # ending point of arrow (option 1)
+        coord_x_2 = []
+        coord_y_2 = []
+        # ending point of arrow (option 2) 
+        coord_x_3 = []
+        coord_y_3 = []
+        # fluxes
+        flux_read = []
+        flux_log10 = []
+ 
+        single_line = [] 
+        for i in range(len(lines)):
+                single_line.append(lines[i].split())
+ 		coord_y_1.append(float(single_line[i][1]))
+                coord_x_1.append(float(single_line[i][2])-coord_y_1[i])
+ 		coord_y_2.append(float(single_line[i][5]))
+                coord_x_2.append(float(single_line[i][6])-coord_y_2[i])
+ 		coord_y_3.append(float(single_line[i][7]))
+                coord_x_3.append(float(single_line[i][8])-coord_y_3[i])
+                flux_read.append(float(single_line[i][9]))
+                flux_log10.append(np.log10(flux_read[i]+1.0e-99))    
+    
+        #print coord_x_1[72],coord_y_1[72] 
+    	print 'file read!'
+
+        if plot_type == 1:
+		I_am_the_target = [22.-10.,10.]
+        # here below need for plotting 
+	# plotaxis = [xmin,xmax,ymin,ymax] 
+	#plotaxis=[1,20,1,20]
+	#plotaxis=[0,0,0,0]
+
+	# elemental labels off/on [0/1]
+	ilabel = 1
+
+	# label for isotopic masses off/on [0/1]
+	imlabel = 1
+
+	# turn lines for magic numbers off/on [0/1]
+	imagic = 0
+
+	# flow is plotted over "prange" dex. If flow < maxflow-prange it is not plotted
+	prange = 8.
+
+        ############################################# 
+
+        max_flux = max(flux_log10)
+        
+  	nzmax = int(max(max(coord_y_1),max(coord_y_2),max(coord_y_3)))+1
+  	nnmax = int(max(max(coord_x_1),max(coord_x_2),max(coord_x_3)))+1
+
+        nzycheck = np.zeros([nnmax,nzmax,3])   
+        coord_x_out = np.zeros(len(coord_x_2))
+        coord_y_out = np.zeros(len(coord_y_2))
+        for i in range(len(flux_log10)):
+  		nzycheck[coord_x_1[i],coord_y_1[i],0] = 1
+  		nzycheck[coord_x_1[i],coord_y_1[i],1] = flux_log10[i]
+  		if coord_x_2[i] >= coord_x_3[i]:
+                        coord_x_out[i] = coord_x_2[i] 
+                        coord_y_out[i] = coord_y_2[i] 
+    			nzycheck[coord_x_out[i],coord_y_out[i],0] = 1
+    			nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10[i]
+                elif coord_x_2[i] < coord_x_3[i]:               
+                        coord_x_out[i] = coord_x_3[i] 
+                        coord_y_out[i] = coord_y_3[i] 
+    			nzycheck[coord_x_out[i],coord_y_out[i],0] = 1
+    			nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10[i]
+    		if flux_log10[i]>max_flux-prange:
+      			nzycheck[coord_x_1[i],coord_y_1[i],2] = 1
+      			nzycheck[coord_x_out[i],coord_y_out[i],2] = 1
+
+	#######################################################################
+	# elemental names: elname(i) is the name of element with Z=i 
+	elname=	('none','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe',
+        'Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb',
+        'Te', 'I','Xe','Cs','Ba','La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta','W','Re','Os',
+        'Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu')
+
+
+	#### create plot
+
+	## define axis and plot style (colormap, size, fontsize etc.)
+	if plotaxis==[0,0,0,0]:
+  		xdim=10
+  		ydim=6
+	else:
+  		dx = plotaxis[1]-plotaxis[0]
+  		dy = plotaxis[3]-plotaxis[2]
+  		ydim = 6
+  		xdim = ydim*dx/dy
+  
+	format = 'pdf'
+	params = {'axes.labelsize':  15,
+          'text.fontsize':   15,
+          'legend.fontsize': 15,
+          'xtick.labelsize': 15,
+          'ytick.labelsize': 15,
+          'text.usetex': True}
+	plt.rcParams.update(params)
+	fig=plt.figure(figsize=(xdim,ydim),dpi=100)
+	axx = 0.10
+	axy = 0.10
+	axw = 0.85
+	axh = 0.8
+	ax=plt.axes([axx,axy,axw,axh])
+
+	# color map choice for abundances
+	cmapa = cm.jet
+	# color map choice for arrows
+	cmapr = cm.autumn
+	# if a value is below the lower limit its set to white
+	cmapa.set_under(color='w')
+	cmapr.set_under(color='w')
+	# set value range for abundance colors (log10(Y))
+	norma = colors.Normalize(vmin=-20,vmax=0)
+	# set x- and y-axis scale aspect ratio to 1
+	ax.set_aspect('equal')
+	#print time,temp and density on top
+	#temp = '%8.3e' %ff['temp']
+	#time = '%8.3e' %ff['time']
+	#dens = '%8.3e' %ff['dens']
+
+	#box1 = TextArea("t : " + time + " s~~/~~T$_{9}$ : " + temp + "~~/~~$\\rho_{b}$ : " \
+        #      + dens + ' g/cm$^{3}$', textprops=dict(color="k"))
+	#anchored_box = AnchoredOffsetbox(loc=3,
+        #        child=box1, pad=0.,
+        #        frameon=False,
+        #        bbox_to_anchor=(0., 1.02),
+        #        bbox_transform=ax.transAxes,
+        #        borderpad=0.,
+        #        )
+	#ax.add_artist(anchored_box)
+
+	# Add black frames for stable isotopes
+	f = open('stable.dat')
+
+	head = f.readline()
+	stable = []
+
+	for line in f.readlines():
+  		tmp = line.split()
+  		zz = int(tmp[2])
+  		nn = int(tmp[3])
+  		xy = nn-0.5,zz-0.5
+  		rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=3.)
+  		rect.set_zorder(2)
+  		ax.add_patch(rect)
+
+ 	apatches = []
+  	acolor = []
+  	m = 0.8/prange
+  	vmax=np.ceil(max(flux_log10))
+  	vmin=max(flux_log10)-prange
+  	b=-vmin*m+0.1
+  	normr = colors.Normalize(vmin=vmin,vmax=vmax)
+  	ymax=0.
+  	xmax=0.
+
+  	for i in range(len(flux_log10)):
+    		x = coord_x_1[i]
+    		y = coord_y_1[i]
+    		dx = coord_x_out[i]-coord_x_1[i]
+    		dy = coord_y_out[i]-coord_y_1[i]                
+                if plot_type == 0: 
+    			if flux_log10[i]>=vmin:
+      				arrowwidth = flux_log10[i]*m+b
+      				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     				if xmax<x:
+        				xmax=x
+      				if ymax<y:
+        				ymax=y
+      				acol = flux_log10[i]
+      				apatches.append(arrow)
+      				acolor.append(acol)
+    		elif plot_type == 1:
+			if x==I_am_the_target[0] and y==I_am_the_target[1] and flux_log10[i]>=vmin:
+      				arrowwidth = flux_log10[i]*m+b
+      				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     				if xmax<x:
+        				xmax=x
+      				if ymax<y:
+        				ymax=y
+      				acol = flux_log10[i]
+      				apatches.append(arrow)
+      				acolor.append(acol)
+			if x+dx==I_am_the_target[0] and y+dy==I_am_the_target[1] and flux_log10[i]>=vmin:
+      				arrowwidth = flux_log10[i]*m+b
+      				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     				if xmax<x:
+        				xmax=x
+      				if ymax<y:
+        				ymax=y
+      				acol = flux_log10[i]
+      				apatches.append(arrow)
+      				acolor.append(acol)
+
+
+
+        	xy = x-0.5,y-0.5
+        	rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=1.)
+        	rect.set_zorder(2)
+        	ax.add_patch(rect)
+        	xy = x+dx-0.5,y+dy-0.5
+        	rect = Rectangle(xy,1,1,ec='k',fc='None',fill='False',lw=1.)
+        	rect.set_zorder(2)
+        	ax.add_patch(rect)
+
+  
+  	a = PatchCollection(apatches, cmap=cmapr, norm=normr)
+  	a.set_array(np.array(acolor))
+  	a.set_zorder(3)
+  	ax.add_collection(a)
+  	cb = plt.colorbar(a)
+
+  	# colorbar label
+  	cb.set_label('log$_{10}$(f)')
+  
+  	# plot file name
+  	graphname = 'flow-chart.'+format
+
+	# decide which array to take for label positions
+	iarr = 2
+
+	# plot element labels
+  	for z in range(nzmax):
+    		try:
+      			nmin = min(np.argwhere(nzycheck[:,z,iarr-2]))[0]-1
+      			ax.text(nmin,z,elname[z],horizontalalignment='center',verticalalignment='center',fontsize='medium',clip_on=True)
+    		except ValueError:
+      			continue
+      
+	# plot mass numbers
+	if imlabel==1:
+  		for z in range(nzmax):
+     			for n in range(nnmax):
+        			a = z+n
+				if nzycheck[n,z,iarr-2]==1:
+          				ax.text(n,z,a,horizontalalignment='center',verticalalignment='center',fontsize='small',clip_on=True)
+
+	# plot lines at magic numbers
+	if imagic==1:
+  		ixymagic=[2, 8, 20, 28, 50, 82, 126]
+  		nmagic = len(ixymagic)
+  		for magic in ixymagic:
+    			if magic<=nzmax:
+      				try:
+        				xnmin = min(np.argwhere(nzycheck[:,magic,iarr-2]))[0]
+        				xnmax = max(np.argwhere(nzycheck[:,magic,iarr-2]))[0]
+        				line = ax.plot([xnmin,xnmax],[magic,magic],lw=3.,color='r',ls='-')
+      				except ValueError:
+        				dummy=0
+    			if magic<=nnmax:
+      				try:
+        				yzmin = min(np.argwhere(nzycheck[magic,:,iarr-2]))[0]
+        				yzmax = max(np.argwhere(nzycheck[magic,:,iarr-2]))[0]
+        				line = ax.plot([magic,magic],[yzmin,yzmax],lw=3.,color='r',ls='-')
+      				except ValueError:
+        				dummy=0
+
+	# set axis limits
+	if plotaxis==[0,0,0,0]:
+		ax.axis([-0.5,xmax+0.5,-0.5,ymax+0.5])
+	else:
+  		ax.axis(plotaxis)
+
+	# set x- and y-axis label
+	ax.set_xlabel('neutron number')
+	ax.set_ylabel('proton number')
+
+	fig.savefig(graphname)
+	print graphname,'is done'
+
+	plt.show()
