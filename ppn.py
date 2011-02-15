@@ -244,6 +244,7 @@ class abu_vector(DataPlot,Utils):
 	dcols=[]  # list of the column attributes
 	index=0   # index of were column data begins in the file
 	files=[]  # list of files
+	isotopes=[]# list of isotopes
 	def __init__(self,sldir='./', filenames='iso_massf'):
 		''' 
 		initial method of this class
@@ -259,7 +260,8 @@ class abu_vector(DataPlot,Utils):
 		self.sldir = sldir
 		self.cattrs=[]
 		self.dcols=[]
-		self.files=[]	
+		self.files=[]
+		self.isotopes=[]
 		if not os.path.exists(sldir):  # If the path does not exist
 			print 'error: Directory, '+sldir+ ' not found'
 			print 'Now returning None'
@@ -274,7 +276,7 @@ class abu_vector(DataPlot,Utils):
 		self.files.sort()
 		
 		if len(self.files)==0: 
-			# If there are no selem Files in thes Directory
+			# If there are no Files in thes Directory
 		    	print 'Error: no '+filenames+ ' named files exist in Directory'
 		    	print 'Now returning None'
 		    	return None
@@ -285,6 +287,8 @@ class abu_vector(DataPlot,Utils):
 			self.files[i]=self.sldir+self.files[i]
 		print str(len(self.files))+' cycle numbers found in '+sldir
 		print 'Rangeing from 0 to '+str(len(self.files)-1)
+		isotops=self.get(self.dcols[-1],0)
+		
 	
 	def getCycleData(self,attri,fname,numType='cycNum'):
 		"""
