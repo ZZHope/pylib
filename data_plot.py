@@ -1641,8 +1641,9 @@ def flux_chart(file_name,plotaxis,plot_type):
         Note: the script is terribly slow, need to be improved. For now I put here in data_plot:
         [1]: import data_plot
         [2]: data_plot.flux_chart('file_name',[xmin,xmax,ymin,ymax],int)
-	The pdf is created, but an error bumped up and the gui is empty. not sure what it is.
-        Finally, no label on x axys is written, not sure why.
+	The pdf is created, but an error bumped up and the gui is empty. To avoid this, I had to set 'text.usetex': False. See below.
+        Also, for the same reason no label in x axys is written using 'text.usetex': True.  
+        Note also that the GUI works really slow with this plot. so, we need to optimize from the graphic point of view.
         This need to be included in ppn.py I think, and set in multi option too, in case we want to read more flux files at the same time. 
         Finally, you need to have stable.dat to read in to make it work....
         '''
@@ -1755,12 +1756,14 @@ def flux_chart(file_name,plotaxis,plot_type):
   		xdim = ydim*dx/dy
   
 	format = 'pdf'
+        # note that I had to set 'text.usetex': False, to avoid Exception in Tkinter callback.
+        # and to make the GUI work properly. Why? some missing package?
 	params = {'axes.labelsize':  15,
           'text.fontsize':   15,
           'legend.fontsize': 15,
           'xtick.labelsize': 15,
           'ytick.labelsize': 15,
-          'text.usetex': True}
+          'text.usetex': False}
 	plt.rcParams.update(params)
 	fig=plt.figure(figsize=(xdim,ydim),dpi=100)
 	axx = 0.10
