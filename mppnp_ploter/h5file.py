@@ -235,6 +235,7 @@ class h5FileHolder(qc.QThread):
 			print 'Reading preprocessor files'
 			preprocTable=ascii_table(self.preprocName,self.filepath)
 			for i in xrange(len(self.h5s)-1):
+				print self.h5s[i+1].filename
 				dat=preprocTable.get(self.h5s[i+1].filename+'-cyc')
 				dat1=[]
 				for j in xrange(len(dat)):
@@ -405,7 +406,7 @@ class h5FileHolder(qc.QThread):
 							None
 						#	Occasionally data comes out formatted in a funny way (arrays nested in arrays....)
 						#	This strips the nested arrays until the actual data is found
-						if dataitem != 'iso_massf':
+						if dataitem != 'iso_massf' or dataitem != 'yps':
 							
 							while np.ndim(self.temp) > 1:
 								shape = np.shape(self.temp)
@@ -428,7 +429,7 @@ class h5FileHolder(qc.QThread):
 							np.append(dat, self.temp)
 									
 									
-		if len(dat) < 2 and dataitem != 'iso_massf':
+		if len(dat) < 2 and (dataitem != 'iso_massf' or dataitem != 'yps'):
 			try:
 				dat = dat[0]
 			except IndexError:
@@ -531,7 +532,7 @@ class h5FileHolder(qc.QThread):
 						temp = h5.fetch_data_one(dataitem,cyc)
 					#	Occasionally data comes out formatted in a funny way (arrays nested in arrays....)
 					#	This strips the nested arrays until the actual data is found
-					if dataitem != 'iso_massf':
+					if dataitem != 'iso_massf' or dataitem != 'yps':
 						
 						while np.ndim(temp) > 1:
 							shape = np.shape(temp)
@@ -545,7 +546,7 @@ class h5FileHolder(qc.QThread):
 						
 						while len(temp) < 2:
 							temp = temp[0]
-					if dataitem == 'iso_massf' and isotope_of_interest != []:
+					if (dataitem == 'iso_massf' or dataitem == 'yps') and isotope_of_interest != []:
 						#	Figure out the index
 						index = 0
 						for x, iso in enumerate(self.isotopes):
@@ -561,7 +562,7 @@ class h5FileHolder(qc.QThread):
 					except AttributeError:
 						np.append(dat, temp)	
 													
-		if len(dat) < 2 and dataitem != 'iso_massf':
+		if len(dat) < 2 and (dataitem != 'iso_massf'or dataitem != 'yps'):
 
 			try:
 				dat = dat[0]
@@ -596,9 +597,10 @@ class h5FileHolder(qc.QThread):
 						node = self.h5s[x].h5[self.cycle_header+str(self.cycles[scale*y])].attrs
 						dat1.append(node.get(dataitem1, None))
 						dat2.append(node.get(dataitem2, None))	
-						print node
+						#print node
 					except (IndexError,KeyError):
-						print 'bad cycle', self.cycles[scale*y]
+						1+1
+						#print 'bad cycle', self.cycles[scale*y]
 						#print self.h5sStarted														
 				#for y in xrange(len(self.h5s[x].cycle)/scale):
 				#	node = self.h5s[x].h5[self.cycle_header+str(self.h5s[x].cycle[scale*y])].attrs
@@ -669,7 +671,10 @@ class h5FileHolder(qc.QThread):
 					except ValueError:
 						node = h5.h5[self.cycle_header+str(cyc)]
 					#temp1 = node.__getitem__("dcoeff")
-					temp1 = node.__getitem__(goal)#node.col('convection_indicator')
+					try:
+						temp1 = node.__getitem__(goal)#node.col('convection_indicator')
+					except:
+						temp1 = node.__getitem__("yps")					
 					temp2 = node.__getitem__("mass")#node.col('mass')	
 					
 					
@@ -817,7 +822,10 @@ class h5FileHolder(qc.QThread):
 										
 						
 						else:
-							temp1 = node.__getitem__("iso_massf")#col('iso_massf')
+							try:							
+								temp1 = node.__getitem__("iso_massf")#col('iso_massf')
+							except:
+								temp1 = node.__getitem__("yps")
 							temp2 = node.__getitem__("mass")#col('mass')
 							fake1 = []
 							fake2 = []
