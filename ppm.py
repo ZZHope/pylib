@@ -102,14 +102,7 @@ class yprofile(DataPlot):
 	sldir - which directory we are working in, defaults to '.', the working 
 		directory
 	"""
-    	sldir  = '' #Standard Directory
     	
-    	files = []  # List of files in this directory
-    	hattrs = [] # header attributes
-    	dcols = []  # list of the column attributes
-    	cattrs= []  # List of the attributes of the y profiles
-    	_cycle=[]    # private var
-    	_top=[]      # privite var
     			
 	def __init__(self, sldir='.'): 
 		"""
@@ -117,8 +110,15 @@ class yprofile(DataPlot):
 		Input:
 		sldir - which directory we are working in, defaults to '.', the 
 		working directory
-		"""               
-		self.sldir = sldir
+		"""
+    	
+		self.files = []  # List of files in this directory
+		self.hattrs = [] # header attributes
+		self.dcols = []  # list of the column attributes
+		self.cattrs= []  # List of the attributes of the y profiles
+		self._cycle=[]    # private var
+		self._top=[]      # privite var
+		self.sldir = sldir #Standard Directory
 		
 		if not os.path.exists(sldir):  # If the path does not exist
 		    print 'error: Directory, '+sldir+ ' not found'
@@ -175,15 +175,15 @@ class yprofile(DataPlot):
 			
 		return data
 	
-	def get(self,attri,FName=None,numType='ndump',resolution='H'):
+	def get(self,attri,fname=None,numtype='ndump',resolution='H'):
 		"""
 		Method that dynamically determines the type of attribute that is 
 		passed into this method. Also it then returns that attribute's 
 		associated data.
 		Input:
 		attri: The attribute we are looking for.
-		Fname: Be the filename, Ndump or time, Defaults to the last NDump
-		numType: designates how this function acts and how it interprets FName
+		fname: Be the filename, Ndump or time, Defaults to the last NDump
+		numtype: designates how this function acts and how it interprets FName
 			 Defaults to file
 		if numType is 'file', this function will get the desired attribute from that file
 		if numType is 'NDump' function will look at the cycle with that nDump
@@ -198,8 +198,8 @@ class yprofile(DataPlot):
 		isCol=False #If Attri is in the Column Atribute section
 		isHead=False #If Attri is in the Header Atribute section
 		
-		if FName==None:
-			FName=len(self.files)-1
+		if fname==None:
+			fname=len(self.files)-1
 		
 		if attri in self.cattrs: # if it is a cycle attribute
 			isCyc = True
@@ -210,9 +210,9 @@ class yprofile(DataPlot):
 		
 		# directing to proper get method
 		if isCyc:
-			return self.getCycleData(attri,FName, numType, resolution=resolution)
+			return self.getCycleData(attri,fname, numtype, resolution=resolution)
 		if isCol:
-			return self.getColData(attri,FName, numType, resolution=resolution)
+			return self.getColData(attri,fname, numtype, resolution=resolution)
 		if isHead:
 			return self.getHeaderData(attri)		
 		else:

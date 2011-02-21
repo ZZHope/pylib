@@ -149,8 +149,8 @@ class xtime(DataPlot):
             data_column[i]=self.data[i][self.col_num[col_str]]
         return data_column
     
-    def plot_xtime(self,Y,X='t_y',label='default',labelX=None, labelY=None , 
-    	title=None, shape='.',logX=False, logY=True, base=10):
+    def plot_xtime(self,y,x='t_y',label='default',labelx=None, labely=None , 
+    	title=None, shape='.',logx=False, logy=True, base=10):
         '''make a simple plot of two columns against each other.
         An example would be instance.plot_xtime('PB206', label='PB206 vs t_y'
         Recomend using the plot function DataPlot.plot() it has more functionality 
@@ -169,17 +169,17 @@ class xtime(DataPlot):
 	for all possable choices
         '''
         if label is 'default':
-            lab_str=Y
+            lab_str=y
         else:
             lab_str=label
         
         try:
-        	self.get(X)
+        	self.get(x)
         except KeyError:
-        	X='age'
+        	x='age'
 	
-        DataPlot.plot(self,X,Y,legend=lab_str,labelX=labelX, labelY=labelY, 
-        	      title=title, shape=shape,logX=logX, logY=logY, base=base)
+        DataPlot.plot(self,x,y,legend=lab_str,labelx=labelx, labely=labely, 
+        	      title=title, shape=shape,logx=logx, logy=logy, base=base)
         '''
         print X,Y
         xdat=self.get(X)

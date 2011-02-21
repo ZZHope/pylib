@@ -59,52 +59,51 @@ class ascii_table(DataPlot):
 	headers is a list of strings that are each a header attribute.  To learn more 
 	please look at the docstring associated with write()
 	'''
-	files = []
-	sldir = ''
-	hattrs=[]
-	dcols=[]
-	data ={}
-	dataType=''
-	headerLines=[]
-	def __init__(self,fileName,sldir='.',sep='  ', dataType='normal',headers=[],dcols=[],data=[],read=True,headerLines=[]):
+	
+	def __init__(self,filename,sldir='.',sep='  ', datatype='normal',headers=[],dcols=[],data=[],read=True,headerlines=[]):
 		'''
 		Init method that reads in ascii type files and trajectory type files.
 		By default this method reads ascii type files.  If the user wants
 		a trajectory file read, either the file must have 'trajectory'
-		in the filename or the user must set the dataType='trajectory'
+		in the filename or the user must set the datatype='trajectory'
 		
 		Input:
-		sldir: Standard directory of fileName
-		fileName: The name of the file we are looking at, or writeing to
+		sldir: Standard directory of filename
+		filename: The name of the file we are looking at, or writeing to
 		read: Boolean of weather this is reading or writing a file.
 			Defaults to Reading
 		sep: The seperator that seperates column attributes in FileName
 		     Defaults to '  '
-		dataType: What type of ascii table  you are reading and or writeing
+		datatype: What type of ascii table  you are reading and or writeing
 			  The only two options currently are 'normal' and 'trajectory'
 		Headers: A list of Header strings or if the file being writtin 
 			 is  of type trajectory, this is a dictionary of header 
 			 attributes and their associated values
 		dcols: A list of data attributes
 		data:  A list of lists (or of numpy arrays) of columns of data
-		headerLines: Additional list of strings of header data, only used
+		headerlines: Additional list of strings of header data, only used
 			     in trajectory data Types.
 		'''
 		self.sldir=sldir
-		self.files.append(fileName)
-		self.dataType=dataType
-		if 'trajectory' in fileName or 'Trajectory' in fileName:
-			self.dataType='trajectory'
+		self.files = []
+		self.hattrs=[]
+		self.dcols=[]
+		self.data ={}
+		self.headerLines=[]
+		self.files.append(filename)
+		self.dataType=datatype
+		if 'trajectory' in filename or 'Trajectory' in filename:
+			self.datatype='trajectory'
 		
 		if read:
 			
-			self.hattrs,self.data=self._readFile(sldir,fileName,sep)
+			self.hattrs,self.data=self._readFile(sldir,filename,sep)
 			self.dcols=self.data.keys()
 		else:
-			a=self.write(fileName,headers,dcols,data,headerLines,sldir,sep)
+			a=self.write(filename,headers,dcols,data,headerlines,sldir,sep)
 			if a ==None:
 				return None
-			self.hattrs,self.data=self._readFile(sldir,fileName,sep)
+			self.hattrs,self.data=self._readFile(sldir,filename,sep)
 		self.dcols=self.data.keys()
 
 	def get(self, attri):
@@ -144,10 +143,10 @@ class ascii_table(DataPlot):
 		Private method that reads in the header and column data
 		'''
 		
-		if sldir.endswith('/'):
+		if sldir.endswith(os.sep):
 			fileName = str(sldir)+str(fileName)
 		else:
-			fileName = str(sldir)+'/'+str(fileName)
+			fileName = str(sldir)+os.sep+str(fileName)
 		
 		
 		fileLines=[] #list of lines in the file
@@ -159,7 +158,7 @@ class ascii_table(DataPlot):
 		f=open(fileName,'r')
 		fileLines=f.readlines()
 		i=0
-		if self.dataType != 'trajectory':
+		if self.datatype != 'trajectory':
 			
 			while i<len(fileLines):
 				if fileLines[i].startswith('H'):
@@ -230,15 +229,15 @@ class ascii_table(DataPlot):
 		return header,dataCols
 
 #Global methods
-def writeTraj(fileName='trajectory.input',data=[], ageUnit=0,TUnit=0,RhoUnit=0, idNum=0):
+def writeTraj(filename='trajectory.input',data=[], ageunit=0,tunit=0,rhounit=0, idNum=0):
 		'''
 		Method for writeing Trajectory type ascii files files.
 		Input:
-		fileName: The file where this data will be written.
+		filename: The file where this data will be written.
 		data: A list of lists (or of numpy arrays).
-		ageUnit: If 1 ageunit = SEC, If 0 ageunit = YRS. Default is 0
-		TUnit:   If 1 TUNIT   = T9K, if 0 TUNIT   = T8K. Default is 0
-		RhoUnit: If 1 RHOUNIT = LOG, if 0 RHOUNIT = CGS. Default is 0
+		ageunit: If 1 ageunit = SEC, If 0 ageunit = YRS. Default is 0
+		tunit:   If 1 TUNIT   = T9K, if 0 TUNIT   = T8K. Default is 0
+		rhounit: If 1 RHOUNIT = LOG, if 0 RHOUNIT = CGS. Default is 0
 		idNum:  An optional id argument
 		'''
 		if data==[]:
@@ -246,26 +245,26 @@ def writeTraj(fileName='trajectory.input',data=[], ageUnit=0,TUnit=0,RhoUnit=0, 
 			print 'returning None'
 			return None
 		headers=[]
-		if ageUnit ==1:
+		if ageunit ==1:
 			headers.append('AGEUNIT = SEC')
-		elif ageUnit==0:
+		elif ageunit==0:
 			headers.append('AGEUNIT = YRS')
 		
-		if TUnit ==1:
+		if tunit ==1:
 			headers.append('TUNIT   = T9K')
-		elif TUnit==0:
+		elif tunit==0:
 			headers.append('TUNIT   = T8K')
 		
-		if RhoUnit ==1:
+		if rhounit ==1:
 			headers.append('RHOUNIT = LOG')
-		elif RhoUnit==0:
+		elif rhounit==0:
 			headers.append('RHOUNIT = CGS')
 		
 		headers.append('ID = '+str(idNum))
 		
-		write(fileName,headers,['time','T','rho'],data,['YRS/SEC; T8K/T9K; CGS/LOG',"FORMAT: '(10x,A3)'"],trajectory=True)
+		write(filename,headers,['time','T','rho'],data,['YRS/SEC; T8K/T9K; CGS/LOG',"FORMAT: '(10x,A3)'"],trajectory=True)
 		
-def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajectory=False):
+def write(filename,headers,dcols,data,headerlines=[],sldir='.',sep='  ',trajectory=False):
 		'''
 		Method for writeing Ascii files.
 		Note the attribute name at position i in dcols will be associated
@@ -274,30 +273,30 @@ def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajecto
 		of data attributes (in dcols)
 		Also all the lengths of that columns must all be the same.
 		Input:
-		fileName: The file where this data will be written.
+		filename: The file where this data will be written.
 		Headers: A list of Header strings or if the file being written 
 			 is of type trajectory, this is a List of strings
 			 that contain header attributes and their associated 
 			 values which are seperated by a '='. 
 		dcols: A list of data attributes
 		data:  A list of lists (or of numpy arrays).
-		headerLines: Additional list of strings of header data, only used
+		headerlines: Additional list of strings of header data, only used
 			     in trajectory data Types.
 		sldir: Where this fill will be written.
 		sep: What seperatesa the data column attributes
 		trajectory: Boolean of if we are writeing a trajectory type file
 		'''
 		if sldir.endswith(os.sep):
-			fileName = str(sldir)+str(fileName)
+			filename = str(sldir)+str(filename)
 		else:
-			fileName = str(sldir)+os.sep+str(fileName)
+			filename = str(sldir)+os.sep+str(filename)
 		tmp=[] #temp variable
 		lines=[]#list of the data lines
 		lengthList=[]# list of the longest element (data or column name)
 			     # in each column
 			     
-		if os.path.exists(fileName):
-			print 'Warning this method will overwrite '+ fileName
+		if os.path.exists(filename):
+			print 'Warning this method will overwrite '+ filename
 			print 'Would you like to continue? (y)es or (n)no?'
 			s = raw_input('--> ')
 			if s=='Y' or s=='y' or s=='Yes' or s=='yes':
@@ -359,15 +358,15 @@ def write(fileName,headers,dcols,data,headerLines=[],sldir='.',sep='  ',trajecto
 			lines.append(tmp+'\n')
 			tmp=''
 			
-		f=open(fileName,'w')
+		f=open(filename,'w')
 		if not trajectory:
 			for i in xrange(len(headers)):
 				f.write(headers[i])
 			f.write(dcols)
 		else:
 			f.write(dcols)
-			for i in xrange(len(headerLines)):
-				f.write('# '+headerLines[i]+'\n')
+			for i in xrange(len(headerlines)):
+				f.write('# '+headerlines[i]+'\n')
 			for i in xrange(len(headers)):
 				f.write(headers[i])
 		for i in xrange(len(lines)):
