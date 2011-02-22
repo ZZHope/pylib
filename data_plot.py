@@ -976,13 +976,15 @@ class DataPlot:
 		    ylim - A 1x2 array containing the lower and upper Y limits.
 		    	   Defaults to 1e-13 and 10
 		    ref  - reference cycle, If it is not -1, this method will 
-		    	   plot the abundences of cycle devided by the refrence
-		    	   Cycle. If any abundence in the refrence cycle is zero, 
+		    	   plot the abundances of cycle devided by the 
+		    	   abundances of the refrence
+		    	   Cycle. If any abundence in the reference cycle is zero, 
 		    	   it will then interpret that abundence of 1e-99.
 		    	   If ref is a string then this is interpreted as 
-		    	   a filename.  It will then use the abundence column as
-		    	   a refrence cycle. The standards for reading this file 
-		    	   can be found in self.read()'s docstring  
+		    	   a filename.  It will then use the abundance column as
+		    	   a reference cycle. The standards for reading this file 
+		    	   can be found in self.read()'s docstring, ie in the 
+		    	   method read() found above.
 		    	   The default is -1, it will do nothing
 		    Shape -The Shape of the dataplots, will default to circles 
 		    
@@ -1022,7 +1024,7 @@ class DataPlot:
 				abundsRef=self.se.get(ref,'iso_massf')
 			
 			if stringRef:
-				abundsRef=self.read(fileName )
+				abundsRef=self.read(fileName)
 				tmpypsRef=zeros(len(z))
 				for i in xrange(len(z)):
 					for j in xrange(len(abundsRef['z'])):

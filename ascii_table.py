@@ -91,7 +91,7 @@ class ascii_table(DataPlot):
 		self.data ={}
 		self.headerLines=[]
 		self.files.append(filename)
-		self.dataType=datatype
+		self.datatype=datatype
 		if 'trajectory' in filename or 'Trajectory' in filename:
 			self.datatype='trajectory'
 		
