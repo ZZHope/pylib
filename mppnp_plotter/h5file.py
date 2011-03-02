@@ -175,8 +175,7 @@ class h5FileHolder(qc.QThread):
 					self.h5s[-1].start()
 					self.connect(self.h5s[-1], qc.SIGNAL('finished()'), self.add_data)
 		
-		print "stated:"
-				
+					
 		
 		if not self.preprocExists:
 			self.connect(self, qc.SIGNAL('finished()'), self.all_done)
@@ -318,7 +317,7 @@ class h5FileHolder(qc.QThread):
 		scale = 1
 	#	print args
 	#	print len(args)
-		print'args', args
+		print'args', args, self.hattrs, self.cattrs
 		
 		if len(args) == 2:
 			dataitem = args[0]
@@ -361,8 +360,11 @@ class h5FileHolder(qc.QThread):
 					if h5.cycle.count(cyc) or h5.cycle.count(str(cyc)):
 						print 'hello'
 						self.h5sStarted[self.h5s.index(h5)]=True
-						h5.start()
-						h5.join()
+						h5.run()
+						try:
+							h5.join()
+						except AttributeError:
+							print 'cheating again'
 						temp = h5.fetch_data_one(dataitem,cyc)
 						
 						try:
@@ -398,7 +400,7 @@ class h5FileHolder(qc.QThread):
 								self.temp = h5.fetch_data_one(dataitem,cyc)
 								
 							else:
-								print "Sarted"
+								#print "Sarted"
 								self.temp = h5.fetch_data_one(dataitem,cyc)
 								#print self.temp
 								
@@ -436,7 +438,7 @@ class h5FileHolder(qc.QThread):
 				None
 			#	print dat
 			#	print 'indexerror'
-		print dat	
+		#print dat	
 		return dat	
 	# This function determines which cycle, which file, which storage mechanism (cattr or data) and returns it 
 	def get1(self, *args):
@@ -459,6 +461,7 @@ class h5FileHolder(qc.QThread):
 		
 		if len(args) == 1:
 			dataitem = args[0]
+	
 			if self.hattrs.count(dataitem) == 0:
 				cycle_list = self.cycles
 			else:
@@ -524,43 +527,61 @@ class h5FileHolder(qc.QThread):
 					
 					if not self.h5sStarted[self.h5s.index(h5)]:
 						self.h5sStarted[self.h5s.index(h5)]=True
-						h5.start()
-						h5.join()
+						
+						h5.run()
+						
+						try:
+							h5.join()
+						except:
+							print 'failed thread:',  h5	
 						temp = h5.fetch_data_one(dataitem,cyc)
 						
 					else:
 						temp = h5.fetch_data_one(dataitem,cyc)
 					#	Occasionally data comes out formatted in a funny way (arrays nested in arrays....)
 					#	This strips the nested arrays until the actual data is found
-					if dataitem != 'iso_massf' or dataitem != 'yps':
-						
-						while np.ndim(temp) > 1:
-							shape = np.shape(temp)
-							temp = temp[0]
 					
-					else:
+					
+					
+					#print 'temp', temp
+					
+
+					
+					#else:
 						
-						while np.ndim(temp) > 2:
-							shape = np.shape(temp)
-							temp = temp[0]
-						
-						while len(temp) < 2:
-							temp = temp[0]
-					if (dataitem == 'iso_massf' or dataitem == 'yps') and isotope_of_interest != []:
+					#	while np.ndim(temp) > 2:
+					#		shape = np.shape(temp)
+					#		temp = temp[0]
+					#	
+					#	while len(temp) < 2:
+					#		temp = temp[0]
+					if (dataitem == 'iso_massf' or dataitem == 'yps') and isotope_of_interest != []: #
 						#	Figure out the index
+						print 'yps', dataitem
 						index = 0
 						for x, iso in enumerate(self.isotopes):
 							print str(iso[0]+'-'+iso[1]), isotope_of_interest
 							if str(iso[0]+'-'+iso[1]) == isotope_of_interest:
 								index = x
 								break
-						print index
+						#print 'iso_massf',temp
 						temp = temp[:,index]
 					#	Now add the information to the list we pass back
+					elif (dataitem=='iso_massf' or dataitem=='yps'):
+						print 'the right stuff', isotope_of_interest
+					else:
+						print 'enter', dataitem
+						while np.ndim(temp) > 1:
+							shape = np.shape(temp)
+							temp = temp[0]
+						
+
 					try:
 						dat.append(temp)
+						print 'right append'
 					except AttributeError:
 						np.append(dat, temp)	
+						print 'bad append'
 													
 		if len(dat) < 2 and (dataitem != 'iso_massf'or dataitem != 'yps'):
 
@@ -577,6 +598,9 @@ class h5FileHolder(qc.QThread):
 			None	
 		except IndexError:
 			None
+			
+		
+		
 		print self.h5sStarted
 		return dat	
 		
@@ -934,6 +958,7 @@ class h5File(qc.QThread):
 	def fetch_data_one(self,dataitem,cycle):
 		#print 'fetching data one'
 		self.h5 = mrT.File(self.filename,'r')
+		
 		try:
 			data = self.h5.__getitem__(self.cycle_header+str(cycle)).__getitem__('SE_DATASET')[dataitem]
 		except ValueError:
@@ -943,7 +968,7 @@ class h5File(qc.QThread):
 				data = self.h5.__getitem__(self.cycle_header+str(cycle))[dataitem]
 				#print data
 
-		#print dataitem, data
+	
 		try:
 			while data.shape[0] < 2:
 				data = data[0]

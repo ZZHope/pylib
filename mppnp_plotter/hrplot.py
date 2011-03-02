@@ -84,6 +84,8 @@ class hrplot(qc.QThread):
 		self.canvas.mpl_connect('pick_event', self.on_pick)
 		#self.canvas.mpl_connect('pick_event',h5s.do_hr_subplot)
 		self.axes.grid()
+		print 'self.teff', self.teff
+		print 'self.logl', self.logL
 		self.axes.plot(self.teff,self.logL) #,'o',picker=3
 		self.axes.plot(self.teff,self.logL,'o',picker=3) #
 		self.axes.set_xlim(xbounds)
@@ -559,7 +561,9 @@ class generic_plot(qc.QThread):
 	
 	def run(self):	
 		print self.parent.write
-		print 'start ', np.shape(self.xdata), len(self.ydata)
+		print 'start ', np.shape(self.xdata), len(self.ydata[0])
+		
+	
 		
 		l1 = []		
 		self.fig = Figure((10.0, 10.0),frameon=True)#, figsize=(9,9)
@@ -641,7 +645,7 @@ class generic_plot(qc.QThread):
 																						
 		else:	
 			for i in xrange(len(self.yparm)):					
-				print 'zip'
+				print 'zip', len(self.ydata[0])
 				try:
 					while len(self.ydata) == 1:
 						self.ydata = self.ydata[0]
@@ -650,6 +654,7 @@ class generic_plot(qc.QThread):
 
 				try:
 					for j in xrange(len(self.ydata[i])):
+						print 'ydata', self.ydata[i]
 						if self.ydata[i][j] < 1e-20:
 							self.ydata[i][j] = 1e-20
 
@@ -734,9 +739,13 @@ class generic_plot(qc.QThread):
 							else:
 								l1.append(self.axes1.loglog(self.xdata,self.ydata[0][i]))							
 						except (IndexError, TypeError):
-							for j in xrange(len(self.ydata)):
+							print 'index error', self.ydata[i]
+							#try:
+							for j in xrange(len(self.ydata[i])):
 								if self.ydata[i][j] < 1e-20:
 									self.ydata[i][j] = 1e-20
+							#except:
+								#None
 							if self.x_log == 0 and self.y_log == 0:
 								l1.append(self.axes1.plot(self.xdata,self.ydata[i]))
 							elif self.x_log == 0 and self.y_log == 2:
@@ -807,7 +816,7 @@ class generic_plot(qc.QThread):
 					print self.yparm
 		try:
 			leg1 = self.axes1.legend(l1[:len(self.yparm)], self.yparm)
-		except (IndexError,ValueError):
+		except (IndexError,ValueError, ZeroDivisionError):
 			print 'Legend failed.'
 		
 		print l2
@@ -867,13 +876,17 @@ class IA_Plot(qc.QThread):
 				for j in xrange(len(self.index)):		#Loop through the elements of interest
 					#	Process the line
 					#print 'processing line'
+					print self.abund_plot[i][j]
 					for l in xrange(len(self.abund_plot[i][j])):
-						if self.abund_plot[i][j][l] == 0:
+						
+						if self.abund_plot[i][j][l] < 1e-20:
+							#print 'fixing',  self.abund_plot[i][j][l]	
 							self.abund_plot[i][j][l] = 1e-20
 					
 					
 					if i == 0:		
 						try:
+							
 							l1.append(self.axes1.semilogy(self.parent.mass_num[j],self.abund_plot[i][j]))
 						except OverflowError:
 							print 'div by zero'
@@ -882,17 +895,20 @@ class IA_Plot(qc.QThread):
 						try:
 							coordinates = [self.parent.mass_num[j][self.abund_plot[i][j].index(max(self.abund_plot[i][j]))],max(self.abund_plot[i][j]) ]	#	Get the coordinates of the highest abundance of each element
 							self.axes1.text(coordinates[0],coordinates[1], self.parent.elem_list[self.index[j]])
+							#print 'coordinates', coordinates
 							#print self.parent.elem_list[self.index[j]],coordinates[0],coordinates[1]
 						except ValueError:
-							print 'Empty var:  ', self.abund_plot[i][j]
+							None#print 'Empty var p2:  ', self.abund_plot[i][j]
 					else:
 						self.axes1.semilogy(self.parent.mass_num[j],self.abund_plot[i][j])
-						
+						#print '2',self.parent.mass_num[j] ,self.abund_plot[i][j]
 					try:
 						self.axes1.semilogy(self.parent.mass_num[j],self.abund_plot[i][j],'bo')
+						#print '1', self.parent.mass_num[j], self.abund_plot[i][j]
 					except OverflowError:
-						print 'div by zero', len(self.parent.mass_num[j]), len(self.abund_plot[i][j])
+						None#print 'div by zero', len(self.parent.mass_num[j]), len(self.abund_plot[i][j])
 			self.axes1.set_ylim([1e-13,1])
+			
 			#leg1 = self.axes1.legend(l1, self.isotope_to_plot)
 		
 		else:
@@ -922,11 +938,11 @@ class IA_Plot(qc.QThread):
 						except ValueError:
 							None#print 'Empty var:  ', self.abund_plot[i][j]	, self.parent.mass_num[j], self.parent.elem_list[self.index[j]]	
 		
-			self.axes1.set_ylim([1e-3,10])		
+			self.axes1.set_ylim([1e-23,10])		
 		#	leg1 = self.axes1.legend(l1,self.parent.cycle_to_plot[1:],loc=0)
 		
 		
 		self.canvas.draw()
-
+		
 
 

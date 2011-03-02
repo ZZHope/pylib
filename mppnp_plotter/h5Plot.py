@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env /Library/Frameworks/Python.framework/Versions/Current/bin/python
 import os
 import sys, gc
 from string import *
@@ -138,11 +138,12 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		if sparsity_factor < 1:
 			sparsity_factor = 1
 
-		data = self.h5s.fetch_datas('logTeff','logL',None, sparsity_factor)
-		teff = data[0]
-		logL = data[1]
+		#data = self.h5s.fetch_datas('logTeff','logL',None, sparsity_factor)
+		#print 'data', data
+		teff = self.h5s.get1('logTeff')  #data[0]
+		logL = self.h5s.get1('logL')     #data[1]
 			
-		del data
+		#del data
 		
 			
 		self.HP.append(hrplot.hrplot(teff,logL, self.sub_plot_controller, sparsity_factor, self))
@@ -431,7 +432,10 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		try:
 			self.cycle_of_interest.append(self.h5s.cycles[index[0]])
 		except TypeError:
-			self.cycle_of_interest.append(self.h5s.cycles[index])
+			try:
+				self.cycle_of_interest.append(self.h5s.cycles[index])
+			except IndexError:
+				print 'skipping == cheating'
 
 		self.textEdit.append('Doing plot for cycle: ' + str(self.cycle_of_interest))
 
@@ -2295,8 +2299,8 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		if rel_abunPlot == 2 and self.ref_index == '':
 			self.textEdit.append('Please double click on a reference cycle')
 			self.isotopic_abund()
-		
-		print 'doing abundance plot'
+				
+		print 'doing abundance plot', self.isotope_to_plot, rel_abunPlot
 	#	if self.cycle_to_plot == [] or (rel_abunPlot == 2 and len(self.cycle_to_plot) < 2):
 	#		self.isotopic_abund()
 	#	else:
@@ -2328,8 +2332,12 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		try:
 			# self.ref_index
 			print 'ref index::::', self.ref_index
-			
-			ref_mass = self.h5s.get([self.ref_index.split('-')[1]],'iso_massf',1)
+			try:
+				ref_mass = self.h5s.get([self.ref_index.split('-')[1]],'iso_massf',1)
+			except:
+				ref_mass = self.h5s.get([self.ref_index.split('-')[1]],'yps',1)
+				
+				
 			ref_coords = self.h5s.get([self.ref_index.split('-')[1]],'mass',1)
 			if len(ref_mass) == 1:
 				ref_mass = ref_mass[0]
@@ -2392,7 +2400,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 											print 'failed to remove: ', self.isotope[iso]
 					except IndexError:
 						removed = True
-						print iso, ind
+		
 				if removed == False:
 					print 'done popping'
 					break
@@ -2403,10 +2411,15 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 			#	cycles, elements, isotopes.  this way the isotopes of a given element can be linked in the plot
 		abund_plot = []
 		self.mass_num = []
-			
-		abunds = self.h5s.get(cycs, 'iso_massf', 1)
+		try:
+			abunds = self.h5s.get1(cycs, 'iso_massf')
+		except :
+			abunds = self.h5s.get1(cycs,'yps')
 		
-		print 'cycles of interst', self.ref_index,cycs
+		
+		if len(cycs) == 1:
+			abunds = [abunds]
+		
 		
 		#for i in xrange(len(self.cycle_to_plot)):
 		#	here = self.h5s.get([int(self.cycle_to_plot[i].split('-')[1])], 'iso_massf',1)
@@ -2463,7 +2476,6 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 					except AttributeError:
 						print i
 					
-				
 				time_step.append(temp)
 			#print time_step
 			abund_plot.append(time_step)
@@ -2474,11 +2486,11 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 			temp2 = []	
 			for k in xrange(len(self.elem_index[index[j]])):
 				
-				
 				temp.append(float(self.h5s.isotopes[self.elem_index[index[j]][k]][1]))
 				abundance = 0
 				#print len(self.elem_index[index[j]])
 				for l in xrange(len(ref_mass)):
+					
 					if ranges[0] <=  ref_coords[l]  and ranges[1] >=  ref_coords[l] :
 						try:
 							abundance += ref_mass[l][self.elem_index[index[j]][k]]*abs(ref_coords[l+1]-ref_coords[l])
@@ -2503,7 +2515,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		print 'doing plot'	, len(ref_mass)
 		self.IA.append(hrplot.IA_Plot(self,abund_plot, self.isotope_to_plot, index, rel_abunPlot, ranges, ref_mass))
 		self.IA[-1].run()					
-					
+			
 		del abund_plot, abunds
 		
 	#	Adds the the plot to the gui subwindow and adds a toolbar to the subwindow
@@ -2687,7 +2699,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		
 		
 		self.h5s = h5file.h5FileHolder(openFile,self.path, self.textEdit)
-		print 'before make wait'
+		
 		
 		if len(openFile)  >1:
 			self.make_wait()
