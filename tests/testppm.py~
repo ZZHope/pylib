@@ -1,7 +1,7 @@
 from ppm import *
 from asserts import *
 def main():
-	print '\nPPM test\n'
+	print '\nyprofile test\n'
 	stddir='./YProfile'
 	
 	

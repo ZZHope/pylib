@@ -130,47 +130,47 @@ def initTests(p):
 def dataTests(p):
 	test='Data'
 	
-	assertEquals(len(p.get('j', p.files[len(p.files)-1],numType='file', resolution ='a')),2,'Expected j Data length',test )
+	assertEquals(len(p.get('j', p.files[len(p.files)-1],numtype='file', resolution ='a')),2,'Expected j Data length',test )
 	
-	assertEquals(len(p.get('j', p.files[len(p.files)-1],numType='file', resolution ='h')),1536,'Expected j Data length',test )
+	assertEquals(len(p.get('j', p.files[len(p.files)-1],numtype='file', resolution ='h')),1536,'Expected j Data length',test )
 	
-	assertEquals(len(p.get('j', p.files[len(p.files)-1],numType='file', resolution ='l')),768,'Expected j Data length',test )
+	assertEquals(len(p.get('j', p.files[len(p.files)-1],numtype='file', resolution ='l')),768,'Expected j Data length',test )
 	
-	assertEquals(p.get('j', p.files[len(p.files)-1],numType='file', resolution ='h')[0],1536.0,'Expected j Data Value',test )
+	assertEquals(p.get('j', p.files[len(p.files)-1],numtype='file', resolution ='h')[0],1536.0,'Expected j Data Value',test )
 	
-	assertEquals(float(p.get('j', p.files[len(p.files)-1],numType='file', resolution ='l')[len(p.get('j', p.files[len(p.files)-1],numType='file', resolution ='l'))-1]),1,'Expected j Data Value',test )
+	assertEquals(float(p.get('j', p.files[len(p.files)-1],numtype='file', resolution ='l')[len(p.get('j', p.files[len(p.files)-1],numtype='file', resolution ='l'))-1]),1,'Expected j Data Value',test )
 	
-	assertEquals(len(p.get('Rho', p.files[len(p.files)-1],numType='file', resolution ='a')),1536,'Expected Rho Data length',test )
+	assertEquals(len(p.get('Rho', p.files[len(p.files)-1],numtype='file', resolution ='a')),1536,'Expected Rho Data length',test )
 	
-	assertEquals(len(p.get('Rho', p.files[len(p.files)-1],numType='file', resolution ='h')),1536,'Expected Rho Data length',test )
+	assertEquals(len(p.get('Rho', p.files[len(p.files)-1],numtype='file', resolution ='h')),1536,'Expected Rho Data length',test )
 	
-	assertEquals(len(p.get('Rho', p.files[len(p.files)-1],numType='file', resolution ='l')),1536,'Expected Rho Data length',test )
+	assertEquals(len(p.get('Rho', p.files[len(p.files)-1],numtype='file', resolution ='l')),1536,'Expected Rho Data length',test )
 	
-	assertEquals(p.get('Rho', p.files[len(p.files)-1],numType='file', resolution ='h')[0],float(9.17554E-05),'Expected Rho Data Value',test )
+	assertEquals(p.get('Rho', p.files[len(p.files)-1],numtype='file', resolution ='h')[0],float(9.17554E-05),'Expected Rho Data Value',test )
 	
-	assertEquals(float(p.get('Rho', p.files[len(p.files)-1],numType='file', resolution ='l')[len(p.get('Rho', p.files[len(p.files)-1],numType='file', resolution ='l'))-1]),float(3.45495E+01),'Expected Rho Data Value',test )
+	assertEquals(float(p.get('Rho', p.files[len(p.files)-1],numtype='file', resolution ='l')[len(p.get('Rho', p.files[len(p.files)-1],numtype='file', resolution ='l'))-1]),float(3.45495E+01),'Expected Rho Data Value',test )
 
-	assertEquals(len(p.get('Ek H+He', p.files[len(p.files)-1],numType='file', resolution ='a')),768,'Expected Ek H+He Data length',test )
+	assertEquals(len(p.get('Ek H+He', p.files[len(p.files)-1],numtype='file', resolution ='a')),768,'Expected Ek H+He Data length',test )
 	
-	assertEquals(len(p.get('Ek H+He', p.files[len(p.files)-1],numType='file', resolution ='h')),768,'Expected Ek H+He Data length',test )
+	assertEquals(len(p.get('Ek H+He', p.files[len(p.files)-1],numtype='file', resolution ='h')),768,'Expected Ek H+He Data length',test )
 	
-	assertEquals(len(p.get('Ek H+He', p.files[len(p.files)-1],numType='file', resolution ='l')),768,'Expected Ek H+He Data length',test )
+	assertEquals(len(p.get('Ek H+He', p.files[len(p.files)-1],numtype='file', resolution ='l')),768,'Expected Ek H+He Data length',test )
 	
-	assertEquals(p.get('Ek H+He', p.files[len(p.files)-1],numType='file', resolution ='h')[0],0,'Expected Ek H+He Data Value',test )
+	assertEquals(p.get('Ek H+He', p.files[len(p.files)-1],numtype='file', resolution ='h')[0],0,'Expected Ek H+He Data Value',test )
 	
-	assertEquals(float(p.get('Ek H+He', p.files[len(p.files)-1],numType='file', resolution ='l')[len(p.get('Ek H+He', p.files[len(p.files)-1],numType='file', resolution ='l'))-1]),float(0.00000E+00),'Expected Ek H+He Data Value',test )
+	assertEquals(float(p.get('Ek H+He', p.files[len(p.files)-1],numtype='file', resolution ='l')[len(p.get('Ek H+He', p.files[len(p.files)-1],numtype='file', resolution ='l'))-1]),float(0.00000E+00),'Expected Ek H+He Data Value',test )
 	
-	assertEquals(len(p.get('Conv Ht', p.files[len(p.files)-1],numType='file', resolution ='l')),11,'Expected Conv Ht Data length',test )
+	assertEquals(len(p.get('Conv Ht', p.files[len(p.files)-1],numtype='file', resolution ='l')),11,'Expected Conv Ht Data length',test )
 	
-	assertEquals(p.get('Conv Ht', p.files[len(p.files)-1],numType='file', resolution ='h')[0],float(3.02147E+01),'Expected Conv Ht Data Value',test )
+	assertEquals(p.get('Conv Ht', p.files[len(p.files)-1],numtype='file', resolution ='h')[0],float(3.02147E+01),'Expected Conv Ht Data Value',test )
 	
-	assertEquals(float(p.get('Conv Ht', p.files[len(p.files)-1],numType='file', resolution ='l')[len(p.get('Conv Ht', p.files[len(p.files)-1],numType='file', resolution ='l'))-1]),float(3.01692E+01),'Expected Conv Ht Data Value',test )
+	assertEquals(float(p.get('Conv Ht', p.files[len(p.files)-1],numtype='file', resolution ='l')[len(p.get('Conv Ht', p.files[len(p.files)-1],numtype='file', resolution ='l'))-1]),float(3.01692E+01),'Expected Conv Ht Data Value',test )
 
-	assertEquals(len(p.get('Ncycle', p.files[len(p.files)-1],numType='file', resolution ='l')),11,'Expected Ncycle Data length',test )
+	assertEquals(len(p.get('Ncycle', p.files[len(p.files)-1],numtype='file', resolution ='l')),11,'Expected Ncycle Data length',test )
 	
-	assertEquals(float(p.get('Ncycle', p.files[len(p.files)-1],numType='file', resolution ='h')[0]),0.0,'Expected Ncycle Data Value',test )
+	assertEquals(float(p.get('Ncycle', p.files[len(p.files)-1],numtype='file', resolution ='h')[0]),0.0,'Expected Ncycle Data Value',test )
 	
-	assertEquals(p.get('Ncycle', p.files[len(p.files)-1],numType='file', resolution ='l')[len(p.get('Ncycle', p.files[len(p.files)-1],numType='file', resolution ='l'))-1],27320,'Expected Ncycle Data Value',test )
+	assertEquals(p.get('Ncycle', p.files[len(p.files)-1],numtype='file', resolution ='l')[len(p.get('Ncycle', p.files[len(p.files)-1],numtype='file', resolution ='l'))-1],27320,'Expected Ncycle Data Value',test )
 	
 	assertEquals(p.get('gridY'),'1536', 'Expected GridY Data Value',test )
 	

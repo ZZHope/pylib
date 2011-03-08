@@ -72,6 +72,8 @@ class se(DataPlot,Utils):
     sedir    - the directory on which the h5 files can be
     pattern - a string pattern that the file names have to
                     contain in order to be read
+    rewrite - a boolean of if the user would like to rewrite the preprocessor
+    	      file. Defaults to False 
 
     example: f=nu.plot_tools('.','260') reads all h5 files with the
                   string 260 in the name in the present directory
@@ -82,7 +84,7 @@ class se(DataPlot,Utils):
     se = []         # main data dictionary
     pattern=''
 
-    def __init__(self, sedir='.', pattern='.h5'):
+    def __init__(self, sedir='.', pattern='.h5', rewrite=False):
         
         slist = os.listdir(sedir)
         self.pattern=pattern
@@ -94,7 +96,7 @@ class se(DataPlot,Utils):
         self.sedir=sedir
         self.sefiles=sefiles
         
-        self.se=h5T.Files(sedir,sefiles)
+        self.se=h5T.Files(sedir,sefiles,rewrite=rewrite)
                 
     def __del__(self):
         print 'Closing plot_tools'
