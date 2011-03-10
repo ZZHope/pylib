@@ -109,6 +109,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		
 		label = qg.QLabel('Sparsity Factor')
 		self.sparse = qg.QLineEdit(str(ideal_factor))
+		
 		self.write = qg.QCheckBox('Write to file', None)
 		
 		
@@ -137,14 +138,38 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 
 		if sparsity_factor < 1:
 			sparsity_factor = 1
+			
+		print "Sparse: "+str(sparsity_factor)
+		t1=t.time()
+		
+		data = self.h5s.fetch_datas('logTeff','logL',None, sparsity_factor)
+		teff = data[0]
+ 		logL = data[1]
 
-		#data = self.h5s.fetch_datas('logTeff','logL',None, sparsity_factor)
-		#print 'data', data
+		
+		''' #Inefficient takes too long 
 		teff = self.h5s.get1('logTeff')  #data[0]
 		logL = self.h5s.get1('logL')     #data[1]
+		a=[]
+		
+		for i in range(len(teff)):
+			if i%sparsity_factor==0:
+				a.append(teff[i])
+				
+		teff=a
+		a=[]
+		
+		for i in range(len(logL)):
+			if i%sparsity_factor==0:
+				a.append(logL[i])
+		logL=a
+		'''
 			
 		#del data
 		
+		t2=t.time()
+		print t2-t1
+		t.sleep(3)
 			
 		self.HP.append(hrplot.hrplot(teff,logL, self.sub_plot_controller, sparsity_factor, self))
 		self.HP[-1].run()
@@ -181,6 +206,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 	#	This class controlls dialog box
 	#	and subplot controll of the abundance_plot class
 	def isotope_subplot(self,isotopes):
+		print "isotope_subplot"
 		#	Set vars and build dialog box
 		self.isotopes = isotopes
 		self.textEdit.append('Beginning plot dialog')
@@ -452,7 +478,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		xval = []
 		yval = []
 		
-		if self.x_data.count('iso_massf') or self.y_data.count('iso_massf'):
+		if self.x_data.count('iso_massf') or self.y_data.count('iso_massf') or self.x_data.count('yps') or self.y_data.count('yps'):
 			self.get_isotope_input()
 		else:
 			self.do_sp()
@@ -532,7 +558,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		
 		global write
 		
-		if self.y_data.count('iso_massf'):
+		if self.y_data.count('iso_massf') or self.y_data.count('yps'):
 			self.indexes = self.dlist1.selectedIndexes()
 		
 			for i in xrange(len(self.indexes)):
@@ -554,7 +580,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		yval = self.h5s.get(self.cycle_of_interest,self.y_data,1)	
 
 		try:
-			if len(yval) < 2 and self.y_data == 'iso_massf':
+			if len(yval) < 2 and (self.y_data == 'iso_massf' or self.y_data == 'yps'):
 				yval = yval[0]
 			#	Call subplot
 		except AttributeError:

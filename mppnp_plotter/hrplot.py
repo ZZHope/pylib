@@ -84,8 +84,8 @@ class hrplot(qc.QThread):
 		self.canvas.mpl_connect('pick_event', self.on_pick)
 		#self.canvas.mpl_connect('pick_event',h5s.do_hr_subplot)
 		self.axes.grid()
-		print 'self.teff', self.teff
-		print 'self.logl', self.logL
+		#print 'self.teff', self.teff
+		#print 'self.logl', self.logL
 		self.axes.plot(self.teff,self.logL) #,'o',picker=3
 		self.axes.plot(self.teff,self.logL,'o',picker=3) #
 		self.axes.set_xlim(xbounds)

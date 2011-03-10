@@ -16,22 +16,15 @@ try:
 except ImportError:
 	print 'No module ascii_table'
 	print 'Please checkout ascii_table.py svn://forum.astro.keele.ac.uk/utils/pylib and add to python path'
+	
+debug=True
+
 class h5FileHolder(qc.QThread):
-	h5files = []
-	h5s = []
-	cycles = []
-	ages =	 []
-	hattrs = []
-	cattrs = []
-	Tables = []
-	dcols =	 []
-	filepaths = []
-	isotopes = []
-	done = []
+	
 	h5sStarted=[]#A list of booleans of if the thread in h5files has had its 
     			#start and join methods called
     	preprocName='h5Preproc.txt' #filename of the preprocessor file
-    	preprocExists=False		#Boolean of if the preprocessor file exists
+    	
 	
 	#	This is a list of isotopes to match to.
 	isos = ['Neutron','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al',
@@ -50,7 +43,6 @@ class h5FileHolder(qc.QThread):
     	    cycNum: int of the cycle desired cycle 
     	    
     	    '''
-    	    
     	    
     	    cycNum=int(cycNum)
     	    i=0
@@ -81,7 +73,7 @@ class h5FileHolder(qc.QThread):
 
 		#	Cleanup the object just in case
 		self.h5files = []
-		self.h5s = []
+		self.h5s = [] #not resetting !!
 		self.cycles = []
 		self.ages =	 []
 		self.hattrs = []
@@ -93,10 +85,12 @@ class h5FileHolder(qc.QThread):
 		self.isomeric_states = []
 		self.A = []
 		self.Z = []
+		self.done=[]
 		self.h5sStarted=[]
 		self.filepath=filepath #Variable for the directory
 		self.temp = []
-
+		preprocExists=False		#Boolean of if the preprocessor file exists
+		
 		print filename
 		for name in filename:
 			self.filepaths.append(name)
@@ -106,10 +100,11 @@ class h5FileHolder(qc.QThread):
 		#preprocessor stuff
 		if self.filepath.endswith(os.sep):
 			preprocName = str(self.filepath)+self.preprocName
-			
 		else:
 			preprocName = str(self.filepath)+os.sep+self.preprocName
-			
+		
+		
+		
 		self.preprocExists=os.path.exists(preprocName)
 		for i in xrange(len(filename)):
 			self.h5sStarted.append(False)
@@ -122,7 +117,8 @@ class h5FileHolder(qc.QThread):
 		print "stated:"
 		print self.h5sStarted
 	def continue_h5s(self):	#tis is equivilent to the run in h5t.py
-		
+		if debug:
+			print "continue_h5s"
 		self.cycles.extend(self.h5s[0].cycle)
 		self.ages.extend(self.h5s[0].age)
 		
@@ -178,13 +174,15 @@ class h5FileHolder(qc.QThread):
 					
 		
 		if not self.preprocExists:
+			print "all done?"
 			self.connect(self, qc.SIGNAL('finished()'), self.all_done)
 		else:
 			self.all_done()
 		
 		
 	def all_done(self):
-		print "all done"
+		if debug:
+			print "all done"
 		if not self.preprocExists:
 			for x in xrange(len(self.h5s)):
 				print len(self.h5s[x].cycle)
@@ -233,6 +231,7 @@ class h5FileHolder(qc.QThread):
 		else:
 			print 'Reading preprocessor files'
 			preprocTable=ascii_table(self.preprocName,self.filepath)
+			
 			for i in xrange(len(self.h5s)-1):
 				print self.h5s[i+1].filename
 				dat=preprocTable.get(self.h5s[i+1].filename+'-cyc')
@@ -282,6 +281,8 @@ class h5FileHolder(qc.QThread):
 
 	
 	def add_data(self):
+		if debug:
+			print "add data"
 		self.done.append(self.h5s[-1].filename)
 		
 		if len(self.done) == len(self.h5s)-1 or len(self.done) == len(self.h5s):
@@ -295,6 +296,8 @@ class h5FileHolder(qc.QThread):
 			
 	# This function determines which cycle, which file, which storage mechanism (cattr or data) and returns it 
 	def get(self, *args):
+		if debug:
+			print "get"
 		#	This function takes in a variety of inputs
 		#	option 1
 		#	get(dataitem)
@@ -339,7 +342,13 @@ class h5FileHolder(qc.QThread):
 			dataitem = args[1]
 			isotope_of_interest = args[2]
 			scale = int(args[3])		
-
+		if dataitem=='yps' and dataitem not in self.dcols:
+			print self.dcols
+			dataitem='iso_massf'
+		if dataitem=='iso_massf' and dataitem not in self.dcols:
+			print self.dcols
+			dataitem='yps'
+			
 	#	print dataitem
 
 		#	if it is a cattr call, it will not have a cycle value
@@ -362,7 +371,7 @@ class h5FileHolder(qc.QThread):
 						self.h5sStarted[self.h5s.index(h5)]=True
 						h5.run()
 						try:
-							h5.join()
+							h5.wait()
 						except AttributeError:
 							print 'cheating again'
 						temp = h5.fetch_data_one(dataitem,cyc)
@@ -388,14 +397,14 @@ class h5FileHolder(qc.QThread):
 			for cyc in cycle_list:
 				for h5 in self.h5s:
 					if h5.cycle.count(int(cyc)) or h5.cycle.count(str(cyc)):
-						print 'world'
+						
 						try:
 							if not self.h5sStarted[self.h5s.index(h5)]:
 								print "not Sarted"
 								self.h5sStarted[self.h5s.index(h5)]=True
 								print self.h5sStarted
-								h5.start()
-								h5.join()
+								h5.run()
+								h5.wait()
 								
 								self.temp = h5.fetch_data_one(dataitem,cyc)
 								
@@ -409,10 +418,14 @@ class h5FileHolder(qc.QThread):
 						#	Occasionally data comes out formatted in a funny way (arrays nested in arrays....)
 						#	This strips the nested arrays until the actual data is found
 						if dataitem != 'iso_massf' or dataitem != 'yps':
-							
+							#print 'hello'
+							#print self.temp
+							'''
 							while np.ndim(self.temp) > 1:
 								shape = np.shape(self.temp)
 								self.temp = self.temp[0]
+							'''	
+							#print self.temp
 						
 						else:
 							
@@ -438,10 +451,12 @@ class h5FileHolder(qc.QThread):
 				None
 			#	print dat
 			#	print 'indexerror'
-		#print dat	
+		print dat	
 		return dat	
 	# This function determines which cycle, which file, which storage mechanism (cattr or data) and returns it 
 	def get1(self, *args):
+		if debug:
+			print "get1"
 		#	This function takes in a variety of inputs
 		#	option 1
 		#	get(dataitem)
@@ -530,10 +545,10 @@ class h5FileHolder(qc.QThread):
 						
 						h5.run()
 						
-						try:
-							h5.join()
-						except:
-							print 'failed thread:',  h5	
+						#try:
+						h5.wait()
+						#except:
+						#	print 'failed thread:',  h5	
 						temp = h5.fetch_data_one(dataitem,cyc)
 						
 					else:
@@ -557,7 +572,7 @@ class h5FileHolder(qc.QThread):
 					#		temp = temp[0]
 					if (dataitem == 'iso_massf' or dataitem == 'yps') and isotope_of_interest != []: #
 						#	Figure out the index
-						print 'yps', dataitem
+						#print 'yps', dataitem
 						index = 0
 						for x, iso in enumerate(self.isotopes):
 							print str(iso[0]+'-'+iso[1]), isotope_of_interest
@@ -570,7 +585,7 @@ class h5FileHolder(qc.QThread):
 					elif (dataitem=='iso_massf' or dataitem=='yps'):
 						print 'the right stuff', isotope_of_interest
 					else:
-						print 'enter', dataitem
+						#print 'enter', dataitem
 						while np.ndim(temp) > 1:
 							shape = np.shape(temp)
 							temp = temp[0]
@@ -578,10 +593,10 @@ class h5FileHolder(qc.QThread):
 
 					try:
 						dat.append(temp)
-						print 'right append'
+						#print 'right append'
 					except AttributeError:
 						np.append(dat, temp)	
-						print 'bad append'
+						#print 'bad append'
 													
 		if len(dat) < 2 and (dataitem != 'iso_massf'or dataitem != 'yps'):
 
@@ -606,7 +621,8 @@ class h5FileHolder(qc.QThread):
 		
 	#	Determines the file-cycle match and gets the associated information
 	def fetch_datas(self,dataitem1,dataitem2,cycle, scale):
-		
+		if debug:
+			print "fetch_datas"
 		dat = []
 		if cycle == None:
 			dat1 = []
@@ -673,6 +689,8 @@ class h5FileHolder(qc.QThread):
 		return dat		
 	
 	def fetch_sp_kh_data(self, cycle_list, scale, ranger, element):
+		if debug:
+			print "fetch_sp_kh_data"
 		t0 = t.time()
 		for h5 in self.h5s:
 			h5.h5 = mrT.File(h5.filename,'r')
@@ -736,7 +754,8 @@ class h5FileHolder(qc.QThread):
 	def fetch_KH_data(self, scale, ranger, cycle_list):
 		#cycle_list = []
 		#age = []
-		
+		if debug:
+			print "fetch_KH_data"
 		t0 = t.time()
 		for h5 in self.h5s:
 			h5.h5 = mrT.File(h5.filename,'r')
@@ -803,6 +822,8 @@ class h5FileHolder(qc.QThread):
 	
 		
 	def fetch_sparse_yps(self,block_plot, scale,isotope_index,textEdit):
+		if debug:
+			print "fetch_sparse_yps"
 		self.cycles.sort()
 		data1 = []
 		data2 = []
