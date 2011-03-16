@@ -274,8 +274,12 @@ class DataPlot:
 			listY=self.get(atriy,fname, numtype,resolution='a')
 			listX=self.get(atrix,fname, numtype,resolution='a')
 		elif plotType=='se':
-			listY=self.get(fname, atriy)
-			listX=self.get(fname, atrix)
+			if fname==None:
+				listY=self.get( atriy)
+				listX=self.get(atrix)
+			else:
+				listY=self.get(fname, atriy)
+				listX=self.get(fname, atrix)
 		elif plotType=='PPN' :
 			if fname==None and atrix not in self.cattrs and atriy not in self.cattrs:
 				fname=len(self.files)-1
