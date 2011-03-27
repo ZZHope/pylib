@@ -81,11 +81,11 @@ class DataPlot:
 		logXER=False
 		logYER=False
 		for i in range(len(tmpX)):
-				if tmpX[i]<=0 and logX:
+				if tmpX[i]<=0. and logX:
 					print 'We can not log a number less than or equal to zero'
 					print 'Attempting to remove incompatible values from X'
 					logXER=True
-				if tmpY[i]<=0 and logY:
+				if tmpY[i]<=0. and logY:
 					print 'We can not log a number less than or equal to zero'
 					print 'Attempting to remove incompatible values from Y'
 					logYER=True
@@ -94,14 +94,14 @@ class DataPlot:
 		
 		if logXER:
 			for i in range(len(tmpX)):
-				if tmpX[i]>0:
+				if tmpX[i]>0.:
 					tmX.append( tmpX[i])
 					tmY.append(tmpY[i])
 			tmpX=tmX
 			tmpY=tmY
 		elif logYER:
 			for i in range(len(tmpY)):
-				if tmpY[i]>0:
+				if tmpY[i]>0.:
 					tmX.append( tmpX[i])
 					tmY.append(tmpY[i])
 			tmpX=tmX
@@ -965,7 +965,7 @@ class DataPlot:
 		dat={'z':z, 'name':name,'abu':abu}
 		return dat
 		
-	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True):
+	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True,given_abund_array=None):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
@@ -998,9 +998,10 @@ class DataPlot:
 		    	   a reference cycle. The standards for reading this file 
 		    	   can be found in self.read()'s docstring, ie in the 
 		    	   method read() found above.
-		    	   The default is -1, it will do nothing
+		    	   The default is -1, it will do nothing.
+                           If ref=-2, than the array given_abund_array is plotted.
 		    Shape -The Shape of the dataplots, will default to circles 
-		    
+		    given_abund_array - array of abundances that can be given from script comparison_ppn, and if ref=-2 are plotted.
 		    	  
 		'''
 		elem_list = []
@@ -1042,7 +1043,7 @@ class DataPlot:
 				for i in xrange(len(z)):
 					for j in xrange(len(abundsRef['z'])):
 						if isomers[i]==1 and z[i]==int(abundsRef['z'][j]) and a[i]==int(abundsRef['name'][j].split()[1]):
-							tmpypsRef[i]=abundsRef['abu'][j]
+							tmpypsRef[i]=abundsRef['abu'][j] 
 							break
 						
 				abundsRef=tmpypsRef
@@ -1110,7 +1111,10 @@ class DataPlot:
 			z=self.get('Z', cycle) #charge
 			a=self.get('A', cycle) #mass
 			isomers=self.get('ISOM', cycle)
-			yps=self.get('ABUNDNACE_MF', cycle)
+			if ref > -2:
+				yps=self.get('ABUNDNACE_MF', cycle)
+			if ref == -2:
+				yps=given_abund_array
 			if ref >-1:
 				ypsRef=self.get('ABUNDNACE_MF', ref)
 			if stringRef:
@@ -1458,17 +1462,18 @@ class DataPlot:
 		plot_type = ['-','--','-.']
 		pl_index = 0
 		#6
-		colors = ['g','r','c','m','k']
+		#colors = ['g','r','c','m','k']
+		colors = ['k','k','k','k','k']
 		cl_index = 0
 		
 		l1 = []
 		l2 = []        
-		
-		#print abund_plot,mass_num
 		for j in xrange(len(abund_plot)):        #Loop through the elements of interest
 		    #    Process the line
 		    #print 'processing line'
 		    for l in xrange(len(abund_plot[j])):
+                        #print mass_num[j][l] 	
+                        print abund_plot[j][l] 	 		
 			if abund_plot[j][l] == 0:
 			    abund_plot[j][l] = 1e-99
 			    
@@ -1476,7 +1481,6 @@ class DataPlot:
 		    
 		    try:
 			l1.append(pl.semilogy(mass_num[j],abund_plot[j],str(colors[cl_index]+plot_type[pl_index])))
-			
 			cl_index+=1
 			pl_index+=1
 			if pl_index > 2:
@@ -1523,7 +1527,7 @@ class DataPlot:
 			#print 'out of bounds: ', len(abund_plot), j
 			    
 		    try:
-			pl.semilogy(mass_num[j],abund_plot[j],'b'+shape)
+			pl.semilogy(mass_num[j],abund_plot[j],'k'+shape)
 		    except OverflowError:
 			None
 			#print 'div by zero', len(mass_num[j]), len(abund_plot[j])
@@ -1535,7 +1539,7 @@ class DataPlot:
 		cl_index = 0
 		
 		for j in xrange(len(isom)):
-			pl.semilogy(isom[j][0].split('-')[1],isom[j][1],'r'+shape)#,str(colors[cl_index]+plot_type[pl_index])))
+			#pl.semilogy(isom[j][0].split('-')[1],isom[j][1],'r'+shape)#,str(colors[cl_index]+plot_type[pl_index])))
 			cl_index+=1
 			pl_index+=1
 			if pl_index > 2:
@@ -1545,7 +1549,7 @@ class DataPlot:
 			coordinates=[int(isom[j][0].split('-')[1]),isom[j][1]]
 			name=isom[j][0]
 
-			pl.text(coordinates[0],coordinates[1], name.split('-')[0]+'m'+name.split('-')[2])
+			#pl.text(coordinates[0],coordinates[1], name.split('-')[0]+'m'+name.split('-')[2])
 		if plotType=='se':
 			title = str('Abundance of Isotopes over range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
 				str(' for cycle %d' %int(cycle))
@@ -1556,14 +1560,16 @@ class DataPlot:
 			if amass_range ==None:
 				title = str('Abundance of Isotopes for Cycle '+str(cycle))
 			else:
-				title = str('Abundance of Isotopes with A between '+str(amass_range[0])+' and '+str(amass_range[1])+' for Cycle '+str(cycle))
+				#title = str('Abundance of Isotopes with A between '+str(amass_range[0])+' and '+str(amass_range[1])+' for Cycle '+str(cycle))
+				title = str('')
 				pl.xlim([amass_range[0]-.5,amass_range[1]+.5])
 			
 		pl.ylim(ylim)
 		pl.title(title)
 		pl.xlabel('Mass Number')
 		if ref>-1:
-			pl.ylabel('Relative Abundance / Refrence Abundance of Cycle '+str(int(ref)))
+			#pl.ylabel('Relative Abundance / Refrence Abundance of Cycle '+str(int(ref)))
+		        pl.ylabel('Relative Abundance') 
 		elif stringRef:
 			pl.ylabel('Relative Abundance / Refrence Abundance of '+str(fileName))
 		else:
@@ -1592,7 +1598,7 @@ class DataPlot:
 			    step = int(i)
 			    print step
 			    for j in range(len(what_specie)):
-				self.plot_prof_1(what_specie[j],step,xlim1,xlim2,ylim1,ylim2, False)
+				self.plot_prof_1(step,what_specie[j],xlim1,xlim2,ylim1,ylim2)
 			    #          
 			    filename = str('%03d' % step)+'_test.png'             
 			    pl.savefig(filename, dpi=400) 
@@ -1604,8 +1610,7 @@ class DataPlot:
 			print 'This method is not supported for '+str(self.__class__)
 			return
 	# From mesa_profile
-    	def plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2, show=True):
-	
+    	def plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2, show=False):
 		''' plot one species for cycle between xlim1 and xlim2 
 		    Only works with instances of se and mesa _profile
 		
@@ -1633,7 +1638,7 @@ class DataPlot:
 			return
 		x,y=self.logarithm(Xspecies,mass,True,False,10)
 		print x
-		pl.plot(y,x,'-',label=str(keystring))
+		pl.plot(y,x,'-',label=str(species))
 		pl.xlim(xlim1,xlim2)
 		pl.ylim(ylim1,ylim2)
 		pl.legend()
@@ -1705,7 +1710,10 @@ def flux_chart(file_name,plotaxis,plot_type):
     	print 'file read!'
 
         if plot_type == 1:
-		I_am_the_target = [22.-10.,10.]
+		I_am_the_target = [23.-11.,11.]
+                #I_am_the_target = [13.-7.,7.]
+		#I_am_the_target = [22.-10.,10.]
+                # = [79.-34.,34.]
         # here below need for plotting 
 	# plotaxis = [xmin,xmax,ymin,ymax] 
 	#plotaxis=[1,20,1,20]
