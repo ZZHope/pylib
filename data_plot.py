@@ -588,7 +588,6 @@ class DataPlot:
 			return
 		plotType=self.classTest()
 		
-		
 		if mass_range!=None and mass_range[0]>mass_range[1]:
 			print 'Please input a proper mass range'
 			print 'Returning None'
@@ -661,7 +660,15 @@ class DataPlot:
 			print 'This method, abu_chart, is not supported by this class'
 			print 'Returning None'
 			return None
-			
+		# in case we call from ipython -pylab, turn interactive on at end again
+		turnoff=False
+		if not show:   
+			try:
+				ioff()
+				turnoff=True
+			except NameError:
+				turnoff=False
+				
 		nnmax = int(max(nin))+1
 		nzmax = int(max(zin))+1
 		nzycheck = zeros([nnmax,nzmax,3])
@@ -865,6 +872,8 @@ class DataPlot:
 		print graphname,'is done'
 		if show:
 			pl.show()
+		if turnoff:
+			ion()
 		return
 		
 	def iso_abundMulti(self,cyclist, stable=False,amass_range=None,mass_range=None,
