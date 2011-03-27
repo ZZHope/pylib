@@ -965,7 +965,7 @@ class DataPlot:
 		dat={'z':z, 'name':name,'abu':abu}
 		return dat
 		
-	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True,given_abund_array=None):
+	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True,given_abund_array=None,log_logic=True):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
@@ -1002,7 +1002,7 @@ class DataPlot:
                            If ref=-2, than the array given_abund_array is plotted.
 		    Shape -The Shape of the dataplots, will default to circles 
 		    given_abund_array - array of abundances that can be given from script comparison_ppn, and if ref=-2 are plotted.
-		    	  
+		    log_logic = True/False to plot abundances in log scale or linear.	  
 		'''
 		elem_list = []
 		elem_index = []
@@ -1480,7 +1480,10 @@ class DataPlot:
 			    
 		    
 		    try:
-			l1.append(pl.semilogy(mass_num[j],abund_plot[j],str(colors[cl_index]+plot_type[pl_index])))
+			if log_logic == True:
+				l1.append(pl.semilogy(mass_num[j],abund_plot[j],str(colors[cl_index]+plot_type[pl_index])))
+			if log_logic == False:
+	                        l1.append(pl.plot(mass_num[j],abund_plot[j],str(colors[cl_index]+plot_type[pl_index]))) 			
 			cl_index+=1
 			pl_index+=1
 			if pl_index > 2:
@@ -1527,7 +1530,10 @@ class DataPlot:
 			#print 'out of bounds: ', len(abund_plot), j
 			    
 		    try:
-			pl.semilogy(mass_num[j],abund_plot[j],'k'+shape)
+			if log_logic == False:
+	                        pl.plot(mass_num[j],abund_plot[j],'k'+shape)
+			if log_logic == True:
+				pl.semilogy(mass_num[j],abund_plot[j],'k'+shape)
 		    except OverflowError:
 			None
 			#print 'div by zero', len(mass_num[j]), len(abund_plot[j])
