@@ -271,6 +271,110 @@ class se(DataPlot,Utils):
          
 
 
+    def kip(self, mix_thresh,xaxis,sparse):
+        '''
+        This function uses a threshold diffusion coefficient, above which the
+        the shell is considered to be convective, to plot a Kippenhahn diagram.
+
+            mix_thresh: the threshold diffusion coefficient
+            xaxis:      age, cycle, log_age or log_time_left
+            sparse:     sparsity factor when plotting from cyclelist
+
+        ex: pt=mp.se('/ngpod1/swj/see/mppnp_out/scratch_data/M25.0Z1e-02','.h5')
+            pt.kip(10000,'log_time_left',100)
+        '''
+
+        original_cyclelist = self.se.cycles
+        cyclelist = original_cyclelist[0:len(original_cyclelist):sparse]
+
+        xx = self.se.get(cyclelist,'age')
+        totalmass = []
+        m_ini = float(self.se.get('mini'))
+
+
+        fig = pl.figure(1)
+        ax = pl.subplot(1,1,1)
+        fsize = 12
+
+        def getlims(d_coeff,massco):
+            '''This function returns the convective boundaries for a cycle,
+            given the cycle's dcoeff and massco columns, taking into account
+            whether surface or centre are at the top'''
+            plotlims = []
+            if massco[0] > massco[-1]:
+                for j in range(-1,-len(d_coeff)-1,-1):
+                    if j == -1:
+                        if d_coeff[j] >= mix_thresh:
+                            plotlims.append(massco[j])
+                        else:
+                            pass
+                    elif (d_coeff[j]-mix_thresh)*(d_coeff[j+1]-mix_thresh) < 0:
+                        plotlims.append(massco[j])
+                    if j == -len(d_coeff):
+                        if d_coeff[j] >= mix_thresh:
+                            plotlims.append(massco[j])
+                return plotlims       
+            else:
+                for j in range(len(d_coeff)):
+                    if j == 0:
+                        if d_coeff[j] >= mix_thresh:
+                            plotlims.append(massco[j])
+                        else:
+                            pass
+                    elif (d_coeff[j]-mix_thresh)*(d_coeff[j-1]-mix_thresh) < 0:
+                        plotlims.append(massco[j])
+                    if j == len(d_coeff)-1:
+                        if d_coeff[j] >= mix_thresh:
+                            plotlims.append(massco[j])
+                return plotlims
+
+            
+
+        if xaxis == 'age':
+            ax.set_xlabel('Age [yr]',fontsize=fsize)
+        elif xaxis == 'cycle':
+            xx = cyclelist
+            ax.set_xlabel('Cycle',fontsize=fsize)
+        elif xaxis == 'log_age':
+            for i in range(len(xx)):
+                xx[i] = np.log10(xx[i])
+            ax.set_xlabel('log$_{10}$(age) [yr]',fontsize=fsize)
+        elif xaxis == 'log_time_left':
+            for i in range(len(xx)):
+                xx[i] = np.log10(max(xx)-xx[i])
+            xx[-1] = xx[-2]*1.001
+            ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
+
+        #centre-surface flag:
+        flag = False
+
+        if self.se.get(cyclelist[1],'mass')[0] > self.se.get(cyclelist[1],'mass')[-1]:
+            flag = True
+
+        for i in range(len(cyclelist)):
+            if flag == True:
+                totalmass.append(self.se.get(cyclelist[i],'mass')[0])
+            else:
+                totalmass.append(self.se.get(cyclelist[i],'mass')[-1])
+            d_coeff = self.se.get(cyclelist[i],'dcoeff')
+            massco = self.se.get(cyclelist[i],'mass')
+            plotlims = getlims(d_coeff,massco)
+            for k in range(0,len(plotlims),2):
+                ax.axvline(xx[i],ymin=plotlims[k]/m_ini,ymax=plotlims[k+1]/m_ini,color='b',linewidth=0.5)
+        
+
+        ax.plot(xx, totalmass, color='black', linewidth=1)
+        if xaxis == 'log_time_left':
+            ax.axis([max(xx),min(xx),0.,m_ini])
+        else:
+            ax.axis([min(xx),max(xx),0.,m_ini])
+        ax.set_ylabel('Mass [$M_{\odot}$]',fontsize=fsize)
+
+        pl.show()
+
+
+
+
 
     def abup_se_plot(mod,species):
 
