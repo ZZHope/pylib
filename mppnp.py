@@ -120,15 +120,16 @@ class se(DataPlot,Utils):
         '''
         return self.se.get(cycle_list,dataitem,isotope)
         
-    def plot_prof_1(self,mod,species,xlim1,xlim2,ylim1,ylim2):
+    def plot_prof_1(self,mod,species,xlim1,xlim2,ylim1,ylim2,symbol=None):
 
         ''' plot one species for cycle between xlim1 and xlim2
         If m
         species      - which species to plot
         mod          - model to plot
         xlim1, xlim2 - mass coordinate range 
-        ylim1, ylim2 - mass fraction coordinate range '''
-        DataPlot.plot_prof_1(self,species,mod,xlim1,xlim2,ylim1,ylim2)
+        ylim1, ylim2 - mass fraction coordinate range
+	symbol       - indicate which symbol you want to use, if required. '''
+        DataPlot.plot_prof_1(self,species,mod,xlim1,xlim2,ylim1,ylim2,symbol)
         '''
         tot_mass=self.se.get(mod,'total_mass')    
         age=self.se.get(mod,'age')    

@@ -1585,7 +1585,7 @@ class DataPlot:
 			pl.show()
 		return
 	
-	def plotprofMulti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2):
+	def plotprofMulti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2,symbol=None):
 	
 		''' create a movie with mass fractions vs mass coordinate 
 		between xlim1 and xlim2, ylim1 and ylim2. Only works with instances of se 
@@ -1596,15 +1596,22 @@ class DataPlot:
 		what_specie  - array with species in the plot
 		xlim1, xlim2 - mass coordinate range 
 		ylim1, ylim2 - mass fraction coordinate range
-	  
+	        symbol       - array indicating which symbol you want to use. Must be of the same len of what_specie array
 		'''
 		plotType=self.classTest()
 		if plotType=='se':
 			for i in range(ini,end+1,delta):
 			    step = int(i)
-			    print step
-			    for j in range(len(what_specie)):
-				self.plot_prof_1(step,what_specie[j],xlim1,xlim2,ylim1,ylim2)
+			    #print step
+			    if symbol==None:
+				symbol_dummy = '-'	
+			    	for j in range(len(what_specie)):
+					self.plot_prof_1(step,what_specie[j],xlim1,xlim2,ylim1,ylim2,symbol_dummy)
+			    else:
+			    	for j in range(len(what_specie)):
+					symbol_dummy = symbol[j]
+					self.plot_prof_1(step,what_specie[j],xlim1,xlim2,ylim1,ylim2,symbol_dummy)
+							
 			    #          
 			    filename = str('%03d' % step)+'_test.png'             
 			    pl.savefig(filename, dpi=400) 
@@ -1616,7 +1623,7 @@ class DataPlot:
 			print 'This method is not supported for '+str(self.__class__)
 			return
 	# From mesa_profile
-    	def plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2, show=False):
+    	def plot_prof_1(self,species,keystring,xlim1,xlim2,ylim1,ylim2,symbol=None, show=False):
 		''' plot one species for cycle between xlim1 and xlim2 
 		    Only works with instances of se and mesa _profile
 		
@@ -1624,7 +1631,8 @@ class DataPlot:
 		keystring    - label that appears in the plot or in the cas of se,
 			       A cycle or list of cycles
 		xlim1, xlim2 - mass coordinate range                                                 
-		ylim1, ylim2 - mass fraction coordinate range '''
+		ylim1, ylim2 - mass fraction coordinate range
+		symbol       - indicate which symbol you want to use, if required. '''
 		plotType=self.classTest()
 		if plotType=='se':
 			tot_mass=self.se.get(keystring,'total_mass')    
@@ -1642,9 +1650,13 @@ class DataPlot:
 		else:
 			print 'This method is not supported for '+str(self.__class__)
 			return
+
+		if symbol == None:
+			symbol = '-'				
+
 		x,y=self.logarithm(Xspecies,mass,True,False,10)
-		print x
-		pl.plot(y,x,'-',label=str(species))
+		#print x
+		pl.plot(y,x,symbol,label=str(species))
 		pl.xlim(xlim1,xlim2)
 		pl.ylim(ylim1,ylim2)
 		pl.legend()
