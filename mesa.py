@@ -337,9 +337,9 @@ class star_log(DataPlot):
 		pyl.xlabel('log Teff')
 		pyl.ylabel('log L')
     
-    def kippenhahn(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
-                       tp_agb=False):
-		''' Kippenhahn plot as a function of time or model
+    def kippenhahn_CO(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
+                       tp_agb=0.):
+		''' Kippenhahn plot as a function of time or model with CO ratio
 		
 		num_frame    number of frame to plot this plot into 
                 xax          string that is either model or time to
@@ -351,7 +351,7 @@ class star_log(DataPlot):
                              Kippenhahn plot 
                 title        figure title
 
-                tp_agb       if <> 0 then 
+                tp_agb       if >= 0 then 
                              ylim=[h1_min*1.-tp_agb/100 : h1_max*1.+tp_agb/100] 
                              with h1_min, h1_max the min and max H-free 
                              core mass coordinate
@@ -400,11 +400,75 @@ class star_log(DataPlot):
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='star_mass')
 		pyl.ylabel('mass coordinate')
 		pyl.legend(loc=2)
-                if tp_agb > 0:
+                if tp_agb > 0.:
                     h1_min = min(h1_boundary_mass[t0_model:])
                     h1_max = max(h1_boundary_mass[t0_model:])
                     h1_min = h1_min*(1.-tp_agb/100.)
                     h1_max = h1_max*(1.+tp_agb/100.)
+                    print 'setting ylim to zoom in on H-burning:',h1_min,h1_max                    
+                    pyl.ylim(h1_min,h1_max)
+
+    def kippenhahn(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
+                       tp_agb=0.):
+		''' Kippenhahn plot as a function of time or model
+		
+		num_frame    number of frame to plot this plot into 
+                xax          string that is either model or time to
+                             indicate what is to be used on the x-axis
+
+                t0_model     model for the zero point in time, for AGB
+                             plots this would be usually the model of
+                             the 1st TP, which can be found with the
+                             Kippenhahn plot 
+                title        figure title
+
+                tp_agb       if >= 0 then 
+                             ylim=[h1_min*1.-tp_agb/100 : h1_max*1.+tp_agb/100] 
+                             with h1_min, h1_max the min and max H-free 
+                             core mass coordinate
+                '''
+	
+		pyl.figure(num_frame)
+		
+		if xax == 'time':
+		    xaxisarray = self.get('star_age')
+		elif xax == 'model':
+		    xaxisarray = self.get('model_number')
+		else:
+		    print 'kippenhahn_error: invalid string for x-axis selction.'+\
+			  ' needs to be "time" or "model"'
+		
+                t0_mod=xaxisarray[t0_model]
+	    
+		h1_boundary_mass  = self.get('h1_boundary_mass')
+		he4_boundary_mass = self.get('he4_boundary_mass')
+		star_mass         = self.get('star_mass')
+		mx1_bot           = self.get('mx1_bot')*star_mass
+		mx1_top           = self.get('mx1_top')*star_mass
+		mx2_bot           = self.get('mx2_bot')*star_mass
+		mx2_top           = self.get('mx2_top')*star_mass
+	
+
+		if xax == 'time':
+		    pyl.xlabel('t / yrs')
+		elif xax == 'model':
+		    pyl.xlabel('model number')
+	
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,h1_boundary_mass[t0_model:],label='h1_boundary_mass')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,he4_boundary_mass[t0_model:],label='he4_boundary_mass')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx1_bot[t0_model:],',r',label='conv bound')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx1_top[t0_model:],',r')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_bot[t0_model:],',r')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_top[t0_model:],',r')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='star_mass')
+		pyl.ylabel('mass coordinate')
+		pyl.legend(loc=2)
+                if tp_agb > 0.:
+                    h1_min = min(h1_boundary_mass[t0_model:])
+                    h1_max = max(h1_boundary_mass[t0_model:])
+                    h1_min = h1_min*(1.-tp_agb/100.)
+                    h1_max = h1_max*(1.+tp_agb/100.)
+                    print 'setting ylim to zoom in on H-burning:',h1_min,h1_max                    
                     pyl.ylim(h1_min,h1_max)
 
     def t_surfabu(self,num_frame,xax,t0_model=0,title='surface abundance'):
@@ -435,8 +499,10 @@ class star_log(DataPlot):
 		surface_c12       = self.get('surface_c12')
 		surface_c13       = self.get('surface_c13')
 		surface_n14       = self.get('surface_n14')
-		surface_o16       = self.get('surface_o16')
-	
+		surface_o16       = self.get('surface_o16')                
+                
+                target_n14 = -3.5
+
 		COratio=(surface_c12*4.)/(surface_o16*3.)
                 t0_mod=xaxisarray[t0_model]
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,COratio[t0_model:],'-k',label='CO ratio')
@@ -458,6 +524,7 @@ class star_log(DataPlot):
                              label='$^{14}\mathrm{N}$')
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,np.log10(surface_o16[t0_model:]),\
                              label='$^{16}\mathrm{O}$')
+                pyl.plot([min(xaxisarray[t0_model:]-t0_mod),max(xaxisarray[t0_model:]-t0_mod)],[target_n14,target_n14])
 
 		pyl.ylabel('mass fraction $\log X$')
 		pyl.legend(loc=2)
