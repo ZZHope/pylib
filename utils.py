@@ -35,9 +35,9 @@ def species_list(what_list):
 	'''
 	if what_list is "CNONe":
 		list_to_print = ['H-1','He-4','C-12','O-16','Ne-20']
-	elif what_list is "s-process":
-		list_to_print = ['Fe-56','Ge-70','Zn-70','Se-76','Kr-80',\
-				 'Kr-82','Kr-86','Sr-88','Ba-138','Pb-208']
+	elif what_list is "sprocess":
+		print 'passa da qui'
+		list_to_print = ['Fe-56','Ge-70','Zn-70','Se-76','Kr-80','Kr-82','Kr-86','Sr-88','Ba-138','Pb-208']
 		
 	return list_to_print
 	
@@ -50,11 +50,25 @@ def symbol_list(what_list):
 		symbol=['ro','bo','ko','go','mo'\
 			,'r-','b-','k-','g-','m-','r--','b--','k--'\
 			,'g--','r1']
+		#symbol=['r+','ro','r-']
 	elif what_list is "list2":
 		symbol=['-','--','-.','.','o','v','^','<','>','1','2',\
 			'3','4','s','p','*','h','H','+']
 			
 	return symbol
 		
+def make_list(default_symbol_list,len_list_to_print):
+	''' provide the list of symbols to use according for the list of species/arrays to plot.
+	default_symbol_list = list of symbols that the user choose to use.  	    	
+	len_list_to_print   = len of list of species/arrays to print.
+	'''
 
+	import scipy as sc
+
+	symbol_used = []
+	for i in range(len_list_to_print):
+		symbol_used.append(default_symbol_list[sc.mod(i,len(default_symbol_list))])
+			
+	return symbol_used
+		
 
