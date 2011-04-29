@@ -540,6 +540,7 @@ class AB_Plot(qc.QThread): #
 		return self		
 	
 class generic_plot(qc.QThread):
+	"""This preforms a generic plot, currently (04-26-11) not working"""
 	def __init__(self,x_parm, y_parm, x_data, y_data, x_log, y_log,  plot_type, parent):
 		qc.QThread.__init__(self,None)
 		self.xparm = x_parm
@@ -559,11 +560,13 @@ class generic_plot(qc.QThread):
 		self = None
 		
 	
-	def run(self):	
+	def run(self):
 		print self.parent.write
-		print 'start ', np.shape(self.xdata), len(self.ydata[0])
+		print "in generic_plot"
 		
-	
+		print self.xparm, self.yparm
+		
+		#print 'start ', np.shape(self.xdata), len(self.ydata[0])
 		
 		l1 = []		
 		self.fig = Figure((10.0, 10.0),frameon=True)#, figsize=(9,9)
@@ -571,16 +574,21 @@ class generic_plot(qc.QThread):
 		self.axes1 = self.fig.add_subplot(111,title=str(self.xparm) + str(' vs ') + str(self.yparm), xlabel=str(self.xparm), ylabel=str(self.yparm))
 		self.axes1.grid()
 		
-	#	while len(self.xdata) == 1:
-	#		print 'trimming x'
-	#		self.xdata = self.xdata[0]
+		while len(self.xdata) == 1:
+			print 'trimming x'
+			self.xdata = self.xdata[0]
 	#	print self.ydata
 		#if len(self.ydata) == 1:
 		#	self.ydata = self.ydata[0]
 		
-		#while len(self.ydata) == 1:
-	#		print 'trimming y'
-	#		self.ydata == self.ydata[0]
+		while len(self.ydata) == 1:
+			print 'trimming y'
+			self.ydata = self.ydata[0]
+		
+		print "xdata" + str(len(self.xdata))
+		print self.xdata
+		print "ydata"+ str(len(self.ydata))
+		print self.ydata
 		
 		if self.xparm == 'Cycle':
 			for x in xrange(len(self.xdata)):
@@ -645,7 +653,7 @@ class generic_plot(qc.QThread):
 																						
 		else:	
 			for i in xrange(len(self.yparm)):					
-				print 'zip', len(self.ydata[0])
+				#print 'zip', len(self.ydata[0])
 				try:
 					while len(self.ydata) == 1:
 						self.ydata = self.ydata[0]

@@ -113,6 +113,7 @@ class yprofile(DataPlot):
 		"""
     	
 		self.files = []  # List of files in this directory
+		self.cycles= []	 # list of cycles in this directory 
 		self.hattrs = [] # header attributes
 		self.dcols = []  # list of the column attributes
 		self.cattrs= []  # List of the attributes of the y profiles
@@ -138,15 +139,34 @@ class yprofile(DataPlot):
 		    slname=self.files[len(self.files)-1] #
 		    self.hattrs,self.dcols, self._cycle=self._readFile(slname,sldir)
 		    
-		    self._splitHeader() #Splits the Header into header attributes and top attributes
+		    self._splitHeader() #Splits the HeaTder into header attributes and top attributes
 		    self.hattrs=self._formatHeader() # returns the header attributes as a dictionary
 		    self.cattrs=self.getCattrs() # returns the concatination of Cycle and Top Attributes
-		    print 'There are '+str(len(self.files))+' YProfile files in the ' +self.sldir+' directory.'
-		    print 'Ndump values range from 0 to '+str(len(self.files)-1)
-		    t=self.get('t')
 		    
-		    print 'Time values range from '+ str(t[0])+' to '+str(t[len(t)-1])
+		    self.ndumpDict=self.ndumpDict(self.files)
+		    
+		    print 'There are '+str(len(self.files))+' YProfile files in the ' +self.sldir+' directory.'
+		    print 'Ndump values range from '+str(min(self.ndumpDict.keys()))+' to '+str(max(self.ndumpDict.keys()))
+		    t=self.get('t',max(self.ndumpDict.keys()))
+		    t1=self.get('t',min(self.ndumpDict.keys()))
+		    print 'Time values range from '+ str(t1[-1])+' to '+str(t[-1])
+		    self.cycles=self.ndumpDict.keys()
 		return None
+	
+	def ndumpDict(self,fileList):
+    		"""
+    		Method that creates a dictionary of Filenames with the associated
+    		key of the filename's Ndump
+    		input - A list of yprofile filenames
+    		output - the filenamem, ndump dictionary
+    		"""
+    		ndumpDict={}
+    		for i in xrange(len(fileList)):
+    			ndump=fileList[i].split("-")[-1]
+    			ndump=ndump.split(".")[0]
+    			ndumpDict[int(ndump)]=fileList[i]
+    		
+    		return ndumpDict
 	
 	def getHattrs(self): 
 		"""returns the list of header attributes"""
@@ -199,7 +219,7 @@ class yprofile(DataPlot):
 		isHead=False #If Attri is in the Header Atribute section
 		
 		if fname==None:
-			fname=len(self.files)-1
+			fname=max(self.ndumpDict.keys())
 		
 		if attri in self.cattrs: # if it is a cycle attribute
 			isCyc = True
@@ -219,6 +239,7 @@ class yprofile(DataPlot):
 			print 'That Data name does not appear in this YProfile Directory'
 			print 'Returning none'
 			return None
+			
 	def getHeaderData(self,attri):
 		"""
 		Returns a String or int of Header data that is associated with the attri
@@ -263,7 +284,7 @@ class yprofile(DataPlot):
 		data=0
 		
 		if FName==None: #By default choose the last YProfile
-			FName=len(self.files)-1
+			FName=max(self.ndumpDict.keys())
 		
 		if attri in self._cycle: #if attri is a cycle attribute rather than a top attribute
 			isCyc = True
@@ -497,6 +518,7 @@ class yprofile(DataPlot):
 		time stamp 
 		Fname the name of the file we are looking or Ndump or time
 		"""
+		
 		numType=numType.upper()
 		boo=False
 		indexH=0
@@ -516,11 +538,11 @@ class yprofile(DataPlot):
 				print 'User Cant select a negative NDump'
 				print 'Reselecting NDump as 0'
 				FName=0
-			if FName > len(self.files)-1:
+			if FName not in self.ndumpDict.keys():
 				print 'NDump '+str(FName)+ ' Does not exist in this directory'
 				print 'Reselecting NDump as the largest in the Directory'
-				print 'Which is '+ str(len(self.files)-1)
-				FName=len(self.files)-1
+				print 'Which is '+ str(max(self.ndumpDict.keys()))
+				FName=max(self.ndumpDict.keys())
 			boo=True
 		
 		elif numType=='T' or numType=='TIME':
@@ -532,7 +554,14 @@ class yprofile(DataPlot):
 			if FName < 0:
 				print 'A negative time does not exist, choosing a time = 0 instead'
 				FName=0
-			timeData=self.get('t',self.files[len(self.files)-1],numType='file')
+			timeData=self.get('t',self.ndumpDict[max(self.ndumpDict.keys())],numtype='file')
+			keys=self.ndumpDict.keys()
+			keys.sort()
+			tmp=[]
+			for i in xrange(len(keys)):
+				tmp.append(timeData[keys[i]])
+			
+			timeData=tmp
 			time= float(FName)
 			for i in range(len(timeData)): #for all the values of time in the list, find the Ndump that has the closest time to FName
 				if timeData[i]>time and i ==0:
@@ -552,11 +581,11 @@ class yprofile(DataPlot):
 			low=time-low
 			
 			if high >=low:
-				print 'The closest time is at Ndump = ' +str(indexL)
-				FName=indexL
+				print 'The closest time is at Ndump = ' +str(keys[indexL])
+				FName=keys[indexL]
 			else:
-				print 'The closest time is at Ndump = ' +str(indexH)
-				FName=indexH
+				print 'The closest time is at Ndump = ' +str(keys[indexH])
+				FName=keys[indexH]
 			boo=True
 		else:
 			print 'Please enter a valid numType Identifyer'
@@ -564,12 +593,7 @@ class yprofile(DataPlot):
 			return None
 		
 		if boo:#here i assume all yprofile files start like 'YProfile-01-'
-			tmp='YProfile-01-'
-			for i in range (4-len(str(FName))):
-				tmp+='0'
-			tmp+=str(FName)
-			tmp+='.bobaaa'
-			FName=tmp
+			FName=self.ndumpDict[FName]
 		return FName
 		   
 	def _splitHeader(self):

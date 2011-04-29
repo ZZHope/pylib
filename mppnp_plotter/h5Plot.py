@@ -1790,7 +1790,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 
 
 
-		if self.y_parm.count('iso_massf') and self.plot_type == 1:
+		if self.y_parm.count('iso_massf') or self.y_parm.count('yps') and self.plot_type == 1:
 			self.gp_iso_selection()
 		else:
 			self.g_plot2()	
@@ -1920,8 +1920,11 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 
 
 
-			if self.y_parm.count('iso_massf'):
-				self.y_parm.pop(self.y_parm.index('iso_massf'))	
+			if self.y_parm.count('iso_massf') or self.y_parm.count('yps'):
+				try:
+					self.y_parm.pop(self.y_parm.index('iso_massf'))	
+				except ValueError:
+					self.y_parm.pop(self.y_parm.index('yps'))	
 				print 'iso_massf selected::::, ', self.y_parm
 				selected = self.dlist1.selectedIndexes()
 				isos = []
@@ -1991,7 +1994,7 @@ class h5Plotter(qg.QMainWindow, qc.QThread):
 		#	All the data has been fetched.  It is time to start plotting	
 		self.GP.append(hrplot.generic_plot(self.x_parm, self.y_parm, self.x_data, self.y_data, self.x_log, self.y_log, self.plot_type, self))		
 		self.GP[-1].run()					
-					
+			
 		del self.x_data, self.y_data
 		
 		#	Adds the the plot to the gui subwindow and adds a toolbar to the subwindow

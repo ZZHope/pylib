@@ -269,7 +269,7 @@ class DataPlot:
 		plotType=self.classTest()
 		if plotType=='YProfile':
 			if fname==None:
-				fname=len(self.files)-1
+				fname=self.cycles[-1]
 		
 			listY=self.get(atriy,fname, numtype,resolution='a')
 			listX=self.get(atrix,fname, numtype,resolution='a')
