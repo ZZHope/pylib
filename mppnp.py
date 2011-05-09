@@ -695,16 +695,22 @@ class se(DataPlot,Utils):
         for i in range(len(self.se.isotopes)):
             spe_rude1.append(self.se.isotopes[i].split('-')[0])
             spe_rude2.append(self.se.isotopes[i].split('-')[1])
-                # spe_rude1 is elem name and spe_rude2 is mass number.
+        # spe_rude1 is elem name and spe_rude2 is mass number.
         #print spe_rude1,spe_rude2
+        k = 0
         for i in range(len(spe_rude1)):
-            if int(spe_rude2[i]) < 10:
-                spe_rude3.append(str(spe_rude1[i][0:2])+str('  ')+str(spe_rude2[i][0:3]))    
-            elif int(spe_rude2[i]) >= 10 and int(spe_rude2[i]) < 100 :    
-                spe_rude3.append(str(spe_rude1[i][0:2])+str(' ')+str(spe_rude2[i][0:3]))    
-            elif int(spe_rude2[i]) >= 100 :    
-                spe_rude3.append(str(spe_rude1[i][0:2])+str(spe_rude2[i][0:3]))    
-            global spe
+            try: 
+            	if int(spe_rude2[i]) < 10:
+            	    spe_rude3.append(str(spe_rude1[i][0:2])+str('  ')+str(spe_rude2[i][0:3]))    
+            	elif int(spe_rude2[i]) >= 10 and int(spe_rude2[i]) < 100 :    
+            	    spe_rude3.append(str(spe_rude1[i][0:2])+str(' ')+str(spe_rude2[i][0:3]))    
+            	elif int(spe_rude2[i]) >= 100 :    
+            	    spe_rude3.append(str(spe_rude1[i][0:2])+str(spe_rude2[i][0:3]))    
+            except ValueError:
+                k = k+1
+                None
+
+        global spe
         spe = []
         n_array = []
         for i in range(len(spe_rude3)):
@@ -712,17 +718,19 @@ class se(DataPlot,Utils):
                 spe.append(str(spe_rude3[i][0:1])+str(' ')+str(spe_rude3[i][1:4]))        
             else:
                 spe.append(spe_rude3[i]) 
-                n_array.append(i)
+	    n_array.append(i)
+        if spe[0]=='Ne  1':
+		spe[0] = 'N   1' 
                                           
         # spe_rude is the isotope name, in agreement with what we use in ppn, etc.
         # need to do this to can use other functions without changing them drastically.
-        #print spe_rude
 
                  
         
+        # here I skip isomers...
         global amass_int
         amass_int=np.zeros(len(spe_rude2)) 
-        for i in range(len(spe_rude2)):   
+        for i in range(len(spe_rude2)-k):   
             amass_int[i]=int(spe_rude2[i])
             #print amass_int
 
@@ -916,13 +924,15 @@ class se(DataPlot,Utils):
         cl={}
         for a,b in zip(spe,n_array):
             cl[a] = b  
-        #print cl
 
         # from here below I read the abundance.
         
         abunds = []
+        name_specie_in_file=self.se.dcols[5]
+
         for i in range(len(spe)):
-            abunds.append(self.se.get(cycle,'iso_massf',self.se.isotopes[i]))
+            #print spe[i],self.se.isotopes[i]
+            abunds.append(self.se.get(cycle,name_specie_in_file,self.se.isotopes[i]))
             #print abunds[0][0],abunds[0][len(masses)-1]
             # abunds[i] is giving abundances for isotope i. I want mass_frac[i],
         # the isotopic distribution for mass zone i
@@ -933,10 +943,10 @@ class se(DataPlot,Utils):
         for i in range(len(masses)):
             if mass_range[0] <=  masses[i]  and mass_range[1] >=  masses[i] :
                 used_masses.append(masses[i])
-                temp = []
-            for j in range (len(spe)):
-                temp.append(abunds[j][i])
-                mass_frac.append(temp)    
+            	temp = []
+            	for j in range (len(spe)):
+                	temp.append(abunds[j][i])
+            		mass_frac.append(temp)    
         #print mass_frac[len(masses)-1][cl['H   1']]        
         #print len(mass_frac)
 
@@ -949,6 +959,8 @@ class se(DataPlot,Utils):
 
         global decayed_multi_d
         decayed_multi_d=[]
+	#print len(mass_frac)
+	#print len(decay_raw)
         for iii in range(len(mass_frac)):
             jj=-1
             decayed=[]
@@ -959,18 +971,35 @@ class se(DataPlot,Utils):
                     for j in range(len(decay_raw[i])):             
                         try:    
                             dum_str = decay_raw[i][j]    
-                            dummy = dummy + float(mass_frac[iii][cl[dum_str.capitalize()]])
+                            dummy = dummy + float(mass_frac[iii][cl[dum_str.lower().capitalize()]])
+			    #print cl[dum_str.lower().capitalize()]		
                             #print dum_str, mass_frac[iii][cl[dum_str.capitalize()]]
                         except KeyError:
                             None            
                             #print 'I am not in the network:',decay_raw[i][j]
                         except IndexError:
                             None
-                            #print 'I am not read',cl[decay_raw[i][j]],decay_raw[i][j]    
+                            #print 'I am not read',cl[decay_raw[i][j].lower().capitalize()],decay_raw[i][j]    
                     decayed.append(dummy) 
             decayed_multi_d.append(decayed)    
+	#print 'I am here'
         #print decayed_multi_d[0][back_ind['CU 63']]
-        #print mass_frac[0][cl[('CU 63').capitalize()]],spe[cl[('CU 63').capitalize()]]
+        #print mass_frac[0][cl[('CU 63').lower().capitalize()]],spe[cl[('CU 63').lower().capitalize()]]
+	#print back_ind        
+        #print decayed_multi_d[0][back_ind['ZR 90']]
+        #print mass_frac[0][cl[('zr 90').capitalize()]],spe[cl[('zr 90').capitalize()]]
+        #print decayed_multi_d[0][back_ind['ZR 91']]
+        #print mass_frac[0][cl[('zr 91').capitalize()]],spe[cl[('zr 91').capitalize()]]
+        #print decayed_multi_d[0][back_ind['ZR 92']]
+        #print mass_frac[0][cl[('zr 92').capitalize()]],spe[cl[('zr 92').capitalize()]]
+        #print decayed_multi_d[0][back_ind['ZR 94']]
+        #print mass_frac[0][cl[('zr 94').capitalize()]],spe[cl[('zr 94').capitalize()]]
+        #print decayed_multi_d[0][back_ind['ZR 96']]
+        #print mass_frac[0][cl[('zr 96').capitalize()]],spe[cl[('zr 96').capitalize()]]
+        #print decayed_multi_d[0][back_ind['CS133']]
+        #print mass_frac[0][cl[('cs133').capitalize()]],spe[cl[('cs133').capitalize()]]
+        #print spe,len(spe)
+        #print cl,len(cl)
 
     
     
@@ -1380,6 +1409,438 @@ class se(DataPlot,Utils):
                     
         return [burn_cycles, burn_ages, burn_abun, burn_type, burn_lifetime]
     
+    def burnstage_upgrade(self, **keyw):
+        """
+        This function calculates the presence of burning stages and outputs
+        the ages when key isotopes are depleted and uses them to calculate burning
+        lifetimes.
+    
+        burnstage()
+        
+        A list is returned containing the following information:
+        
+        [burn_cycles, burn_ages, burn_abun, burn_type, burn_lifetime]
+    
+        Cycles contain the cycle numbers for the various points where the abundance
+        is abun.  The age of the star at each point and the type of burning is
+        indicated by those arrays.  The lifetimes are calculated by 
+    
+        The following keywords can also be used:
+    
+        | Keyword argument | Default Value:
+        ------------------------------------------------------------------------------
+         abund               "iso_massf"
+         isoa                "A"
+         isoz                "Z"
+         mass                "mass"
+         cycle               "cycle"
+         cyclefin             0
+        
+        All arguments change the name of fields used to read data from HDF5 files,
+        other than cyclefin.  Cyclefin is the last timestep to use when reading 
+        files
+        """
+
+        if ("isoa" in keyw) == False:
+            keyw["isoa"] = "A"
+        if ("isoz" in keyw) == False:
+            keyw["isoz"] = "Z"
+        if ("mass" in keyw) == False:
+            keyw["mass"] = "mass"
+        if ("age" in keyw) == False:
+            keyw["age"] = "age"
+        if ("abund" in keyw) == False:
+            keyw["abund"] = "iso_massf"
+        if ("cycle" in keyw) == False:
+            keyw["cycle"] = "cycle"
+        if ("cyclefin" in keyw) == False:
+            cyclefin = 1.e99
+        else:
+            cyclefin = keyw["cyclefin"]
+
+        burn_cycles = []
+        burn_ages = []
+        burn_abun = []
+        burn_type = []
+    
+        burn_lifetime = []
+    
+        firstfile = True
+    
+        hemax, cmax, nemax, omax = 0., 0., 0., 0.
+	hburn_logic = True
+	heburn_logic = True
+	cburn_logic = True
+	neburn_logic = True
+	oburn_logic = True		
+
+	hburn_start_logic = False
+	heburn_start_logic = False
+	cburn_start_logic = False
+	neburn_start_logic = False
+	oburn_start_logic = False		        
+            
+        #cycles_list = self.se.cycles
+	cyc = self.se.cycles
+	sparsity_factor = int(1)	
+	cycles_list = range(int(cyc[0]),int(cyc[len(cyc)-1]),((int(cyc[1])-int(cyc[0])))*sparsity_factor)
+        age_list    = self.se.get(keyw["age"])
+	# I want to read only the isotopes I need to identify the burning stages.
+	all_isos=self.se.isotopes
+	#list_all_isos=all_isos.tolist()
+	useful_species = species_list("burn_stages")
+	useful_index  = []
+	for iso in useful_species:
+		#useful_index.append(all_isos.index(iso))
+		useful_index.append(useful_species.index(iso))
+
+        specie_index={}
+        for a,b in zip(useful_species,useful_index):
+            specie_index[a] = b  
+
+        # Check the order of the input data
+        xm_init = self.se.get(0,keyw["mass"])
+        central_zone = 0
+	external_zone = -1
+        if isinstance(xm_init, list) == True:
+            if xm_init[0] > xm_init[1]:
+                # mass is descending with shell number and the centre of the star
+                # is the last shell
+                central_zone = -1
+		external_zone = 0
+
+	# central zone first	
+	zone = 0
+	xm_cyc=[]
+	xm_list=[]
+	for i in cycles_list:
+		xm_cyc  = self.se.get(i,keyw["mass"])[central_zone]
+		xm_list.append(xm_cyc)
+
+	
+	abund_list = []
+	for i in cycles_list:
+		abund_tmp = []	
+		for iso in useful_species:
+			abund_cyc = self.se.get(i,keyw["abund"],iso)[central_zone]
+			abund_tmp.append(abund_cyc)
+		abund_list.append(abund_tmp)	
+
+        if firstfile == True:
+            hsurf = self.se.get(0,keyw["abund"],'H-1')[external_zone]
+            #hesurf = self.se.get(0,keyw["abund"],'He-4')[external_zone]
+            firstfile = False
+            
+        # Try and determine the location of a convective core using the central and
+        # next from central shells
+        for i in range(1, len(cycles_list)-1):
+            if cycles_list[i] > cyclefin and cyclefin != 0:
+                pair = False
+                age1 = -1
+                for i in range(len(burn_type)):
+                    if 'start' in burn_type[i] and pair == False:
+                        age1 = burn_ages[i]
+                        pair = True
+                    elif 'end' in burn_type[i] and pair == True:
+                        age2 = burn_ages[i]
+                        pair = False
+                        if age1 != -1:
+                            burn_lifetime.append(age2 - age1)
+                            age1 = -1
+                            
+                return [burn_cycles, burn_ages, burn_abun, burn_type,
+                burn_lifetime]
+            	
+		print 'passa 3'
+
+            # H-burning
+	    if hburn_logic:
+ 	           hcen  = abund_list[i][specie_index['H-1']]
+                   hcennext = abund_list[i+1][specie_index['H-1']]
+            	   if hcen >1.e-10:
+                	if hcennext < hsurf-0.003 and hcen >= hsurf-0.003:
+                    		burn_cycles.append(cycles_list[i])
+                    		burn_ages.append(age_list[i])
+                    		burn_abun.append(hcen)
+                    		burn_type.append('H_start')
+				hburn_start_logic = True
+        
+                	if hcennext < 1.e-1 and hcen >= 1.e-1:
+                    		burn_cycles.append(cycles_list[i])
+                    		burn_ages.append(age_list[i])
+                    		burn_abun.append(1.e-1)
+                    		burn_type.append('H')
+                    
+                	if hcennext < 1.e-2 and hcen >= 1.e-2:
+                    		burn_cycles.append(cycles_list[i])
+                    		burn_ages.append(age_list[i])
+                    		burn_abun.append(1.e-2)
+                    		burn_type.append('H')
+
+                	if hcennext < 1.e-3 and hcen >= 1.e-3:
+                    		burn_cycles.append(cycles_list[i])
+                    		burn_ages.append(age_list[i])
+                    		burn_abun.append(1.e-3)
+                   		burn_type.append('H')
+                    
+                	if hcennext < 1.e-4 and hcen >= 1.e-4:
+                    		burn_cycles.append(cycles_list[i])
+                    		burn_ages.append(age_list[i])
+                    		burn_abun.append(1.e-4)
+                    		burn_type.append('H')
+
+                	if hcennext < 1.e-5 and hcen >= 1.e-5:
+                    		burn_cycles.append(cycles_list[i])
+                    		burn_ages.append(age_list[i])
+                    		burn_abun.append(1.e-5)
+                    		burn_type.append('H_end')
+                    		hemax = abund_list[i][specie_index['He-4']]
+				if hburn_start_logic:
+					hburn_logic == False
+
+                	if hcennext < 1.e-6 and hcen >= 1.e-6:
+                    		burn_cycles.append(cycles_list[i])
+                    		burn_ages.append(age_list[i])
+                    		burn_abun.append(1.e-6)
+                    		burn_type.append('H')
+                    
+                	#if hcennext < 1.e-9 and hcen >= 1.e-9:
+                    	#	burn_cycles.append(cycles_list[i])
+                    	#	burn_ages.append(age_list[i])
+                    	#	burn_abun.append(1.e-9)
+                    	#	burn_type.append('H')
+                    
+            # He-burning
+            hecen  = abund_list[i][specie_index['He-4']]
+            hecennext = abund_list[i+1][specie_index['He-4']]
+            if hcen < 1.e-5 and hecen > 1.e-10:
+                if hecennext < hemax-0.003 and hecen >= hemax-0.003:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(hecen)
+                    burn_type.append('He_start')
+        
+                if hecennext < 1.e-1 and hecen >= 1.e-1:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-1)
+                    burn_type.append('He')
+                    
+                if hecennext < 1.e-2 and hecen >= 1.e-2:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-2)
+                    burn_type.append('He')
+
+                if hecennext < 1.e-3 and hecen >= 1.e-3:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-3)
+                    burn_type.append('He')
+                    
+                if hecennext < 1.e-4 and hecen >= 1.e-4:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-4)
+                    burn_type.append('He')
+
+                if hecennext < 1.e-5 and hecen >= 1.e-5:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-5)
+                    burn_type.append('He_end')
+                    cmax = abund_list[i][specie_index['C-12']]
+
+                if hecennext < 1.e-6 and hecen >= 1.e-6:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-6)
+                    burn_type.append('He')
+                    
+                if hecennext < 1.e-9 and hecen >= 1.e-9:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-9)
+                    burn_type.append('He')
+    
+            # C-burning
+            ccen  = abund_list[i][specie_index['C-12']]
+            ccennext = abund_list[i+1][specie_index['C-12']]
+            if hcen < 1.e-5 and hecen < 1.e-5 and ccen > 1.e-10:
+                if ccennext < cmax-0.003 and ccen >= cmax-0.003:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(ccen)
+                    burn_type.append('C_start')
+        
+                if ccennext < 1.e-1 and ccen >= 1.e-1:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-1)
+                    burn_type.append('C')
+                    
+                if ccennext < 1.e-2 and ccen >= 1.e-2:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-2)
+                    burn_type.append('C')
+
+                if ccennext < 1.e-3 and ccen >= 1.e-3:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-3)
+                    burn_type.append('C')
+                    
+                if ccennext < 1.e-4 and ccen >= 1.e-4:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-4)
+                    burn_type.append('C')
+
+                if ccennext < 1.e-5 and ccen >= 1.e-5:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-5)
+                    burn_type.append('C_end')
+                    nemax = abund_list[i][specie_index['Ne-20']]
+
+                if ccennext < 1.e-6 and ccen >= 1.e-6:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-6)
+                    burn_type.append('C')
+                    
+                if ccennext < 1.e-9 and ccen >= 1.e-9:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-9)
+                    burn_type.append('C')
+
+            # Ne-burning
+            necen  = abund_list[i][specie_index['Ne-20']]
+            necennext = abund_list[i+1][specie_index['Ne-20']]
+            if hcen < 1.e-5 and hecen < 1.e-5 and ccen < 1.e-3 and necen > 1.e-10:
+                if necennext < nemax-0.003 and necen >= nemax-0.003:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(necen)
+                    burn_type.append('Ne_start')
+        
+                if necennext < 1.e-1 and necen >= 1.e-1:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-1)
+                    burn_type.append('Ne')
+                    
+                if necennext < 1.e-2 and necen >= 1.e-2:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-2)
+                    burn_type.append('Ne')
+                    
+
+                if necennext < 1.e-3 and necen >= 1.e-3:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-3)
+                    burn_type.append('Ne_end')
+                    omax = abund_list[i][specie_index['O-16']]
+                    
+                if necennext < 1.e-4 and necen >= 1.e-4:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-4)
+                    burn_type.append('Ne')
+
+                if necennext < 1.e-5 and necen >= 1.e-5:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-5)
+                    burn_type.append('Ne')
+
+                if necennext < 1.e-6 and necen >= 1.e-6:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-6)
+                    burn_type.append('Ne')
+
+                if necennext < 1.e-9 and necen >= 1.e-9:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-9)
+                    burn_type.append('Ne')
+                    
+            # O-burning
+            ocen  = abund_list[i][specie_index['O-16']]
+            ocennext = abund_list[i+1][specie_index['O-16']]
+            if hcen < 1.e-5 and hecen < 1.e-5 and ccen < 1.e-3 and ocen > 1.e-10:
+                if ocennext < omax-0.003 and ocen >= omax-0.003:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(ccen)
+                    burn_type.append('O_start')
+        
+                if ocennext < 1.e-1 and ocen >= 1.e-1:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-1)
+                    burn_type.append('O')
+                    
+                if ocennext < 1.e-2 and ocen >= 1.e-2:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-2)
+                    burn_type.append('O')
+
+                if ocennext < 1.e-3 and ocen >= 1.e-3:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-3)
+                    burn_type.append('O')
+                    
+                if ocennext < 1.e-4 and ocen >= 1.e-4:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-4)
+                    burn_type.append('O')
+
+                if ocennext < 1.e-5 and ocen >= 1.e-5:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-5)
+                    burn_type.append('O_end')
+
+                if ocennext < 1.e-6 and ocen >= 1.e-6:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-6)
+                    burn_type.append('O')
+                    
+                if ocennext < 1.e-9 and ocen >= 1.e-9:
+                    burn_cycles.append(cycles_list[i])
+                    burn_ages.append(age_list[i])
+                    burn_abun.append(1.e-9)
+                    burn_type.append('O')
+                        
+        
+	print 'passa 4'
+
+        pair = False
+        age1 = -1
+        for i in range(len(burn_type)):
+            if 'start' in burn_type[i] and pair == False:
+                age1 = burn_ages[i]
+                pair = True
+            elif 'end' in burn_type[i] and pair == True:
+                age2 = burn_ages[i]
+                pair = False
+                if age1 != -1:
+                    burn_lifetime.append(age2 - age1)
+                    age1 = -1
+                    
+        return [burn_cycles, burn_ages, burn_abun, burn_type, burn_lifetime]
+
+
     
     def cores(self, incycle, **keyw):
         """        
@@ -2067,7 +2528,7 @@ def stable_specie():
     'SI 28', 'SI 29', 'SI 30',\
     'P  31',\
     'S  32', 'S  33', 'S  34', 'S  36',\
-    ' CL 35', 'CL 37',\
+    'CL 35', 'CL 37',\
     'AR 36', 'AR 38', 'AR 40',\
     'K  39', 'K  40', 'K  41',\
     'CA 40', 'CA 42', 'CA 43', 'CA 44', 'CA 46', 'CA 48',\
@@ -2140,12 +2601,15 @@ def stable_specie():
     stable=[]
     global jdum
     jdum=np.zeros(len(stable_raw))
+    global jjdum
+    jjdum=np.zeros(len(spe))
     for i in range(len(stable_raw)):
        dum_str = stable_raw[i]
        for j in range(len(spe)):
                if stable_raw[i].capitalize() == spe[j]:
                    stable.append(stable_raw[i]) 
                    jdum[i]=1
+		   jjdum[j]=1
                    jj=jj+1
                    count_size_stable.append(int(jj))
     #print stable
@@ -2455,18 +2919,23 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
     i_decay       - if = 1 I plot not decayed, if = 2 I plot decayed. Make sense only if stable is true.'''
 
 
-    import nuh5p 
-    
+    #import nuh5p 
+    import mppnp as mp 	    
+
     if not stable and i_decay == 2:
         print 'ERROR: choose i_decay = 1'  
         return
     
-    data=nuh5p.plot_tools(directory,name_h5_file)
+    data=mp.se(directory,name_h5_file)
     data.read_iso_abund_marco(mass_range,cycle)
-    
+    #print spe
     if i_decay == 2:
-        stable_specie()
+        mp.stable_specie()
+        print 'PASSA DA QUI'
         data.decay()
+
+    print 'PASSA DA QUI'
+
     
     # here I am calculating average mass fraction for all isotopes in given mass range, and then
     # if needed calculating average over decayed.
@@ -2478,11 +2947,14 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
     average_mass_frac = []
     
     if len(used_masses) >= 2:
+        dm_tot = abs(used_masses[len(used_masses)-1]-used_masses[0])
         for j in range(len(spe)):
             temp = 0.
-        for i in range(len(used_masses)-1):
-            temp = float(mass_frac[i][j]*abs(used_masses[i+1]-used_masses[i])) + temp
-            temp = temp/abs(used_masses[len(used_masses)-1]-used_masses[0])    
+            for i in range(len(used_masses)-1):
+	        dm_i = abs(used_masses[i+1]-used_masses[i])
+            	temp = float(mass_frac[i][j]*dm_i/dm_tot) + temp
+            	#temp = float(mass_frac[i][j]*abs(used_masses[i+1]-used_masses[i])) + temp
+            	#temp = temp/abs(used_masses[len(used_masses)-1]-used_masses[0])    
             average_mass_frac.append(temp)
         #print average_mass_frac
     elif  len(used_masses) == 1:
@@ -2499,12 +2971,17 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
     if i_decay == 2:
         global average_mass_frac_decay
         average_mass_frac_decay = []
-        for j in range(len(back_ind)):
-           temp = 0.
-        for i in range(len(used_masses)-1):
-            temp = float(decayed_multi_d[i][j]*abs(used_masses[i+1]-used_masses[i])) + temp
-            temp = temp/abs(used_masses[len(used_masses)-1]-used_masses[0])    
-            average_mass_frac_decay.append(temp)
+	dm_tot = abs(used_masses[len(used_masses)-1]-used_masses[0])
+	#
+	#print len(decayed_multi_d[0]),decayed_multi_d[0]        
+	for j in range(len(back_ind)):
+        	temp = 0.
+           	for i in range(len(used_masses)-1):
+		        dm_i = abs(used_masses[i+1]-used_masses[i])
+	            	temp = float(decayed_multi_d[i][j]*dm_i/dm_tot) + temp
+           		#temp = float(decayed_multi_d[i][j]*abs(used_masses[i+1]-used_masses[i])) + temp
+            		#temp = temp/abs(used_masses[len(used_masses)-1]-used_masses[0])    
+            	average_mass_frac_decay.append(temp)
 
         somma = 0.
         for i in range(len(back_ind)):
@@ -2619,11 +3096,11 @@ def element_abund_marco(i_decay,solar_factor):
     i_for_unstable = 0
     for i in range(z_bismuth):
         z_for_elem.append(int(i+1))
-    # the only elements below bismuth with no stable isotopes are Tc and Pm
-    if i+1 == 43 or i+1 == 61:
-        index_stable.append(i_for_unstable) 
-    else:
-        index_stable.append(i_for_stable)
+    	# the only elements below bismuth with no stable isotopes are Tc and Pm
+    	if i+1 == 43 or i+1 == 61:
+        	index_stable.append(i_for_unstable) 
+    	else:
+        	index_stable.append(i_for_stable)
         
     # notice that elem_abund include all contribution, both from stables and unstables in
     # that moment.
@@ -2632,14 +3109,14 @@ def element_abund_marco(i_decay,solar_factor):
         for j in range(len(spe)):
             if znum_int[j] == i+1:
                 dummy = dummy + float(average_mass_frac[j])
-    elem_abund[i] = dummy
+    	elem_abund[i] = dummy
 
     for i in range(z_bismuth):
         dummy = 0.
         for j in range(len(solar_abundance)):
             if z_sol[j] == i+1:
                 dummy = dummy + float(solar_abundance[names_sol[j]])
-    solar_elem_abund[i] = dummy
+    	solar_elem_abund[i] = dummy
 
 
     for i in range(z_bismuth):
@@ -2656,7 +3133,7 @@ def element_abund_marco(i_decay,solar_factor):
                 if znum_int[cl[stable[j].capitalize()]] == i+1:
                     #print znum_int[cl[stable[j].capitalize()]],cl[stable[j].capitalize()],stable[j]
                     dummy = dummy + float(average_mass_frac_decay[j])
-        elem_abund_decayed[i] = dummy
+       	    elem_abund_decayed[i] = dummy
 
 
         for i in range(z_bismuth):

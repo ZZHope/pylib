@@ -36,9 +36,12 @@ def species_list(what_list):
 	if what_list is "CNONe":
 		list_to_print = ['H-1','He-4','C-12','O-16','Ne-20']
 	elif what_list is "sprocess":
-		print 'passa da qui'
 		list_to_print = ['Fe-56','Ge-70','Zn-70','Se-76','Kr-80','Kr-82','Kr-86','Sr-88','Ba-138','Pb-208']
-		
+	elif what_list is "burn_stages":
+		list_to_print = ['H-1','He-4','C-12','O-16','Ne-20','Si-28']	
+	elif what_list is "list_marco_1":
+		list_to_print = ['C-12','Ne-20','Ne-22','Na-23','Fe-54','Fe-56','Zn-70','Ge-70','Se-76','Kr-80','Kr-82','Sr-88','Y-89','Zr-96','Te-124','Xe-130','Xe-134','Ba-138']	
+			
 	return list_to_print
 	
 def symbol_list(what_list):
