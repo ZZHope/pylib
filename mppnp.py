@@ -2931,10 +2931,8 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
     #print spe
     if i_decay == 2:
         mp.stable_specie()
-        print 'PASSA DA QUI'
         data.decay()
 
-    print 'PASSA DA QUI'
 
     
     # here I am calculating average mass fraction for all isotopes in given mass range, and then
