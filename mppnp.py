@@ -13,43 +13,84 @@
    you can get help:
    2 : help mp
 
-   next, initiate a se class instance, the arguments are the
-   directory sedir and sefiles, a list of files you want to read;
-   note:
+   next, initiate a se class instance:   
+   3 : pt=mp.se('path/to/dir/with/se-files')
+   
+   which would read all h5 files from the current directory; again, do
+   help(mp.se) or mp.se? do get info for more options, as for example
+   how to specify a match pattern to select only certain files in the
+   directory; this may be useful if there are very many files and you
+   want only every 10th; example:
+   3 : pt =mp.se('.','M1.65Z0.020.00') 
 
-         * an easy way to get a list of files is, in ipython, to do
-           something like this:
-
-           In [2]: slist=!ls [<regexp>] <- [<regexp>] is optional,
-           e.g. *26*, then turn the string list into something h5T can
-           take as an argument:
-           In [3]: sefiles=slist.s.split()
-
-         * you can have several of these for different file sets from
-           different dirs, which should make comparing models quite easy
-
-   3 : pt =mp.se('.','M1') 
+      note: initialising an instance with 120 files with 1000 packets
+      each may take 3-4 minutes, which is too long for many people;
+      therefore the initialisation module will generate and write an
+      index file; if such an index file is present initialisation will
+      take less then a second; the initialisation module will
+      automatically detect various situations in which the index file
+      needs to be rewritten, for example if there is a new file.
 
    look at the data that is available in your instance
    4 : pt.sedir 
    5 : pt.sefiles
 
-   and use the functions inside, the se-h5T file read is only 
-   done once
-   6 : pt.plot_prof_1(23500,'H-1',0.1,0.9,0,1)
-   7 : pt.plot_prof_1(23500,'He-4',0.1,0.9,0,1)
-   8 : help pt.plot_prof_1 
-   use pt.get() to get data 
-   9 : pt.get(23500,'H-1')
+   The actual data is in pt.se and the following commands give you
+   access to header and cycle attributes as well as the cycle profile
+   data:
+      pt.se.cattrs
+      pt.se.hattrs
+      pt.se.dcols
+
+   Available cylces can be viewed with
+      pt.se.cycles
+
+   You can get any of the quanties via the 'get' method, which is
+   relatively smart to give you things in various ways:
+      pt.get('rho')
+
+   would give you all rho vectors for all cycles, which is maybe more
+   than you want, so try
+      pt.get(300,'rho')
+   to get the rho vector for cycle 300, instead of one cycle you may
+   also supply a cycle list for the first argument
+
+   Do help(pt) (or whatever you instance is) for a full description of
+   what else your instance has to offer, which includes methods to
+   work with data
+
+      note: a particularly nice feature is that you can work with
+      instances of different types of data in a very flexible way, for
+      example in lists:
+         cases=[pt1,pt2,pt3]
+         for this_case in cases:
+            do someting with this_case
+
+   There are various plotting methodes, including plotting abundance
+   charts (abu_chart), isotopic abundance distributions and the
+   generic 'plot' method that lets you plot every quantity against any
+   other quantity that can possibly be plotted. Some of the methods
+   (including the three just mentioned) are available via the super
+   class data_plot, and are equally available in other python
+   modulues, as for example mesa.py or ppn.py. Several methods accept
+   lists of cycles which implies to create a series of frames to be
+   written to disk in order to make movies.
+
+   6 : pt.plot('mass','rho',fname=3000)
+
+   whereas pt.plot('mass','rho',fname=[3000,4000]) will produce two png files,
+   one for each cycle, do help(m.plot) for a full list of options
+   
+   mppnp output allows to do plots with abundances:
    10: pt.iso_abund(23500)
    11: pt.abu_chart(23500)
-   One note about iso_abund and abu_chart, if instead of a single cycle the user 
-	inputs a list of cycles, the method will then, instead of plotting them, 
-	will then save a .png for each cycle. Also if you just want a singular 
-	plot saved, the user can input their cycle, in a list like [0]. And that 
-	will save their plot.
 
-   The data of the instance is in pt.se
+   Also for iso_abund and abu_chart: if instead of a single
+	cycle the user inputs a list of cycles, the method will then,
+	instead of plotting them, will then save a .png for each
+	cycle. Also if you just want a singular plot saved, the user
+	can input their cycle, in a list like [0]. And that will save
+	their plot.
 '''
 
 import h5T
