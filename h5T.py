@@ -259,7 +259,7 @@ class Files(threading.Thread):
             #print self.h5s
             
             #self.connect(self.h5s[-1], qc.SIGNAL('finished()'), self.continue_h5s)
-        
+    
         
     def run(self):    
         
@@ -425,10 +425,19 @@ class Files(threading.Thread):
             return 0
         else: # x<y
             return -1
-
+    '''        
+    def startThreads(self,threads,IsConcurrent):
+         """
+         Method that starts the h5 file threads
+         Input: Threads- a list of threads that need to be started
+         """
+         
+         if (str(threads.__class__())==("<type 'list'>")):
+         	threads=[threads]
+    '''     
                 
     # This function determines which cycle, which file, which storage mechanism (cattr or data) and returns it 
-    def get(self, cycle_list,dataitem=None,isotope=None):
+    def get(self, cycle_list,dataitem=None,isotope=None,sparse=1):
     	'''
         There are three ways to call this function
             option 1
@@ -444,9 +453,14 @@ class Files(threading.Thread):
             get(cycle_list, 'iso_massf', isotope)
                isotope Must be in the form 'H-2'
                 fetches the isotope data for a list of cycles
+                
+        Additional Input:
+        	sparse - implements a sparsity factor on the fetched data ie
+        		 only the i th cycle in cycle_list data is returned
+        		 where i = sparse
         '''
         #    Check out the inputs        
-      
+        t1=time.time()
         isotope_of_interest = []
         
         if dataitem==None and isotope==None:
@@ -454,6 +468,7 @@ class Files(threading.Thread):
             dataitem = cycle_list
             
             if self.hattrs.count(dataitem) == 0: #if data item is not a header attribute
+            	
                 cycle_list = self.cycles
             else:
                 first_file = mrT.File(self.h5s[0].filename,'r')
@@ -461,13 +476,13 @@ class Files(threading.Thread):
 		first_file.close()
                 return dat
             if dataitem.split('-')[0] in self.isos:
-            	   return self.get(cycle_list,'iso_massf',dataitem)
+            	   return self.get(cycle_list,'iso_massf',dataitem,sparse=sparse)
         elif isotope==None:
             option_ind = 2
             cycle_list = cycle_list
             dataitem = dataitem
             if dataitem.split('-')[0] in self.isos:
-            	   return self.get(cycle_list,'iso_massf',dataitem)
+            	   return self.get(cycle_list,'iso_massf',dataitem,sparse=sparse)
         else:
 # there is an implicite rule here that if you want 2D arrays you have
 # to give 3 args, or, in other words you have to give a cycle or cycle
@@ -481,7 +496,9 @@ class Files(threading.Thread):
 # a one row array, as - for example- in the surf.h5 files
             shellnb=self.get(cycle_list,'shellnb')
             
-            
+        if sparse <1:
+        	sparse=1
+        
         #    Just in case the user inputs integers 
         try:
             for x in xrange(len(cycle_list)):
@@ -489,51 +506,67 @@ class Files(threading.Thread):
         except TypeError:
             cycle_list = [str(cycle_list)]
 
-
-        try:
-            if cycle_list.isdigit():
-                cycle_list = [cycle_list]
-                for cycle in cycle_list:
-                    if len(cycle) != len(self.cycles[0]):
-
-                        diff = len(self.cycles[0])-len(cycle)
-                        OO = ''
-                        while diff >=1:
-                            OO+='0'
-    
-                        cycle = OO+cycle
-
-        except AttributeError:
-            if cycle_list[0].isdigit():
-                                
-                for x in xrange(len(cycle_list)):
-                    if len(str(cycle_list[x])) != len(str(self.cycles[0])):
-    
-                        diff = len(str(self.cycles[0]))-len(str(cycle_list[x]))
-                        
-                        OO = ''
-                        while diff >=1:
-                            OO+='0'
-                            diff-=1
-                    
-                        try:
-                            cycle_list[x] = OO+cycle_list[x]
-                        except TypeError:
-                            cycle_list[0] = OO+cycle_list[0]
-                         
-	for i in xrange( len (cycle_list)):
-        	cycle_list[i]=self.findCycle(cycle_list[i])
+	
+	if option_ind != 1:
+		
+		try: #if it is a single cycle make sure its formatted correctly
+		    if cycle_list.isdigit():
+			cycle_list = [cycle_list]
+			for cycle in cycle_list:
+			    if len(cycle) != len(self.cycles[0]):
+				print "a"
+				diff = len(self.cycles[0])-len(cycle)
+				OO = ''
+				while diff >=1:
+				    OO+='0'
+	    
+				cycle = OO+cycle
+	
+		except AttributeError: ##if it is a list of cycles make sure its formatted correctly
+					
+		    
+		    if cycle_list[0].isdigit():
+					
+			for x in xrange(len(cycle_list)):
+			    if len(str(cycle_list[x])) != len(str(self.cycles[0])):
+				print "b"
+				diff = len(str(self.cycles[0]))-len(str(cycle_list[x]))
+				
+				OO = ''
+				while diff >=1:
+				    OO+='0'
+				    diff-=1
+			    
+				try:
+				    cycle_list[x] = OO+cycle_list[x]
+				except TypeError:
+				    cycle_list[0] = OO+cycle_list[0]
+	
+        if option_ind != 1:
+		for i in xrange( len (cycle_list)):
+			if cycle_list[i] not in self.cycles:
+				
+				cycle_list[i]=self.findCycle(cycle_list[i])
         
-        print 'Method mineing data from these cycles'
-        print cycle_list
+        #print 'Method mineing data from these cycles'
+        #print cycle_list[1:10]
         
         #    if it is a cattr call, it will not have a cycle value
         dat = []        
     #    for h5 in self.h5s:
     #        h5.h5 = mrT.File(h5.filename,'r')
     #'/rpod2/fherwig/tmp/tmp/'
+        i=0
+        cycle_list.sort()
         for cyc in cycle_list:
+            
+            if (i%sparse)!=0:
+            	    i+=1
+            	    continue
+            
+            i+=1
             for h5 in self.h5s:
+            	    
                 if h5.cycle.count(int(cyc)) or h5.cycle.count(str(cyc)):
                     
                     if not self.h5sStarted[self.h5s.index(h5)]:
@@ -616,7 +649,8 @@ class Files(threading.Thread):
                         dat.append(temp)
                         
                     except AttributeError:
-                        np.append(dat, temp)    
+                        np.append(dat, temp)  
+              
                                                     
         if len(dat) < 2 and option_ind != 3:
 
@@ -635,7 +669,8 @@ class Files(threading.Thread):
             None
         
         
-        
+        t2=time.time()
+        print "Total get time "+ str(t2-t1)
         return dat    
 
     #    uses the index information to build list of isos from tables A,Z    

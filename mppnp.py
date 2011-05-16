@@ -142,7 +142,7 @@ class se(DataPlot,Utils):
     def __del__(self):
         print 'Closing plot_tools'
         
-    def get(self, cycle_list,dataitem=None,isotope=None):
+    def get(self, cycle_list,dataitem=None,isotope=None, sparse=1):
     	'''
     	Simple function that simply calls h5T.py get method.
         There are three ways to call this function
@@ -158,8 +158,10 @@ class se(DataPlot,Utils):
             get(cycle_list, 'iso_massf', isotope)
                isotope Must be in the form 'H-2'
                 fetches the isotope data for a list of cycles
+         Additional Input:
+        	sparse - implements a sparsity factor on the fetched data
         '''
-        return self.se.get(cycle_list,dataitem,isotope)
+        return self.se.get(cycle_list,dataitem,isotope,sparse)
         
     def plot_prof_1(self,mod,species,xlim1,xlim2,ylim1,ylim2,symbol=None):
 

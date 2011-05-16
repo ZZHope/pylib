@@ -245,9 +245,9 @@ class DataPlot:
 		limits: The length four list of the x and y limits. The order of
 			the list is xmin,xmax,ymin,ymax
 		"""
-		
+		t1=time.time()
 		#Setting the axis labels
-
+ 
 		if labelx== None :
 			labelx=atrix
 		if labely== None :
@@ -275,11 +275,14 @@ class DataPlot:
 			listX=self.get(atrix,fname, numtype,resolution='a')
 		elif plotType=='se':
 			if fname==None:
-				listY=self.get( atriy)
-				listX=self.get(atrix)
+				listY=self.get( atriy,sparse=sparse)
+				listX=self.get(atrix,sparse=sparse)
 			else:
-				listY=self.get(fname, atriy)
-				listX=self.get(fname, atrix)
+				listY=self.get(fname, atriy,sparse=sparse)
+				listX=self.get(fname, atrix,sparse=sparse)
+		        
+			t2= time.time()
+			print t2 -t1
 		elif plotType=='PPN' :
 			if fname==None and atrix not in self.cattrs and atriy not in self.cattrs:
 				fname=len(self.files)-1
@@ -395,7 +398,8 @@ class DataPlot:
 			print 'It seems that the selected lists are of different\nsize, now returning none'
 			return None
 		# Sparse stuff
-		tmpX,tmpY=self.sparse(tmpX,tmpY, sparse)
+		if plotType!='se':
+			tmpX,tmpY=self.sparse(tmpX,tmpY, sparse)
 		
 		# Logarithm stuff
 		if logy or logx:	
