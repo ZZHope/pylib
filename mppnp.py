@@ -3148,7 +3148,7 @@ def element_abund_marco(i_decay,solar_factor):
     for i in range(z_bismuth):
         dummy = 0.
         for j in range(len(spe)):
-            if znum_int[j] == i+1:
+            if znum_int[j] == i+1 and jjdum[j] > 0.5:
                 dummy = dummy + float(average_mass_frac[j])
     	elem_abund[i] = dummy
 
@@ -3186,7 +3186,7 @@ def element_abund_marco(i_decay,solar_factor):
 
                          
 
-def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor):
+def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor,symbol='ko'):
     ''' Interface to plot elements abundances averaged over mass_range. 
     directory     -  location of h5 file to plot. Needed for plot_tools
     name_h5_file  -  name of h5 file. Needed for plot_tools
@@ -3221,7 +3221,7 @@ def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_d
  
     if not logic_stable:
         for i in range(z_bismuth):
-            pl.plot(z_for_elem[i],elem_prod_fac[i],'ko')
+            pl.plot(z_for_elem[i],elem_prod_fac[i],symbol,markersize=10.)
 
         pl.xlabel('$Atomic$ $number$', fontsize=20)
         pl.ylabel('$X_{i}/X_{sun}$', fontsize=20)
@@ -3232,11 +3232,12 @@ def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_d
     elif logic_stable:
         for i in range(z_bismuth):
             if index_stable[i] == 1:
-                pl.plot(z_for_elem[i],elem_prod_fac[i],'ko')
+		continue
+                #pl.plot(z_for_elem[i],elem_prod_fac[i],'ko')
         if i_decay == 2:
             for i in range(z_bismuth):
                 if index_stable[i] == 1:
-                    pl.plot(z_for_elem[i],elem_prod_fac_decayed[i],'ro')
+                    pl.plot(z_for_elem[i],elem_prod_fac_decayed[i],symbol,markersize=10.)
 
         pl.xlabel('$Atomic$ $number$', fontsize=20)
         pl.ylabel('$X_{i}/X_{sun}$', fontsize=20)
