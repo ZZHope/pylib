@@ -40,7 +40,7 @@ def species_list(what_list):
 	elif what_list is "burn_stages":
 		list_to_print = ['H-1','He-4','C-12','O-16','Ne-20','Si-28']	
 	elif what_list is "list_marco_1":
-		list_to_print = ['C-12','Ne-20','Ne-22','Na-23','Fe-54','Fe-56','Zn-70','Ge-70','Se-76','Kr-80','Kr-82','Sr-88','Y-89','Zr-96','Te-124','Xe-130','Xe-134','Ba-138']	
+		list_to_print = ['C-12','O-16','Ne-20','Ne-22','Na-23','Fe-54','Fe-56','Zn-70','Ge-70','Se-76','Kr-80','Kr-82','Sr-88','Y-89','Zr-96','Te-124','Xe-130','Xe-134','Ba-138']	
 			
 	return list_to_print
 	
