@@ -315,7 +315,7 @@ class se(DataPlot,Utils):
          
 
 
-    def kip(self, mix_thresh,xaxis,sparse):
+    def kip(self,cycle_end,mix_thresh,xaxis,sparse):
         '''
         This function uses a threshold diffusion coefficient, above which the
         the shell is considered to be convective, to plot a Kippenhahn diagram.
@@ -329,9 +329,9 @@ class se(DataPlot,Utils):
         '''
 
         original_cyclelist = self.se.cycles
-        cyclelist = original_cyclelist[0:len(original_cyclelist):sparse]
+        cyclelist = original_cyclelist[0:cycle_end:sparse]
 
-        xx = self.se.get(cyclelist,'age')
+        xx = self.se.ages[:cycle_end:sparse]
         totalmass = []
         m_ini = float(self.se.get('mini'))
 
@@ -386,7 +386,8 @@ class se(DataPlot,Utils):
         elif xaxis == 'log_time_left':
             for i in range(len(xx)):
                 xx[i] = np.log10(max(xx)-xx[i])
-            xx[-1] = xx[-2]*1.001
+            xx[-2] = xx[-3]-abs(xx[-4]-xx[-3])
+            xx[-1] = xx[-2]-abs(xx[-3]-xx[-2])
             ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
 
         #centre-surface flag:
@@ -400,6 +401,9 @@ class se(DataPlot,Utils):
                 totalmass.append(self.se.get(cyclelist[i],'mass')[0])
             else:
                 totalmass.append(self.se.get(cyclelist[i],'mass')[-1])
+            percent = int(i*100/len(cyclelist))
+            sys.stdout.flush()
+            sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
             d_coeff = self.se.get(cyclelist[i],'dcoeff')
             massco = self.se.get(cyclelist[i],'mass')
             plotlims = getlims(d_coeff,massco)
@@ -409,16 +413,339 @@ class se(DataPlot,Utils):
 
         ax.plot(xx, totalmass, color='black', linewidth=1)
         if xaxis == 'log_time_left':
-            ax.axis([max(xx),min(xx),0.,m_ini])
+            ax.axis([xx[0],xx[-1],0.,m_ini])
         else:
             ax.axis([min(xx),max(xx),0.,m_ini])
         ax.set_ylabel('Mass [$M_{\odot}$]',fontsize=fsize)
 
         pl.show()
 
+    def kip_cont(self,cycle_end,sparse):
+        '''
+        This function creates a Kippenhahn diagram as a contour plot of the
+        se output using convection_indicator'''
+
+        original_cyclelist = self.se.cycles
+        cyclelist = original_cyclelist[0:cycle_end:sparse]
+
+        xx = self.se.ages[0:cycle_end:sparse]
+
+        totalmass = []
+        m_ini = float(self.se.get('mini'))
+
+        y_res = 2000
+        dy = m_ini/float(y_res)
+        y = np.arange(0., m_ini, dy)
+
+        fig = pl.figure(1)
+        ax = pl.subplot(1,1,1)
+        fsize = 12
+
+        Z = np.zeros([len(y),len(xx)],float)
+
+        def getlims(conv_i_vec,massco):
+            '''This function returns the convective boundaries for a cycle,
+            given the cycle's conv_i_vec and massco columns, taking into account
+            whether surface or centre are at the top'''
+            plotlims = []
+            if massco[0] > massco[-1]:
+                for j in range(-1,-len(conv_i_vec)-1,-1):
+                    if conv_i_vec[j] >= 2:
+                        conv_i_vec[j] = 0
+                    if conv_i_vec[j+1] >= 2:
+                        conv_i_vec[j+1] = 0
+                    if j == -1:
+                        if conv_i_vec[j] == 1:
+                            plotlims.append(massco[j])
+                        else:
+                            pass
+                    elif abs(conv_i_vec[j]-conv_i_vec[j+1]) == 1:
+                            plotlims.append(massco[j])
+                    if j == -len(conv_i_vec):
+                        if conv_i_vec[j] == 1:
+                            plotlims.append(massco[j])
+                return plotlims       
+            else:
+                for j in range(len(conv_i_vec)):
+                    if conv_i_vec[j] >= 2:
+                        conv_i_vec[j] = 0
+                    if j == 0:
+                        if conv_i_vec[j] == 1:
+                            plotlims.append(massco[j])
+                        else:
+                            pass
+                    elif abs(conv_i_vec[j]-conv_i_vec[j-1]) >= 1:
+
+                        plotlims.append(massco[j])
+                    if j == len(conv_i_vec)-1:
+                        if conv_i_vec[j] == 1:
+                            plotlims.append(massco[j])
+                return plotlims
+
+        for i in range(len(cyclelist)):
+            print 'CYCLE: ', cyclelist[i]
+            conv_i_vec = self.se.get(cyclelist[i],'convection_indicator')
+            massco = self.se.get(cyclelist[i],'mass')
+            plotlims = getlims(conv_i_vec,massco)
+            percent = int(i*100/len(cyclelist))
+            sys.stdout.flush()
+            sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
+            for k in range(0,len(plotlims),2):
+                llimit = plotlims[k]
+                ulimit = plotlims[k+1]
+                for f in range(y_res):
+                    if llimit<=y[f] and ulimit>y[f]:
+	                Z[f,i]=1.
 
 
+        # Set up x-axis
+        for i in range(len(xx)):
+            xx[i] = np.log10(xx[-1]-xx[i])
+        xx[-2] = xx[-3]-abs(xx[-4]-xx[-3])
+        xx[-1] = xx[-2]-abs(xx[-3]-xx[-2])
+        ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
 
+        print xx
+
+        #cmap=mpl.cm.get_cmap('Blues')
+        cmap = mpl.colors.ListedColormap(['w','b'])
+
+        print 'plotting contours'
+        print len(xx),len(y)
+        ax.contourf(xx,y,Z, cmap=cmap, alpha=0.7)
+        ax.axis([xx[0],xx[-1],0.,float(m_ini)])
+        pl.show()
+
+    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],alphas=[0.3],yllim=0.,yulim=0.,y_res=2000,age='years',sparse_intrinsic=20,engen=False):
+        '''
+        This function creates a Kippenhahn diagram as a contour plot of the
+        .se.h5 or .out.h5 files using any continuous variable (columns in the hdf5 cycle data.
+        Multiple columns may be plotted, their name indicated in the list "plot", and their
+        thresholds in the list "thresholds".
+        
+        Currently, this is only designed to take one threshold for each variable
+        but future versions will hopefully be able to plot with multiple
+        thresholds, however you may circumvent this issue by repeating the variable in "plots"
+        and entering a second threshold for it in "thresholds".
+
+        Arguments:
+        sparse:              x-axis (timestep) sparsity; true sparsity = sparse*sparse_intrinsic
+                             Try 100 or 500 for .se.h5 and 20 for .out.h5 files for preliminary plots
+        sparse_intrinsic:    sparsity of timesteps in the data provided (usually 20 for .out.h5 
+                             files and 1 for .se.h5 files
+        cycle_start:         cycle from which you wish to plot (defaults to 0)
+        cycle_end:           maximum cycle that you wish to plot (if 0, = last cycle available).
+                             I recommend setting this to 2000-3000 cycles before the run ends, because
+                             the timesteps become so small that lack of precision leads to no difference
+                             in age between cycles, allowing for "-inf" to occur in the ages array.
+        plot:                1-D array containing the variables to be plotted (as strings, e.g.
+                             plots=['dcoeff','C-13'] I recommend always plotting 'dcoeff' as plots[0])
+        thresholds:          1-D array containing the thresholds corresponding to the variables in
+                             "plots". The threshold for 'dcoeff' defaults to 1.0E+12
+        alphas:              array containing the opacity (0 to 1) of the contour for each variable.
+        yllim:               lower plot limit for y-axis (mass co-ordinate)
+        yulim:               lower plot limit for y-axis (mass co-ordinate)
+        y_res:               y-axis resolution. Defaults to 2000 but increasing to as much as 10000
+                             does not significantly affect the plotting time.
+        age:                 either 'years' or 'seconds', depending on the data
+        engen:               boolean indicating whether the user would like to plot Kippenhahn
+                             of convective zones and energy generation. If True, please still include
+                             plots-['dcoeff'] and thresholds=[1.0E+12'] in your call. This will
+                             require the data to have an 'eps_nuc' column, so the plot is only working
+                             for .se.h5 files from MESA in the current se library. This is the most
+                             recent addition, so probably the most buggy. The plot script will automatically
+                             calculate and assign multiple thresholds according to the model.
+        '''
+
+        # Organize cycles and ages:
+        original_cyclelist = self.se.cycles
+        if cycle_end==0.:
+            cycle_end = original_cyclelist[-1]
+        cycle_end = int(cycle_end)/sparse_intrinsic - 1
+        if cycle_start==0:
+            pass
+        else:
+            cycle_start = int(cycle_start)/sparse_intrinsic - 1
+        cyclelist = original_cyclelist[cycle_start:cycle_end:sparse]
+        # Ages:
+        xx = self.se.ages[cycle_start:cycle_end:sparse]
+        # Y-axis limits and resolution:
+        totalmass = []
+        m_ini = float(self.se.get('mini'))
+        if yulim==0.:
+            yulim = m_ini 
+        dy = m_ini/float(y_res)
+        # Figure:
+        fig = pl.figure(1)
+        ax = pl.subplot(1,1,1)
+        fsize = 12
+        # Set up (y-axis) vector and a 3-D (hist) array to store all of the
+        # contours.
+        y = np.arange(0., m_ini, dy)
+        if engen == True:
+            Z = np.zeros([len(y),len(xx),len(plot)+1],float)
+        else:
+            Z = np.zeros([len(y),len(xx),len(plot)],float)
+
+        # Define function extracting the contour boundaries which will be
+        # called for every cycle in cyclelist, for every variable to be plotted
+        # along with its corresponding threshold(s).
+        def getlims(variable_array,thresh,massco_array):
+            '''This function returns the variable boundaries (in mass) for a cycle,
+            given the cycle's variable and mass columns, ensuring that the boundaries
+            are ordered centre to surface (as some .se.h5 files are the opposite).'''
+            plotlims = []
+            if massco_array[0] > massco_array[-1]:
+                for j in range(-1,-len(variable_array)-1,-1):
+                    if j == -1:
+                        if variable_array[j] >= thresh:
+                            plotlims.append(massco_array[j])
+                        else:
+                            pass
+                    elif (variable_array[j]-thresh)*(variable_array[j+1]-thresh) < 0:
+                        plotlims.append(massco_array[j])
+                    if j == -len(variable_array):
+                        if variable_array[j] >= thresh:
+                            plotlims.append(massco_array[j])
+                return plotlims       
+            else:
+                for j in range(len(variable_array)):
+                    if j == 0:
+                        if variable_array[j] >= thresh:
+                            plotlims.append(massco_array[j])
+                        else:
+                            pass
+                    elif (variable_array[j]-thresh)*(variable_array[j-1]-thresh) < 0:
+                        plotlims.append(massco_array[j])
+                    if j == len(variable_array)-1:
+                        if variable_array[j] >= thresh:
+                            plotlims.append(massco_array[j])
+                return plotlims
+        #Flag preventing plotting any other variables on an energy generation Kippenhahn plot:
+        if engen == True:
+            plot = ['dcoeff']
+        # This loop gets the mass co-ordinate array and the variable arrays, calls to get the
+        # boundaries in order, and populates the contour array.
+        for i in range(len(cyclelist)):
+            print 'CYCLE: ', cyclelist[i]
+            massco = self.se.get(cyclelist[i],'mass')
+            plotlimits=[]
+            for j in range(len(plot)):
+                variables = self.se.get(cyclelist[i],plot[j])
+                plotlims = getlims(variables,thresholds[j],massco)
+                plotlimits.append(plotlims)
+            percent = int(i*100/len(cyclelist))
+            sys.stdout.flush()
+            sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
+            for g in range(len(plot)):
+                for k in range(0,len(plotlimits[g]),2):
+                    llimit = plotlimits[g][k]
+                    ulimit = plotlimits[g][k+1]
+                    for f in range(y_res):
+                        if llimit<=y[f] and ulimit>y[f]:
+                            Z[f,i,g]=1.
+        # This function deetermines the adjacent two mass cells to a point in the y-vector
+        # (which contains mass co-ordinates centre to surface, split into y_res chunks),
+        # returning their index in the mass co-ordinate vector for that timestep/cycle.
+        def find_nearest(array,value):
+            '''Returns [lower,upper] indexes locating adjacent mass cells (in the massco vector)
+               around y-value (one of y_res points equally spaced between centre and surface).'''
+            idx=(np.abs(array-value)).argmin()
+            lims=np.zeros([2],int)
+            if array[idx] < value:
+                if array[idx]-array[idx+1] < 0.:
+                    lims[0] = idx
+                    lims[1] = idx-1
+                    return lims
+                else:
+                    lims[0] = idx
+                    lims[1] = idx+1
+                    return lims
+            elif array[idx] > value:
+                if array[idx]-array[idx+1] < 0.:
+                    lims[0] = idx+1
+                    lims[1] = idx
+                    return lims
+                else:
+                    lims[0] = idx-1
+                    lims[1] = idx
+                    return lims
+        # This flag enebles the loop below it to populate the contour array for energy generation.
+        # It does not take threshold arguments, as the array contains the log of the energy
+        # generation rather than "above" or "below".  Because of this, contour boundaries are
+        # automatically calculated according to the max energy generation in the model.
+        if engen == True:
+        # Requires eps_nuc array in the data. Produces energy generation contour
+        # by linearly interpolating eps_nuc between mass co-ordinates according
+        # to the y-resolution:
+            for i in range(len(cyclelist)):
+                print 'CYCLE: ', cyclelist[i]
+                max_energy_gen = 0.
+                massco = self.se.get(cyclelist[i],'mass')
+                log_epsnuc = np.log10(self.se.get(cyclelist[i],'eps_nuc'))
+                for f in range(len(log_epsnuc)):
+                    if log_epsnuc[f] < 0.: log_epsnuc[f] = 0.
+                print log_epsnuc
+                percent = int(i*100/len(cyclelist))
+                sys.stdout.flush()
+                sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
+                for j in range(len(y)):
+                    if j == len(y)-1:
+                        energy_here = 0.
+                    elif j == 0:
+                        energy_here = log_epsnuc[-1]
+                        if energy_here > max_energy_gen:
+                            max_energy_gen = energy_here
+                    else:
+                        lims = find_nearest(massco,y[j])
+                        frac = (y[j]-massco[lims[0]])/(massco[lims[1]]-massco[lims[0]])
+                        energy_here = frac*(log_epsnuc[lims[1]]-log_epsnuc[lims[0]]) + log_epsnuc[lims[0]]
+                    if energy_here > max_energy_gen:
+                        max_energy_gen = energy_here
+                    if max_energy_gen >1.0E+30:
+                        sys.exit()
+                    print i, j
+                    print max_energy_gen
+                    Z[j,i,1] = energy_here
+
+        # Set up x-axis according to whether ages are in years or seconds and re-write as log(time left).
+        # The last entry will always be -inf in this way so we calculate it by extrapolating the
+        # anti-penultimate and penultimate entries.
+        if age == 'years':
+            for i in range(len(xx)):
+                xx[i] = np.log10(xx[-1]-xx[i])
+        elif age == 'seconds':
+            xx[-1] = xx[-1]/31536000.0
+            for i in range(len(xx)):
+                xx[i] = xx[i]/31536000.0
+                xx[i] = np.log10(xx[-1]-xx[i])
+        #xx[-1] = xx[-2]*0.998
+        #xx[-2] = xx[-3]-abs(xx[-4]-xx[-3])
+        xx[-1] = xx[-2]-abs(xx[-3]-xx[-2])
+        ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
+        # Here we define the colourmap for the energy generation and an array containing a list of
+        # colours in which to plot each variable (in the order that the variables appear in "plots")
+        # iso_colours is obsolete but was for when we tried plotting isotopes with just their boundary lines
+        # as opposed to shading (for clarity). Colourmaps of these choices are written to cmap (array).
+        engen_cmap=mpl.cm.get_cmap('Blues')
+        colours = ['k','m','g','b']
+        iso_colours = ['b','r','y']
+        cmap = []
+        for i in range(len(plot)):
+            cmap.append(mpl.colors.ListedColormap(['w',colours[i]]))
+
+        print 'plotting contours'
+        print len(xx),len(y)
+        # Plot all of the contours. Levels indicates to only plot the shaded regions and not plot the
+        # white regions, so that they are essentially transparent. If engen=True, then the energy generation
+        # levels (boundary values) are calculated (in dex) from 2 to the macimum in steps of 2.
+        for i in range(len(plot)):
+            ax.contourf(xx,y,Z[:,:,i],levels=[0.5,1.5],colors=colours[i], alpha=alphas[i])
+        if engen == True:
+            ceiling = int(max_energy_gen)
+            ax.contourf(xx,y,Z[:,:,1],cmap=engen_cmap,levels=range(2,ceiling+1,2),alpha=0.5)
+        ax.axis([xx[0],xx[-1],yllim,yulim])
+        pl.show()
 
     def abup_se_plot(mod,species):
 
