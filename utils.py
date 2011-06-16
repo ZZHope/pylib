@@ -55,7 +55,7 @@ def symbol_list(what_list):
 			,'g--','r1']
 		#symbol=['r+','ro','r-']
 	elif what_list is "list2":
-		symbol=['-','--','-.','.','o','v','^','<','>','1','2',\
+		symbol=['r-','b--','g-.','k:','md','.','o','v','^','<','>','1','2',\
 			'3','4','s','p','*','h','H','+']
 			
 	return symbol

@@ -503,32 +503,39 @@ class star_log(DataPlot):
                 
                 target_n14 = -3.5
 
+	
 		COratio=(surface_c12*4.)/(surface_o16*3.)
                 t0_mod=xaxisarray[t0_model]
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,COratio[t0_model:],'-k',label='CO ratio')
-		pyl.ylabel('C/O ratio')
-		pyl.legend(loc=4)
-	
+                log10_c12=np.log10(surface_c12[t0_model:])
+
+                eps=1.e-3
+                logxaxisarray=log10(max(xaxisarray[t0_model:])+eps-xaxisarray[t0_model:])
+
+		pyl.plot(logxaxisarray,log10_c12,\
+                             label='$^{12}\mathrm{C}$')
+		pyl.plot(logxaxisarray,np.log10(surface_c13[t0_model:]),\
+                             label='$^{13}\mathrm{C}$')
+		pyl.plot(logxaxisarray,np.log10(surface_n14[t0_model:]),\
+                             label='$^{14}\mathrm{N}$')
+		pyl.plot(logxaxisarray,np.log10(surface_o16[t0_model:]),\
+                             label='$^{16}\mathrm{O}$')
+#                pyl.plot([min(xaxisarray[t0_model:]-t0_mod),max(xaxisarray[t0_model:]-t0_mod)],[target_n14,target_n14])
+
+		pyl.ylabel('mass fraction $\log X$')
+		pyl.legend(loc=2)
+
 		if xax == 'time':
 		    pyl.xlabel('t / yrs')
 		elif xax == 'model':
 		    pyl.xlabel('model number')
 	
-		pyl.twinx()
-                log10_c12=np.log10(surface_c12[t0_model:])
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,log10_c12,\
-                             label='$^{12}\mathrm{C}$')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,np.log10(surface_c13[t0_model:]),\
-                             label='$^{13}\mathrm{C}$')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,np.log10(surface_n14[t0_model:]),\
-                             label='$^{14}\mathrm{N}$')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,np.log10(surface_o16[t0_model:]),\
-                             label='$^{16}\mathrm{O}$')
-                pyl.plot([min(xaxisarray[t0_model:]-t0_mod),max(xaxisarray[t0_model:]-t0_mod)],[target_n14,target_n14])
 
-		pyl.ylabel('mass fraction $\log X$')
-		pyl.legend(loc=2)
+		pyl.twinx()
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,COratio[t0_model:],'-k',label='CO ratio')
+		pyl.ylabel('C/O ratio')
+		pyl.legend(loc=4)
                 pyl.title(title)
+
 # ... end t_surfabu
 
     def t_lumi(self,num_frame,xax):

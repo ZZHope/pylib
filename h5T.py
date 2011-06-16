@@ -476,13 +476,19 @@ class Files(threading.Thread):
 		first_file.close()
                 return dat
             if dataitem.split('-')[0] in self.isos:
-            	   return self.get(cycle_list,'iso_massf',dataitem,sparse=sparse)
+                try:
+                    return self.get(cycle_list,'iso_massf',dataitem,sparse=sparse)
+		except: # in some old se files there maybe still yps as the name for the abundance arrays
+                    return self.get(cycle_list,'yps',dataitem,sparse=sparse) 
         elif isotope==None:
             option_ind = 2
             cycle_list = cycle_list
             dataitem = dataitem
             if dataitem.split('-')[0] in self.isos:
-            	   return self.get(cycle_list,'iso_massf',dataitem,sparse=sparse)
+                try:
+                    return self.get(cycle_list,'iso_massf',dataitem,sparse=sparse)
+		except: # in some old se files there maybe still yps as the name for the abundance arrays
+                    return self.get(cycle_list,'yps',dataitem,sparse=sparse) 
         else:
 # there is an implicite rule here that if you want 2D arrays you have
 # to give 3 args, or, in other words you have to give a cycle or cycle
