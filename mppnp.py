@@ -516,45 +516,61 @@ class se(DataPlot,Utils):
         ax.axis([xx[0],xx[-1],0.,float(m_ini)])
         pl.show()
 
-    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],alphas=[0.3],yllim=0.,yulim=0.,y_res=2000,age='years',sparse_intrinsic=20,engen=False):
+    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],alphas=[0.3],yllim=0.,yulim=0.,y_res=2000,age='years',sparse_intrinsic=20, engen=False,engenalpha=0.6):
         '''
         This function creates a Kippenhahn diagram as a contour plot of the
-        .se.h5 or .out.h5 files using any continuous variable (columns in the hdf5 cycle data.
-        Multiple columns may be plotted, their name indicated in the list "plot", and their
-        thresholds in the list "thresholds".
+        .se.h5 or .out.h5 files using any continuous variable (columns in the
+        hdf5 cycle data.
+        Multiple columns may be plotted, their name indicated in the list "plot",
+        and theirthresholds in the list "thresholds".
         
         Currently, this is only designed to take one threshold for each variable
         but future versions will hopefully be able to plot with multiple
-        thresholds, however you may circumvent this issue by repeating the variable in "plots"
-        and entering a second threshold for it in "thresholds".
+        thresholds, however you may circumvent this issue by repeating the variable
+        in "plots" and entering a second threshold for it in "thresholds".
 
         Arguments:
-        sparse:              x-axis (timestep) sparsity; true sparsity = sparse*sparse_intrinsic
-                             Try 100 or 500 for .se.h5 and 20 for .out.h5 files for preliminary plots
-        sparse_intrinsic:    sparsity of timesteps in the data provided (usually 20 for .out.h5 
+        --------------------
+        sparse:              x-axis (timestep) sparsity;
+                             true sparsity = sparse*sparse_intrinsic
+                             Try 100 or 500 for .se.h5 and 20 for .out.h5 files
+                             for preliminary plots
+        sparse_intrinsic:    sparsity of timesteps in the data provided (usually
+                             20 for .out.h5 
                              files and 1 for .se.h5 files
         cycle_start:         cycle from which you wish to plot (defaults to 0)
-        cycle_end:           maximum cycle that you wish to plot (if 0, = last cycle available).
-                             I recommend setting this to 2000-3000 cycles before the run ends, because
-                             the timesteps become so small that lack of precision leads to no difference
-                             in age between cycles, allowing for "-inf" to occur in the ages array.
-        plot:                1-D array containing the variables to be plotted (as strings, e.g.
-                             plots=['dcoeff','C-13'] I recommend always plotting 'dcoeff' as plots[0])
-        thresholds:          1-D array containing the thresholds corresponding to the variables in
-                             "plots". The threshold for 'dcoeff' defaults to 1.0E+12
-        alphas:              array containing the opacity (0 to 1) of the contour for each variable.
+        cycle_end:           maximum cycle that you wish to plot (if 0, = last
+                             cycle available).
+                             I recommend setting this to 2000-3000 cycles before
+                             the run ends, because
+                             the timesteps become so small that lack of precision
+                             leads to no difference in age between cycles, allowing
+                             for "-inf" to occur in the ages array.
+        plot:                1-D array containing the variables to be plotted (as 
+                             strings, e.g. plots=['dcoeff','C-13']. I recommend
+                             always plotting 'dcoeff' as plots[0])
+        thresholds:          1-D array containing the thresholds corresponding to
+                             the variables in "plots". The threshold for 'dcoeff'
+                             defaults to 1.0E+12
+        alphas:              array containing the opacity (0 to 1) of the contour
+                             for each variable.
         yllim:               lower plot limit for y-axis (mass co-ordinate)
         yulim:               lower plot limit for y-axis (mass co-ordinate)
-        y_res:               y-axis resolution. Defaults to 2000 but increasing to as much as 10000
+        y_res:               y-axis resolution. Defaults to 2000 but increasing
+                             to as much as 10000
                              does not significantly affect the plotting time.
         age:                 either 'years' or 'seconds', depending on the data
-        engen:               boolean indicating whether the user would like to plot Kippenhahn
-                             of convective zones and energy generation. If True, please still include
-                             plots-['dcoeff'] and thresholds=[1.0E+12'] in your call. This will
-                             require the data to have an 'eps_nuc' column, so the plot is only working
-                             for .se.h5 files from MESA in the current se library. This is the most
-                             recent addition, so probably the most buggy. The plot script will automatically
-                             calculate and assign multiple thresholds according to the model.
+        engen:               boolean indicating whether the user would like to
+                             plot Kippenhahn of convective zones and energy
+                             generation. If True, please still include
+                             plots=['dcoeff'] and thresholds=[1.0E+12'] in your call.
+                             This will require the data to have an 'eps_nuc' column,
+                             so the plot is only working for .se.h5 files from MESA
+                             in the current se library. This is the most recent
+                             addition, so probably the most buggy. The plot script
+                             will automatically calculate and assign multiple
+                             thresholds according to the model.
+        engenalpha:          opacity of the energy generation contours.
         '''
 
         # Organize cycles and ages:
@@ -595,6 +611,8 @@ class se(DataPlot,Utils):
             given the cycle's variable and mass columns, ensuring that the boundaries
             are ordered centre to surface (as some .se.h5 files are the opposite).'''
             plotlims = []
+            print massco_array
+            print massco_array[0],massco_array[-1]
             if massco_array[0] > massco_array[-1]:
                 for j in range(-1,-len(variable_array)-1,-1):
                     if j == -1:
@@ -621,11 +639,12 @@ class se(DataPlot,Utils):
                         if variable_array[j] >= thresh:
                             plotlims.append(massco_array[j])
                 return plotlims
-        #Flag preventing plotting any other variables on an energy generation Kippenhahn plot:
+        # Flag preventing plotting any other variables on an energy generation
+        # Kippenhahn plot:
         if engen == True:
             plot = ['dcoeff']
-        # This loop gets the mass co-ordinate array and the variable arrays, calls to get the
-        # boundaries in order, and populates the contour array.
+        # This loop gets the mass co-ordinate array and the variable arrays,
+        # calls to get the boundaries in order, and populates the contour array.
         for i in range(len(cyclelist)):
             print 'CYCLE: ', cyclelist[i]
             massco = self.se.get(cyclelist[i],'mass')
@@ -644,12 +663,14 @@ class se(DataPlot,Utils):
                     for f in range(y_res):
                         if llimit<=y[f] and ulimit>y[f]:
                             Z[f,i,g]=1.
-        # This function deetermines the adjacent two mass cells to a point in the y-vector
-        # (which contains mass co-ordinates centre to surface, split into y_res chunks),
-        # returning their index in the mass co-ordinate vector for that timestep/cycle.
+        # This function determines the adjacent two mass cells to a point in the
+        # y-vector (which contains mass co-ordinates centre to surface, split into
+        # y_res chunks), returning their index in the mass co-ordinate vector for
+        # that timestep/cycle.
         def find_nearest(array,value):
-            '''Returns [lower,upper] indexes locating adjacent mass cells (in the massco vector)
-               around y-value (one of y_res points equally spaced between centre and surface).'''
+            '''Returns [lower,upper] indexes locating adjacent mass cells (in the
+               massco vector) around y-value (one of y_res points equally spaced
+               between centre and surface).'''
             idx=(np.abs(array-value)).argmin()
             lims=np.zeros([2],int)
             if array[idx] < value:
@@ -670,10 +691,11 @@ class se(DataPlot,Utils):
                     lims[0] = idx-1
                     lims[1] = idx
                     return lims
-        # This flag enebles the loop below it to populate the contour array for energy generation.
-        # It does not take threshold arguments, as the array contains the log of the energy
-        # generation rather than "above" or "below".  Because of this, contour boundaries are
-        # automatically calculated according to the max energy generation in the model.
+        # This flag enebles the loop below it to populate the contour array for
+        # energy generation. It does not take threshold arguments, as the array
+        # contains the log of the energy generation rather than "above" or "below".
+        # Because of this, contour boundaries are automatically calculated
+        # according to the max energy generation in the model.
         if engen == True:
         # Requires eps_nuc array in the data. Produces energy generation contour
         # by linearly interpolating eps_nuc between mass co-ordinates according
@@ -694,8 +716,6 @@ class se(DataPlot,Utils):
                         energy_here = 0.
                     elif j == 0:
                         energy_here = log_epsnuc[-1]
-                        if energy_here > max_energy_gen:
-                            max_energy_gen = energy_here
                     else:
                         lims = find_nearest(massco,y[j])
                         frac = (y[j]-massco[lims[0]])/(massco[lims[1]]-massco[lims[0]])
@@ -704,13 +724,14 @@ class se(DataPlot,Utils):
                         max_energy_gen = energy_here
                     if max_energy_gen >1.0E+30:
                         sys.exit()
-                    print i, j
+                    print energy_here
                     print max_energy_gen
-                    Z[j,i,1] = energy_here
+                    Z[j,i,1] = 10**energy_here
 
-        # Set up x-axis according to whether ages are in years or seconds and re-write as log(time left).
-        # The last entry will always be -inf in this way so we calculate it by extrapolating the
-        # anti-penultimate and penultimate entries.
+        # Set up x-axis according to whether ages are in years or seconds and
+        # re-write as log(time left). The last entry will always be -inf in this 
+        # way so we calculate it by extrapolating the anti-penultimate and
+        # penultimate entries.
         if age == 'years':
             for i in range(len(xx)):
                 xx[i] = np.log10(xx[-1]-xx[i])
@@ -719,14 +740,14 @@ class se(DataPlot,Utils):
             for i in range(len(xx)):
                 xx[i] = xx[i]/31536000.0
                 xx[i] = np.log10(xx[-1]-xx[i])
-        #xx[-1] = xx[-2]*0.998
-        #xx[-2] = xx[-3]-abs(xx[-4]-xx[-3])
         xx[-1] = xx[-2]-abs(xx[-3]-xx[-2])
         ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
-        # Here we define the colourmap for the energy generation and an array containing a list of
-        # colours in which to plot each variable (in the order that the variables appear in "plots")
-        # iso_colours is obsolete but was for when we tried plotting isotopes with just their boundary lines
-        # as opposed to shading (for clarity). Colourmaps of these choices are written to cmap (array).
+        # Here we define the colourmap for the energy generation and an array
+        # containing a list of colours in which to plot each variable (in the
+        # order that the variables appear in "plots") iso_colours is obsolete
+        # but was for when we tried plotting isotopes with just their boundary
+        # lines as opposed to shading (for clarity). Colourmaps of these choices
+        # are written to cmap (array).
         engen_cmap=mpl.cm.get_cmap('Blues')
         colours = ['k','m','g','b']
         iso_colours = ['b','r','y']
@@ -736,14 +757,19 @@ class se(DataPlot,Utils):
 
         print 'plotting contours'
         print len(xx),len(y)
-        # Plot all of the contours. Levels indicates to only plot the shaded regions and not plot the
-        # white regions, so that they are essentially transparent. If engen=True, then the energy generation
-        # levels (boundary values) are calculated (in dex) from 2 to the macimum in steps of 2.
+        # Plot all of the contours. Levels indicates to only plot the shaded
+        # regions and not plot the white regions, so that they are essentially
+        # transparent. If engen=True, then the energy generation levels
+        # (boundary values) are calculated (in dex) from 2 to the maximum in
+        # steps of 2.
         for i in range(len(plot)):
             ax.contourf(xx,y,Z[:,:,i],levels=[0.5,1.5],colors=colours[i], alpha=alphas[i])
         if engen == True:
+            print max_energy_gen
             ceiling = int(max_energy_gen)
-            ax.contourf(xx,y,Z[:,:,1],cmap=engen_cmap,levels=range(2,ceiling+1,2),alpha=0.5)
+            print ceiling
+            cburn = ax.contourf(xx,y,Z[:,:,1],cmap=engen_cmap,locator=mpl.ticker.LogLocator(),alpha=engenalpha)
+            cbarburn = pl.colorbar(cburn)
         ax.axis([xx[0],xx[-1],yllim,yulim])
         pl.show()
 
