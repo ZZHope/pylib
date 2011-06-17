@@ -611,8 +611,11 @@ class se(DataPlot,Utils):
             given the cycle's variable and mass columns, ensuring that the boundaries
             are ordered centre to surface (as some .se.h5 files are the opposite).'''
             plotlims = []
-            print massco_array
-            print massco_array[0],massco_array[-1]
+            # Just a fix for some get problem I was having:
+            if len(massco_array) == 2:
+                massco_array = massco_array[0]
+            if len(variable_array) == 2:
+                variable_array = variable_array[0]
             if massco_array[0] > massco_array[-1]:
                 for j in range(-1,-len(variable_array)-1,-1):
                     if j == -1:
@@ -772,6 +775,7 @@ class se(DataPlot,Utils):
             cbarburn = pl.colorbar(cburn)
         ax.axis([xx[0],xx[-1],yllim,yulim])
         pl.show()
+
 
     def abup_se_plot(mod,species):
 
