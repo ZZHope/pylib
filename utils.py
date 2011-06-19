@@ -57,6 +57,8 @@ def symbol_list(what_list):
 	elif what_list is "list2":
 		symbol=['r-','b--','g-.','k:','md','.','o','v','^','<','>','1','2',\
 			'3','4','s','p','*','h','H','+']
+	elif what_list is "lines1":
+		symbol=['r-','b--','g-.','k:','c-','m-','b-','g--','k-.','c:','m-','b-']
 			
 	return symbol
 		
