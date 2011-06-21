@@ -276,42 +276,55 @@ class se(DataPlot,Utils):
 
         f.close()
 
-    def abund_at_masscoorinate(self,ini,end,delta,mass_coo):
+    def abund_at_masscoorinate(self,ini,mass_coo):
 
-        ''' create a trajectory out of a stellar model 
+        ''' create a file with distribution at a given mass coord, and at a given time step. 
+        This for istance may be used as intial distribution for function trajectory, to
+        reproduce local conditions in ppn.   
 
-        ini       - initial model
-        end       - final model 
-        delta     - sparsity factor of the frames
+        ini       - model number
         mass_coo  - mass coordinate for the traj
   
-        warning: remove the old trajectory, if you have any for the same mass coordinate.
+        warning: remove the old abundance file, if you have any for the same mass coordinate.
         you are appendind data, not overwriting.
         '''
         
-        f = open('traj_'+str(mass_coo)+'.dat','a')
-        for step in range(ini,end+1,delta):
-            age=self.se.get(step,'age')
-            mass=self.se.get(step,'mass')  
-            temperature=self.se.get(step,'temperature')
-            rho=self.se.get(step,'rho')
-            for i in range(len(mass)):
-                if mass_coo == mass[i]:
-                    mass_coo_new = mass[i]
-                    zone = int(i) 
-                elif mass_coo > mass[i]:
-                    try:
-                        dum = mass[i+1]   
+        f = open('massf_'+str(mass_coo)+'.dat','a')
+
+        age=self.se.get(ini,'age')
+        mass=self.se.get(ini,'mass')  
+        temperature=self.se.get(ini,'temperature')
+        rho=self.se.get(ini,'rho')
+        for i in range(len(mass)):
+          if mass_coo == mass[i]:
+             mass_coo_new = mass[i]
+             zone = int(i) 
+          elif mass_coo > mass[i]:
+            	try:
+                  	dum = mass[i+1]   
                         if mass_coo <= mass[i+1]:
                             mass_coo_new = mass[i+1]
                             zone = int(i+1) 
-                    except IndexError:
+                except IndexError:
                         mass_coo_new = mass[i]
                         zone = int(i)
-            string = str(step)+'  '+str(age)+'  '+str(temperature[zone])+'  '+str(rho[zone]) 
-            f.write(string+"\n")
-
+        string = 'C Model number | time (yr)  |  Temperature (GK)  | density (cm^-3) ' 
+        f.write(string+"\n")
+        string = 'C '+str(ini)+'  '+str(age)+'  '+str(temperature[zone])+'  '+str(rho[zone]) 
+        f.write(string+"\n")
+        string = 'C Mass coordinate that is really used' 
+        f.write(string+"\n")
+        string = 'C '+str(mass_coo_new)
+        f.write(string+"\n")
+        abund_string = self.se.dcols[5]
+        print abund_string
+        # the for loop below maybe optimized, I believe 
+        # defining before isotopes and abundances. Marco 13 Jannuary 2011
+        for i in range(len(self.se.isotopes)):
+           string = 'D '+str(self.se.isotopes[i].split('-')[0]).upper()+'   '+str(self.se.isotopes[i].split('-')[1]).upper()+'    '+str(self.se.get(ini,abund_string)[zone][i])
+           f.write(string+"\n")
         f.close()
+         
          
 
 
@@ -2912,7 +2925,7 @@ def stable_specie():
 
 
     stable_raw=[]
-    stable_raw = ['H   1', 'H    2',\
+    stable_raw = ['H   1', 'H   2',\
     'HE  3', 'HE  4',\
     'LI  6', 'LI  7',\
     'BE  9',\
@@ -3432,13 +3445,13 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
     
     elif logic_stable:
     # plot stable
-        for i in range(len(stable)):
-            pl.plot(amass_int[cl[stable[i].capitalize()]],average_mass_frac[cl[stable[i].capitalize()]]/solar_abundance[stable[i].lower()]/solar_factor,'ko')
+        #for i in range(len(stable)):
+        #    pl.plot(amass_int[cl[stable[i].capitalize()]],average_mass_frac[cl[stable[i].capitalize()]]/solar_abundance[stable[i].lower()]/solar_factor,'ko')
         
         if i_decay == 2:
             for j in range(len(stable)):
                     #print cl[stable[j].capitalize()],stable[j].capitalize(),amass_int[cl[stable[j].capitalize()]]
-                    pl.plot(amass_int[cl[stable[j].capitalize()]],average_mass_frac_decay[back_ind[stable[j]]]/solar_abundance[stable[j].lower()]/solar_factor,'Dg')
+                    pl.plot(amass_int[cl[stable[j].capitalize()]],average_mass_frac_decay[back_ind[stable[j]]]/solar_abundance[stable[j].lower()]/solar_factor,'Dk')
     
         for i in range(len(stable)):
             for j in range(len(stable)): 
@@ -3447,14 +3460,19 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
                         adum  =[amass_int[cl[stable[i].capitalize()]],amass_int[cl[stable[j].capitalize()]]]
                         mfdum =[float(average_mass_frac[cl[stable[i].capitalize()]])/float(solar_abundance[stable[i].lower()]*solar_factor),float(average_mass_frac[cl[stable[j].capitalize()]])/float(solar_abundance[stable[j].lower()]*solar_factor)]
                         mfddum=[float(average_mass_frac_decay[back_ind[stable[i]]])/float(solar_abundance[stable[i].lower()]*solar_factor),float(average_mass_frac_decay[back_ind[stable[j]]])/float(solar_abundance[stable[j].lower()]*solar_factor)]
-                        pl.plot(adum,mfdum,'k-')
-                    if i_decay == 2:
-                              pl.plot(adum,mfddum,'g-')  
+                        #pl.plot(adum,mfdum,'k-')
+			# I had to add this try/except...why? I guess is someone related to H2, that I spotted that was wrong in stable_raw...
+			# should deal without this. Have to be solved when I have time Marco (June 7 2011)
+                    	if i_decay == 2:
+				try:
+                        		pl.plot(adum,mfddum,'k-')
+				except UnboundLocalError:
+					continue	  
 
     pl.xlabel('$Mass$ $number$', fontsize=20)
     pl.ylabel('$X_{i}/X_{sun}$', fontsize=20)
 
-    pl.ylim(1.0e-2,1000.)
+    pl.ylim(1.0e-3,5000.)
     pl.xlim(55,210)
     
     
