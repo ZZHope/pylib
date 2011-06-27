@@ -529,7 +529,7 @@ class se(DataPlot,Utils):
         ax.axis([xx[0],xx[-1],0.,float(m_ini)])
         pl.show()
 
-    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],alphas=[0.3],yllim=0.,yulim=0.,y_res=2000,age='years',sparse_intrinsic=20, engen=False,engenalpha=0.6):
+    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[0.3],yllim=0.,yulim=0.,y_res=2000,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6):
         '''
         This function creates a Kippenhahn diagram as a contour plot of the
         .se.h5 or .out.h5 files using any continuous variable (columns in the
@@ -565,6 +565,7 @@ class se(DataPlot,Utils):
         thresholds:          1-D array containing the thresholds corresponding to
                              the variables in "plots". The threshold for 'dcoeff'
                              defaults to 1.0E+12
+        xax:                 x-axis quantity; either 'log_time_left' or 'cycles'
         alphas:              array containing the opacity (0 to 1) of the contour
                              for each variable.
         yllim:               lower plot limit for y-axis (mass co-ordinate)
@@ -584,6 +585,9 @@ class se(DataPlot,Utils):
                              will automatically calculate and assign multiple
                              thresholds according to the model.
         engenalpha:          opacity of the energy generation contours.
+        netnuc_name:         the name of the column containing (eps_nuc-eps_neu).
+                             If you do not have available eps_neu, then you can give
+                             netnuc_name="eps_nuc" to just plot energy generation.
         '''
 
         # Organize cycles and ages:
@@ -596,8 +600,12 @@ class se(DataPlot,Utils):
         else:
             cycle_start = int(cycle_start)/sparse_intrinsic - 1
         cyclelist = original_cyclelist[cycle_start:cycle_end:sparse]
-        # Ages:
-        xx = self.se.ages[cycle_start:cycle_end:sparse]
+        # X-axis:
+        if xax == 'log_time_left':
+            xx = self.se.ages[cycle_start:cycle_end:sparse]
+        if xax == 'cycles':
+            xx = cyclelist
+        print xx[0], xx[-1]
         # Y-axis limits and resolution:
         totalmass = []
         m_ini = float(self.se.get('mini'))
@@ -612,7 +620,7 @@ class se(DataPlot,Utils):
         # contours.
         y = np.arange(0., m_ini, dy)
         if engen == True:
-            Z = np.zeros([len(y),len(xx),len(plot)+1],float)
+            Z = np.zeros([len(y),len(xx),len(plot)+2],float)
         else:
             Z = np.zeros([len(y),len(xx),len(plot)],float)
 
@@ -661,12 +669,30 @@ class se(DataPlot,Utils):
             plot = ['dcoeff']
         # This loop gets the mass co-ordinate array and the variable arrays,
         # calls to get the boundaries in order, and populates the contour array.
+        ypscoeff = [-1,-1,-1] # this should have same length as plot - quick fix for yps.
         for i in range(len(cyclelist)):
             print 'CYCLE: ', cyclelist[i]
             massco = self.se.get(cyclelist[i],'mass')
             plotlimits=[]
             for j in range(len(plot)):
-                variables = self.se.get(cyclelist[i],plot[j])
+                if plot[j][1] == '-' or plot[j][2] == '-':
+                    # Assume file has yps, not iso_massf
+                    ypsthere = True
+                    try: variables = self.se.get(cyclelist[i],'yps')
+                    # If this is not the case, do the usual se calls for iso_massf
+                    except KeyError:
+                        variables = self.se.get(cyclelist[i],plot[j])
+                        ypsthere = False
+                    # If yps is there, ask which indices correspond to the 
+                    # elements that are to be plotted, one by one.
+                    if ypsthere == True:
+                        if ypscoeff[j] == -1:
+                            ypscoeff[j] = int(raw_input("What integer is your element "+str(plot[j])+" in the 'yps' array? "))
+                        else:
+                            pass
+                        variables = self.se.get(cyclelist[i],'yps')[:,ypscoeff[j]]
+                else:
+                    variables = self.se.get(cyclelist[i],plot[j])
                 plotlims = getlims(variables,thresholds[j],massco)
                 plotlimits.append(plotlims)
             percent = int(i*100/len(cyclelist))
@@ -719,11 +745,12 @@ class se(DataPlot,Utils):
             for i in range(len(cyclelist)):
                 print 'CYCLE: ', cyclelist[i]
                 max_energy_gen = 0.
+                min_energy_gen = 0.
                 massco = self.se.get(cyclelist[i],'mass')
-                log_epsnuc = np.log10(self.se.get(cyclelist[i],'eps_nuc'))
+                log_epsnuc = np.log10(self.se.get(cyclelist[i],netnuc_name))
                 for f in range(len(log_epsnuc)):
                     if log_epsnuc[f] < 0.: log_epsnuc[f] = 0.
-                print log_epsnuc
+#                print log_epsnuc
                 percent = int(i*100/len(cyclelist))
                 sys.stdout.flush()
                 sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
@@ -738,26 +765,34 @@ class se(DataPlot,Utils):
                         energy_here = frac*(log_epsnuc[lims[1]]-log_epsnuc[lims[0]]) + log_epsnuc[lims[0]]
                     if energy_here > max_energy_gen:
                         max_energy_gen = energy_here
+                    if energy_here < min_energy_gen:
+                        min_energy_gen = energy_here
                     if max_energy_gen >1.0E+30:
                         sys.exit()
-                    print energy_here
-                    print max_energy_gen
+#                    print energy_here
+#                    print max_energy_gen
+#                    if energy_here >= 0.:
                     Z[j,i,1] = 10**energy_here
+#                    if energy_here < 0.:
+#                        Z[j,i,2] = 10**energy_here
 
         # Set up x-axis according to whether ages are in years or seconds and
         # re-write as log(time left). The last entry will always be -inf in this 
         # way so we calculate it by extrapolating the anti-penultimate and
         # penultimate entries.
-        if age == 'years':
-            for i in range(len(xx)):
-                xx[i] = np.log10(xx[-1]-xx[i])
-        elif age == 'seconds':
-            xx[-1] = xx[-1]/31536000.0
-            for i in range(len(xx)):
-                xx[i] = xx[i]/31536000.0
-                xx[i] = np.log10(xx[-1]-xx[i])
-        xx[-1] = xx[-2]-abs(xx[-3]-xx[-2])
-        ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
+        if xax == 'log_time_left':
+            if age == 'years':
+                for i in range(len(xx)):
+                    xx[i] = np.log10(xx[-1]-xx[i])
+            elif age == 'seconds':
+                xx[-1] = xx[-1]/31536000.0
+                for i in range(len(xx)):
+                    xx[i] = xx[i]/31536000.0
+                    xx[i] = np.log10(xx[-1]-xx[i])
+            xx[-1] = xx[-2]-abs(xx[-3]-xx[-2])
+            ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
+        if xax == 'cycles':
+            ax.set_xlabel('$\mathrm{CYCLE}$',fontsize=fsize)
         # Here we define the colourmap for the energy generation and an array
         # containing a list of colours in which to plot each variable (in the
         # order that the variables appear in "plots") iso_colours is obsolete
@@ -765,6 +800,7 @@ class se(DataPlot,Utils):
         # lines as opposed to shading (for clarity). Colourmaps of these choices
         # are written to cmap (array).
         engen_cmap=mpl.cm.get_cmap('Blues')
+        enloss_cmap=mpl.cm.get_cmap('Reds')
         colours = ['k','m','g','b']
         iso_colours = ['b','r','y']
         cmap = []
@@ -772,7 +808,7 @@ class se(DataPlot,Utils):
             cmap.append(mpl.colors.ListedColormap(['w',colours[i]]))
 
         print 'plotting contours'
-        print len(xx),len(y)
+
         # Plot all of the contours. Levels indicates to only plot the shaded
         # regions and not plot the white regions, so that they are essentially
         # transparent. If engen=True, then the energy generation levels
@@ -781,12 +817,14 @@ class se(DataPlot,Utils):
         for i in range(len(plot)):
             ax.contourf(xx,y,Z[:,:,i],levels=[0.5,1.5],colors=colours[i], alpha=alphas[i])
         if engen == True:
-            print max_energy_gen
-            ceiling = int(max_energy_gen)
-            print ceiling
+            ceiling = int(max_energy_gen+1)
+            floor = int(min_energy_gen+1)
             cburn = ax.contourf(xx,y,Z[:,:,1],cmap=engen_cmap,locator=mpl.ticker.LogLocator(),alpha=engenalpha)
             cbarburn = pl.colorbar(cburn)
-        ax.axis([xx[0],xx[-1],yllim,yulim])
+#            if min_energy_gen != 0:
+#                closs = ax.contourf(xx,y,Z[:,:,2],cmap=enloss_cmap,locator=mpl.ticker.LogLocator(),alpha=engenalpha)
+#                cbarloss = pl.colorbar(closs)
+        ax.axis([float(xx[0]),float(xx[-1]),yllim,yulim])
         pl.show()
 
 
