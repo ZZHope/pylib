@@ -1,6 +1,6 @@
-pdflatex ppn-chapter
-pdflatex ppn-chapter
-makeindex ppn-chapter
-bibtex ppn-chapter
-pdflatex ppn-chapter
-pdflatex ppn-chapter
+pdflatex mppnp-chapter
+pdflatex mppnp-chapter
+makeindex mppnp-chapter
+bibtex mppnp-chapter
+pdflatex mppnp-chapter
+pdflatex mppnp-chapter
