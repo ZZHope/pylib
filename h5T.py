@@ -676,7 +676,7 @@ class Files(threading.Thread):
         
         
         t2=time.time()
-        print "Total get time "+ str(t2-t1)
+#        print "Total get time "+ str(t2-t1)
         return dat    
 
     #    uses the index information to build list of isos from tables A,Z    
