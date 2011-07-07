@@ -270,9 +270,18 @@ class Files(threading.Thread):
         self.Tables    =   self.h5s[0].Table
         self.dcols     =   self.h5s[0].dcol
         self.cycle_header = self.h5s[0].cycle_header    #This string handles the name of the cycle
-        self.A = self.h5s[0].A[0]
-        self.Z = self.h5s[0].Z[0]
-        self.isomeric_states = self.h5s[0].isomeric_state[0]
+        try:
+            self.A = self.h5s[0].A[0]
+        except IndexError:
+            print "Sorry, there is no A vector. This can cause problems for reading abundances. Continue..."
+        try:
+            self.Z = self.h5s[0].Z[0]
+        except IndexError:
+            print "Sorry, there is no Z vector. This can cause problems for reading abundances. Continue... "
+        try:
+            self.isomeric_states = self.h5s[0].isomeric_state[0]
+        except IndexError:
+            print "Sorry, there is no isomeric state vector. Continue..."
         new = self.h5s[0].new    #    This boolean handles the changes to the cycle nomenclature format
         
         if self.filename.endswith(os.sep):

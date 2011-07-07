@@ -554,11 +554,6 @@ class se(DataPlot,Utils):
         cycle_start:         cycle from which you wish to plot (defaults to 0)
         cycle_end:           maximum cycle that you wish to plot (if 0, = last
                              cycle available).
-                             I recommend setting this to 2000-3000 cycles before
-                             the run ends, because
-                             the timesteps become so small that lack of precision
-                             leads to no difference in age between cycles, allowing
-                             for "-inf" to occur in the ages array.
         plot:                1-D array containing the variables to be plotted (as 
                              strings, e.g. plots=['dcoeff','C-13']. I recommend
                              always plotting 'dcoeff' as plots[0])
@@ -602,10 +597,10 @@ class se(DataPlot,Utils):
         cyclelist = original_cyclelist[cycle_start:cycle_end:sparse]
         # X-axis:
         if xax == 'log_time_left':
-            xx = self.se.ages[cycle_start:cycle_end:sparse]
+            xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
         if xax == 'cycles':
             xx = cyclelist
-        print xx[0], xx[-1]
+            xxtmp = cyclelist
         # Y-axis limits and resolution:
         totalmass = []
         m_ini = float(self.se.get('mini'))
@@ -620,9 +615,9 @@ class se(DataPlot,Utils):
         # contours.
         y = np.arange(0., m_ini, dy)
         if engen == True:
-            Z = np.zeros([len(y),len(xx),len(plot)+2],float)
+            Z = np.zeros([len(y),len(xxtmp),len(plot)+2],float)
         else:
-            Z = np.zeros([len(y),len(xx),len(plot)],float)
+            Z = np.zeros([len(y),len(xxtmp),len(plot)],float)
 
         # Define function extracting the contour boundaries which will be
         # called for every cycle in cyclelist, for every variable to be plotted
@@ -671,7 +666,7 @@ class se(DataPlot,Utils):
         # calls to get the boundaries in order, and populates the contour array.
         ypscoeff = [-1,-1,-1] # this should have same length as plot - quick fix for yps.
         for i in range(len(cyclelist)):
-            print 'CYCLE: ', cyclelist[i]
+#            print 'CYCLE: ', cyclelist[i]
             massco = self.se.get(cyclelist[i],'mass')
             plotlimits=[]
             for j in range(len(plot)):
@@ -743,7 +738,7 @@ class se(DataPlot,Utils):
         # by linearly interpolating eps_nuc between mass co-ordinates according
         # to the y-resolution:
             for i in range(len(cyclelist)):
-                print 'CYCLE: ', cyclelist[i]
+#                print 'CYCLE: ', cyclelist[i]
                 max_energy_gen = 0.
                 min_energy_gen = 0.
                 massco = self.se.get(cyclelist[i],'mass')
@@ -780,16 +775,26 @@ class se(DataPlot,Utils):
         # re-write as log(time left). The last entry will always be -inf in this 
         # way so we calculate it by extrapolating the anti-penultimate and
         # penultimate entries.
+        # Modified from the GENEC gdic (R. Hirschi)
         if xax == 'log_time_left':
             if age == 'years':
-                for i in range(len(xx)):
-                    xx[i] = np.log10(xx[-1]-xx[i])
+                xx=np.zeros(len(xxtmp))
+                agemin = max(abs(xxtmp[-1]-xxtmp[-2])/5.,1.e-10)
+                for i in np.arange(len(xxtmp)):
+                     if xxtmp[-1]-xxtmp[i]>agemin:
+                         xx[i]=np.log10(xxtmp[-1]-xxtmp[i]+agemin)
+                     else :
+                         xx[i]=np.log10(agemin)
             elif age == 'seconds':
-                xx[-1] = xx[-1]/31536000.0
-                for i in range(len(xx)):
-                    xx[i] = xx[i]/31536000.0
-                    xx[i] = np.log10(xx[-1]-xx[i])
-            xx[-1] = xx[-2]-abs(xx[-3]-xx[-2])
+                for i in range(len(xxtmp)):
+                    xxtmp[i] = xxtmp[i]/31536000.0
+                xx=np.zeros(len(xxtmp))
+                agemin = max(abs(xxtmp[-1]-xxtmp[-2])/5.,1.e-10)
+                for i in np.arange(len(xxtmp)):
+                    if xxtmp[-1]-xxtmp[i]>agemin:
+                        xx[i]=np.log10(xxtmp[-1]-xxtmp[i]+agemin)
+                    else :
+                        xx[i]=np.log10(agemin)
             ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
         if xax == 'cycles':
             ax.set_xlabel('$\mathrm{CYCLE}$',fontsize=fsize)
