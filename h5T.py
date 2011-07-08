@@ -199,14 +199,14 @@ class Files(threading.Thread):
 
 
         if fName==None and pattern=='*':
-            self.filename = os.path.abspath(path) 
+            self.filename = os.path.abspath(path)
             self.files = os.listdir(self.filename)
             
             for fil in self.files:
                 if os.path.isfile(self.filename + os.sep + fil) and fil.count('.h5'):
                         self.h5files.append(self.filename + os.sep + fil)
         elif pattern=='*':
-            self.filename = os.path.abspath(path) 
+            self.filename = os.path.realpath(os.path.abspath(path))
             if self.filename[-1] == os.sep:
                 self.filename = self.filename[:-1]
             self.files = os.listdir(self.filename)
@@ -217,7 +217,7 @@ class Files(threading.Thread):
             for arg in temps:
                 self.h5files.append(self.filename + os.sep + arg)
         elif fName==None:
-            self.filename = os.path.abspath(path) 
+            self.filename = os.path.realpath(os.path.abspath(path))
             if not pattern.endswith('*'):
             	    pattern=pattern+'*'
             if not pattern.startswith('*'):
@@ -298,9 +298,9 @@ class Files(threading.Thread):
         	if self.preprocExists:
 			for i in xrange(len(self.h5files)):
 				
-				if self.h5files[i]+'-cyc' not in preprocTable.dcols and self.preprocExists:
+				if os.path.basename(self.h5files[i])+'-cyc' not in preprocTable.dcols and self.preprocExists:
 					print 'A File was renamed, rewriteing preprocessor file'
-					
+					print preprocTable.dcols[i], os.path.basename(self.h5files[i])+'-cyc'
 					self.preprocExists=False
         
         if not self.preprocExists and os.path.exists(b):
@@ -370,8 +370,8 @@ class Files(threading.Thread):
 		length=0
 		for i in xrange(len(self.h5s)):
                         print self.h5s[i].filename.rpartition('/')[2]
-			dcols.append(self.h5s[i].filename.rpartition('/')[2]+'-cyc')
-			dcols.append(self.h5s[i].filename.rpartition('/')[2]+'-age')
+			dcols.append(os.path.basename(self.h5s[i].filename)+'-cyc')
+			dcols.append(os.path.basename(self.h5s[i].filename)+'-age')
 			data.append(self.h5s[i].cycle)
 			data.append(self.h5s[i].age)
 			if len(self.h5s[i].cycle)>length:
