@@ -529,7 +529,7 @@ class Files(threading.Thread):
 			cycle_list = [cycle_list]
 			for cycle in cycle_list:
 			    if len(cycle) != len(self.cycles[0]):
-				print "a"
+				#print "a"
 				diff = len(self.cycles[0])-len(cycle)
 				OO = ''
 				while diff >=1:
@@ -544,7 +544,7 @@ class Files(threading.Thread):
 					
 			for x in xrange(len(cycle_list)):
 			    if len(str(cycle_list[x])) != len(str(self.cycles[0])):
-				print "b"
+				#print "b"
 				diff = len(str(self.cycles[0]))-len(str(cycle_list[x]))
 				
 				OO = ''
@@ -792,17 +792,17 @@ class h5File(threading.Thread):
         self.h5 = mrT.File(self.filename,'r')
             
         try:
-            data = self.h5.__getitem__(self.cycle_header+str(cycle)).__getitem__('SE_DATASET')[dataitem]
+            data = self.h5[self.cycle_header+str(cycle)]['SE_DATASET'][dataitem]
         except ValueError:
             try:
-                data = self.h5.__getitem__(self.cycle_header+str(cycle)).attrs.get(dataitem, None)[0]
+                data = self.h5[self.cycle_header+str(cycle)].attrs.get(dataitem, None)
             except TypeError:
-                data = self.h5.__getitem__(self.cycle_header+str(cycle))[dataitem]
-        
+                data = self.h5[self.cycle_header+str(cycle)][dataitem]    
+
         try:        
             while data.shape[0] < 2:
                 data = data[0]
-        except IndexError:
+        except (IndexError, AttributeError):
             None    
             
         

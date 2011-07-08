@@ -529,7 +529,7 @@ class se(DataPlot,Utils):
         ax.axis([xx[0],xx[-1],0.,float(m_ini)])
         pl.show()
 
-    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[0.3],yllim=0.,yulim=0.,y_res=2000,xllim=0.,xulim=0.,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6,outfile='',annotation=''):
+    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[1.0],yllim=0.,yulim=0.,y_res=2000,xllim=0.,xulim=0.,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6,outfile='',annotation=''):
         '''
         This function creates a Kippenhahn diagram as a contour plot of the
         .se.h5 or .out.h5 files using any continuous variable (columns in the
@@ -595,18 +595,6 @@ class se(DataPlot,Utils):
         else:
             cycle_start = int(cycle_start)/sparse_intrinsic - 1
         cyclelist = original_cyclelist[cycle_start:cycle_end:sparse]
-        # X-axis:
-        if xax == 'log_time_left':
-            xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
-        if xax == 'cycles':
-            xx = cyclelist
-            xxtmp = cyclelist
-        # Y-axis limits and resolution:
-        totalmass = []
-        m_ini = float(self.se.get('mini'))
-        if yulim==0.:
-            yulim = m_ini 
-        dy = m_ini/float(y_res)
         # Figure:
         fig = pl.figure(1)
         ax = pl.subplot(1,1,1)
@@ -618,6 +606,40 @@ class se(DataPlot,Utils):
           'text.usetex': True}
         fsize=18
 	pl.rcParams.update(params)
+        # X-axis:
+        if xax == 'log_time_left':
+            xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
+            if age == 'years':
+                xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
+            else:
+                for i in range(len(cyclelist)):
+                    xxtmp[i] = self.se.ages[cycle_start:cycle_end:sparse][i]/31536000.0
+        if xax == 'cycles':
+            xx = cyclelist
+            xxtmp = cyclelist
+        # Set up x-axis according to whether ages are in years or seconds and
+        # re-write as log(time left). The last entry will always be -inf in this 
+        # way so we calculate it by extrapolating the anti-penultimate and
+        # penultimate entries.
+        # Modified from the GENEC gdic (R. Hirschi)
+        if xax == 'log_time_left':
+            xx=np.zeros(len(xxtmp))
+            agemin = max(abs(xxtmp[-1]-xxtmp[-2])/5.,1.e-10)
+            for i in np.arange(len(xxtmp)):
+                 if xxtmp[-1]-xxtmp[i]>agemin:
+                     xx[i]=np.log10(xxtmp[-1]-xxtmp[i]+agemin)
+                 else :
+                     xx[i]=np.log10(agemin)
+            ax.set_xlabel('$log_\mathrm{10}(t_\mathrm{end}-t)\;[\mathrm{yr}]$',fontsize=fsize-1)
+        if xax == 'cycles':
+            ax.set_xlabel('$\mathrm{CYCLE}$',fontsize=fsize-1)
+        # Y-axis limits and resolution:
+        totalmass = []
+        m_ini = float(self.se.get('mini'))
+        if yulim==0.:
+            yulim = m_ini 
+        dy = m_ini/float(y_res)
+        vlinetol = 1.0E-8
         # Set up (y-axis) vector and a 3-D (hist) array to store all of the
         # contours.
         y = np.arange(0., m_ini, dy)
@@ -704,9 +726,12 @@ class se(DataPlot,Utils):
                 for k in range(0,len(plotlimits[g]),2):
                     llimit = plotlimits[g][k]
                     ulimit = plotlimits[g][k+1]
-                    for f in range(y_res):
-                        if llimit<=y[f] and ulimit>y[f]:
-                            Z[f,i,g]=1.
+                    if xx[i] >= 0:
+                        for f in range(y_res):
+                            if llimit<=y[f] and ulimit>y[f]:
+                                Z[f,i,g]=1.
+                    else:
+                        ax.axvline(xx[i],ymin=llimit/m_ini,ymax=ulimit/m_ini,color='#8B8386',alpha=alphas[0],linewidth=0.5)
         # This function determines the adjacent two mass cells to a point in the
         # y-vector (which contains mass co-ordinates centre to surface, split into
         # y_res chunks), returning their index in the mass co-ordinate vector for
@@ -778,33 +803,7 @@ class se(DataPlot,Utils):
 #                    if energy_here < 0.:
 #                        Z[j,i,2] = 10**energy_here
 
-        # Set up x-axis according to whether ages are in years or seconds and
-        # re-write as log(time left). The last entry will always be -inf in this 
-        # way so we calculate it by extrapolating the anti-penultimate and
-        # penultimate entries.
-        # Modified from the GENEC gdic (R. Hirschi)
-        if xax == 'log_time_left':
-            if age == 'years':
-                xx=np.zeros(len(xxtmp))
-                agemin = max(abs(xxtmp[-1]-xxtmp[-2])/5.,1.e-10)
-                for i in np.arange(len(xxtmp)):
-                     if xxtmp[-1]-xxtmp[i]>agemin:
-                         xx[i]=np.log10(xxtmp[-1]-xxtmp[i]+agemin)
-                     else :
-                         xx[i]=np.log10(agemin)
-            elif age == 'seconds':
-                for i in range(len(xxtmp)):
-                    xxtmp[i] = xxtmp[i]/31536000.0
-                xx=np.zeros(len(xxtmp))
-                agemin = max(abs(xxtmp[-1]-xxtmp[-2])/5.,1.e-10)
-                for i in np.arange(len(xxtmp)):
-                    if xxtmp[-1]-xxtmp[i]>agemin:
-                        xx[i]=np.log10(xxtmp[-1]-xxtmp[i]+agemin)
-                    else :
-                        xx[i]=np.log10(agemin)
-            ax.set_xlabel('$log_\mathrm{10}(t_\mathrm{end}-t)\;[\mathrm{yr}]$',fontsize=fsize-1)
-        if xax == 'cycles':
-            ax.set_xlabel('$\mathrm{CYCLE}$',fontsize=fsize-1)
+
         # Here we define the colourmap for the energy generation and an array
         # containing a list of colours in which to plot each variable (in the
         # order that the variables appear in "plots") iso_colours is obsolete
@@ -813,7 +812,7 @@ class se(DataPlot,Utils):
         # are written to cmap (array).
         engen_cmap=mpl.cm.get_cmap('Blues')
         enloss_cmap=mpl.cm.get_cmap('Reds')
-        colours = ['k','m','g','b']
+        colours = ['#8B8386','m','g','b']
         iso_colours = ['b','r','y']
         cmap = []
         for i in range(len(plot)):
@@ -841,6 +840,8 @@ class se(DataPlot,Utils):
         pl.text(0.9,0.9,annotation,horizontalalignment='right',transform = ax.transAxes,fontsize=fsize)
         pl.ylabel('$\mathrm{Mass}\;[M_\odot]$',fontsize=fsize-1)
         pl.savefig(outfile, dpi=400)
+        print outfile+' is done.'
+        pl.clf()
 #        pl.show()
 
 
