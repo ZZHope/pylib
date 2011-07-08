@@ -199,14 +199,14 @@ class Files(threading.Thread):
 
 
         if fName==None and pattern=='*':
-            self.filename = os.path.abspath(path)
+            self.filename = path
             self.files = os.listdir(self.filename)
             
             for fil in self.files:
                 if os.path.isfile(self.filename + os.sep + fil) and fil.count('.h5'):
                         self.h5files.append(self.filename + os.sep + fil)
         elif pattern=='*':
-            self.filename = os.path.realpath(os.path.abspath(path))
+            self.filename = path
             if self.filename[-1] == os.sep:
                 self.filename = self.filename[:-1]
             self.files = os.listdir(self.filename)
@@ -217,7 +217,7 @@ class Files(threading.Thread):
             for arg in temps:
                 self.h5files.append(self.filename + os.sep + arg)
         elif fName==None:
-            self.filename = os.path.realpath(os.path.abspath(path))
+            self.filename = path
             if not pattern.endswith('*'):
             	    pattern=pattern+'*'
             if not pattern.startswith('*'):
@@ -389,7 +389,7 @@ class Files(threading.Thread):
         	print 'Reading preprocessor files'
         	preprocTable=ascii_table(self.preprocName,self.filename)
         	for i in xrange(len(self.h5s)-1):
-        		dat=preprocTable.get(self.h5s[i+1].filename+'-cyc')
+        		dat=preprocTable.get(os.path.basename(self.h5s[i+1].filename)+'-cyc')
         		dat1=[]
         		for j in xrange(len(dat)):
         			if dat[j]!=3.14159265:
@@ -404,7 +404,7 @@ class Files(threading.Thread):
         		for j in xrange(len(dat)):
         			self.cycles.append(dat[j])
         		self.h5s[i+1].cycle=dat
-        		dat=preprocTable.get(self.h5s[i+1].filename+'-age')
+        		dat=preprocTable.get(os.path.basename(self.h5s[i+1].filename)+'-age')
         		dat1=[]
         		for j in xrange(len(dat)):
         			if dat[j]!=3.14159265:
