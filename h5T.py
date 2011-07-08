@@ -199,7 +199,8 @@ class Files(threading.Thread):
 
 
         if fName==None and pattern=='*':
-            self.filename = path
+#            self.filename = path
+            self.filename = os.path.abspath(path)
         
             self.files = os.listdir(self.filename)
             
@@ -207,7 +208,8 @@ class Files(threading.Thread):
                 if os.path.isfile(self.filename + os.sep + fil) and fil.count('.h5'):
                         self.h5files.append(self.filename + os.sep + fil)
         elif pattern=='*':
-            self.filename = path
+#            self.filename = path
+            self.filename = os.path.abspath(path)
             if self.filename[-1] == os.sep:
                 self.filename = self.filename[:-1]
             self.files = os.listdir(self.filename)
@@ -218,7 +220,8 @@ class Files(threading.Thread):
             for arg in temps:
                 self.h5files.append(self.filename + os.sep + arg)
         elif fName==None:
-            self.filename = path
+#            self.filename = path
+            self.filename = os.path.abspath(path)
             if not pattern.endswith('*'):
             	    pattern=pattern+'*'
             if not pattern.startswith('*'):

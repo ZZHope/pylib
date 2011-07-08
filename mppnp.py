@@ -529,7 +529,7 @@ class se(DataPlot,Utils):
         ax.axis([xx[0],xx[-1],0.,float(m_ini)])
         pl.show()
 
-    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[0.3],yllim=0.,yulim=0.,y_res=2000,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6):
+    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[0.3],yllim=0.,yulim=0.,y_res=2000,xllim=0.,xulim=0.,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6,outfile='',annotation=''):
         '''
         This function creates a Kippenhahn diagram as a contour plot of the
         .se.h5 or .out.h5 files using any continuous variable (columns in the
@@ -610,7 +610,14 @@ class se(DataPlot,Utils):
         # Figure:
         fig = pl.figure(1)
         ax = pl.subplot(1,1,1)
-        fsize = 12
+	params = {'axes.labelsize':  15,
+          'text.fontsize':   15,
+          'legend.fontsize': 15,
+          'xtick.labelsize': 15,
+          'ytick.labelsize': 15,
+          'text.usetex': True}
+        fsize=18
+	pl.rcParams.update(params)
         # Set up (y-axis) vector and a 3-D (hist) array to store all of the
         # contours.
         y = np.arange(0., m_ini, dy)
@@ -795,9 +802,9 @@ class se(DataPlot,Utils):
                         xx[i]=np.log10(xxtmp[-1]-xxtmp[i]+agemin)
                     else :
                         xx[i]=np.log10(agemin)
-            ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
+            ax.set_xlabel('$log_\mathrm{10}(t_\mathrm{end}-t)\;[\mathrm{yr}]$',fontsize=fsize-1)
         if xax == 'cycles':
-            ax.set_xlabel('$\mathrm{CYCLE}$',fontsize=fsize)
+            ax.set_xlabel('$\mathrm{CYCLE}$',fontsize=fsize-1)
         # Here we define the colourmap for the energy generation and an array
         # containing a list of colours in which to plot each variable (in the
         # order that the variables appear in "plots") iso_colours is obsolete
@@ -829,8 +836,12 @@ class se(DataPlot,Utils):
 #            if min_energy_gen != 0:
 #                closs = ax.contourf(xx,y,Z[:,:,2],cmap=enloss_cmap,locator=mpl.ticker.LogLocator(),alpha=engenalpha)
 #                cbarloss = pl.colorbar(closs)
-        ax.axis([float(xx[0]),float(xx[-1]),yllim,yulim])
-        pl.show()
+#        ax.axis([float(xx[0]),float(xx[-1]),yllim,yulim])
+        ax.axis([xllim,xulim,yllim,yulim])
+        pl.text(0.9,0.9,annotation,horizontalalignment='right',transform = ax.transAxes,fontsize=fsize)
+        pl.ylabel('$\mathrm{Mass}\;[M_\odot]$',fontsize=fsize-1)
+        pl.savefig(outfile, dpi=400)
+#        pl.show()
 
 
     def abup_se_plot(mod,species):
