@@ -199,17 +199,14 @@ class Files(threading.Thread):
 
 
         if fName==None and pattern=='*':
-#            self.filename = path
-            self.filename = os.path.abspath(path)
-        
+            self.filename = os.path.abspath(path) 
             self.files = os.listdir(self.filename)
             
             for fil in self.files:
                 if os.path.isfile(self.filename + os.sep + fil) and fil.count('.h5'):
                         self.h5files.append(self.filename + os.sep + fil)
         elif pattern=='*':
-#            self.filename = path
-            self.filename = os.path.abspath(path)
+            self.filename = os.path.abspath(path) 
             if self.filename[-1] == os.sep:
                 self.filename = self.filename[:-1]
             self.files = os.listdir(self.filename)
@@ -220,8 +217,7 @@ class Files(threading.Thread):
             for arg in temps:
                 self.h5files.append(self.filename + os.sep + arg)
         elif fName==None:
-#            self.filename = path
-            self.filename = os.path.abspath(path)
+            self.filename = os.path.abspath(path) 
             if not pattern.endswith('*'):
             	    pattern=pattern+'*'
             if not pattern.startswith('*'):
@@ -373,8 +369,9 @@ class Files(threading.Thread):
 		dcols=[]
 		length=0
 		for i in xrange(len(self.h5s)):
-			dcols.append(self.h5s[i].filename+'-cyc')
-			dcols.append(self.h5s[i].filename+'-age')
+                        print self.h5s[i].filename.rpartition('/')[2]
+			dcols.append(self.h5s[i].filename.rpartition('/')[2]+'-cyc')
+			dcols.append(self.h5s[i].filename.rpartition('/')[2]+'-age')
 			data.append(self.h5s[i].cycle)
 			data.append(self.h5s[i].age)
 			if len(self.h5s[i].cycle)>length:
