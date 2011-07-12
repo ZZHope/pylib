@@ -111,11 +111,14 @@
         reading ./log87.data ...
 
 '''
+import numpy as np
 from data_plot import *
 import numpy as np
+import matplotlib
 import matplotlib.pylab as pyl
 import matplotlib.pyplot as pl
 import os
+import sys
 
 
 
@@ -599,6 +602,206 @@ class star_log(DataPlot):
 		    pyl.xlabel('t / yrs')
 		elif xax == 'model':
 		    pyl.xlabel('model number')
+
+    def kip_cont(self,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50):
+        '''This function creates a Kippenhahn plot with energy flux using
+        contours. For this version you need to have printed the columns which
+        have the form burn_qtop_n and burn_type_n, where n is an integer.
+        If you have only epsnuc_M_n columns there's a script for that too.
+        If you have only conv_mx1_bot, then either re-run or let me know'''
+
+        xxyy=[self.get('star_age'),self.get('star_age')]
+        mup = max(float(self.get('star_mass')[0])*1.02,1.0)
+        nmodels=len(self.get('model_number'))
+
+        # y-axis resolution
+        ny=yres
+        dy=mup/float(ny)
+
+        # x-axis resolution
+        maxpoints=xres
+        dx=int(max(1,nmodels/maxpoints))
+
+        y = np.arange(0., mup, dy)
+        x = np.arange(0, nmodels, dx)
+        Msol=1.98892E+33
+
+        engenstyle = 'full'
+
+	B1=np.random.random_sample((len(y),len(x)))
+	B2=np.random.random_sample((len(y),len(x)))
+        try:
+            self.get('burn_qtop_1')
+        except:
+            engenstyle = 'twozone'
+        if engenstyle == 'full':
+            for i in range(len(x)):
+                # writing reading status 
+	        percent = int(i*100/len(x))
+	        sys.stdout.flush()
+	        sys.stdout.write("\rcreating color map1 " + "...%d%%" % percent)
+	        for j in range(1,burn_zones+1):
+	            ulimit=self.get('burn_qtop_'+str(j))[i*dx]*self.get('star_mass')[i*dx]
+	            if j==1:
+	                llimit=0.0
+	            else:
+	                llimit=self.get('burn_qtop_'+str(j-1))[i*dx]*self.get('star_mass')[i*dx]
+	            btype=float(self.get('burn_type_'+str(j))[i*dx])
+	            if llimit!=ulimit:
+	                for k in range(ny):
+	                    if llimit<=y[k] and ulimit>y[k] and btype>0.:
+		                B1[k,i]=10**(abs(btype))
+		            if llimit<=y[k] and ulimit>y[k] and btype<0.:
+		                B2[k,i]=10**(abs(btype))
+        if engenstyle == 'twozone':
+                V=np.random.random_sample((len(y),len(x)))
+                for i in range(len(x)):
+                # writing reading status 
+                  percent = int(i*100/len(x))
+                  sys.stdout.flush()
+                  sys.stdout.write("\rcreating color map1 " + "...%d%%" % percent)
+                  llimitl1=self.get('epsnuc_M_1')[i*dx]/Msol
+                  ulimitl1=self.get('epsnuc_M_4')[i*dx]/Msol
+                  llimitl2=self.get('epsnuc_M_5')[i*dx]/Msol
+                  ulimitl2=self.get('epsnuc_M_8')[i*dx]/Msol
+                  llimith1=self.get('epsnuc_M_2')[i*dx]/Msol
+                  ulimith1=self.get('epsnuc_M_3')[i*dx]/Msol
+                  llimith2=self.get('epsnuc_M_6')[i*dx]/Msol
+                  ulimith2=self.get('epsnuc_M_7')[i*dx]/Msol
+                  # lower thresh first, then upper thresh:
+                  if llimitl1!=ulimitl1:
+                      for k in range(ny):
+                          if llimitl1<=y[k] and ulimitl1>y[k]:
+                              V[k,i]=10.
+                  if llimitl2!=ulimitl2:
+                      for k in range(ny):
+                          if llimitl2<=y[k] and ulimitl2>y[k]:
+                              V[k,i]=10.
+                  if llimith1!=ulimith1:
+                      for k in range(ny):
+                          if llimith1<=y[k] and ulimith1>y[k]:
+                              V[k,i]=30.
+                  if llimith2!=ulimith2:
+                      for k in range(ny):
+                          if llimith2<=y[k] and ulimith2>y[k]:
+                              V[k,i]=30.
+
+        mixstyle = 'full'
+        try:
+            self.get('mix_qtop_1')
+        except:
+            mixstyle = 'twozone'
+        if mixstyle == 'full':
+	        Z=np.zeros([len(y),len(x)],float)
+	        for i in range(len(x)):
+	        # writing reading status 
+	          percent = int(i*100/len(x))
+	          sys.stdout.flush()
+	          sys.stdout.write("\rcreating color map2 " + "...%d%%" % percent)
+	          for j in range(1,mix_zones+1):
+	            ulimit=self.get('mix_qtop_'+str(j))[i*dx]*self.get('star_mass')[i*dx]
+	            if j==1:
+	              llimit=0.0
+	            else:
+	              llimit=self.get('mix_qtop_'+str(j-1))[i*dx]*self.get('star_mass')[i*dx]
+	            mtype=self.get('mix_type_'+str(j))[i*dx]
+	            if llimit!=ulimit:
+	              for k in range(ny):
+		        if llimit<=y[k] and ulimit>y[k] and mtype == 1:
+		          Z[k,i]=1.
+        if mixstyle == 'twozone':
+	        Z=np.zeros([len(y),len(x)],float)
+	        for i in range(len(x)):
+	        # writing reading status 
+	          percent = int(i*100/len(x))
+	          sys.stdout.flush()
+	          sys.stdout.write("\rcreating color map2 " + "...%d%%" % percent)
+                  ulimit=self.get('conv_mx1_top')[i*dx]*self.get('star_mass')[i*dx]
+	          llimit=self.get('conv_mx1_bot')[i*dx]*self.get('star_mass')[i*dx]
+	          if llimit!=ulimit:
+	              for k in range(ny):
+		          if llimit<=y[k] and ulimit>y[k]:
+		              Z[k,i]=1.
+                  ulimit=self.get('conv_mx2_top')[i*dx]*self.get('star_mass')[i*dx]
+	          llimit=self.get('conv_mx2_bot')[i*dx]*self.get('star_mass')[i*dx]
+	          if llimit!=ulimit:
+	              for k in range(ny):
+		          if llimit<=y[k] and ulimit>y[k]:
+		              Z[k,i]=1.
+
+        print 'engenstyle was ', engenstyle
+        print 'mixstyle was ', mixstyle
+	print '\n finished preparing color map'
+
+	########################################################################
+	#----------------------------------plot--------------------------------#
+	fig = pl.figure(1)
+	fig.set_size_inches(16,9)
+	fsize=20
+        ax=pl.axes()
+
+	if ixaxis == 'log_time_left':
+	# log of time left until core collapse
+	    gage= self.get('star_age')
+	    lage=np.zeros(len(gage))
+	    agemin = max(abs(gage[-1]-gage[-2])/5.,1.e-10)
+	    for i in np.arange(len(gage)):
+	        if gage[-1]-gage[i]>agemin:
+	            lage[i]=np.log10(gage[-1]-gage[i]+agemin)
+	        else :
+	            lage[i]=np.log10(agemin)
+	    xxx = lage
+	    print 'plot versus time left'
+	    ax.set_xlabel('$\mathrm{log}_{10}(t^*) \, \mathrm{(yr)}$',fontsize=fsize)
+	elif ixaxis =='model_number':
+	    xxx= self.get('model_number')
+	    print 'plot versus model number'
+	    ax.set_xlabel('Model number',fontsize=fsize)
+	elif ixaxis =='age':
+	    xxx= self.get('star_age')/1.e6
+	    print 'plot versus age'
+	    ax.set_xlabel('Age [Myr]',fontsize=fsize)
+
+	cmapMIX = matplotlib.colors.ListedColormap(['w','k'])
+	cmapB1  = pl.cm.get_cmap('Blues')
+	cmapB2  = pl.cm.get_cmap('Reds')
+	#cmapB1  = matplotlib.colors.ListedColormap(['w','b'])
+	#cmapB2  = matplotlib.colors.ListedColormap(['r','w'])
+        if xlims == [0.,0.]:
+            xlims[0] = xxx[0]
+            xlims[1] = xxx[-1]
+        if ylims == [0.,0.]:
+            ylims[0] = 0.
+            ylims[1] = mup
+
+        ax=pl.axes([xlims[0],xlims[1],ylims[0],ylims[1]])
+
+	print 'plotting contours'
+	CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.5,levels=[0.5,1.5])
+        if engenstyle == 'full':
+                print B1
+                print B2
+        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5, locator=matplotlib.ticker.LogLocator())
+#        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5)
+        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5, locator=matplotlib.ticker.LogLocator())
+#        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5)
+        	CBARBURN1 = pl.colorbar(CBURN1)
+        	CBARBURN2 = pl.colorbar(CBURN2)
+        if engenstyle == 'twozone':
+                print V
+                ax.contourf(xxx[::dx],y,V, cmap=cmapB1, alpha=0.5)
+
+	print 'plotting patches'
+	ax.plot(xxx[::dx],self.get('star_mass')[::dx],'k-')
+
+	CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
+
+	print 'plotting abund boundaries'
+	ax.plot(xxx,self.get('h1_boundary_mass'),label='H boundary')
+	ax.plot(xxx,self.get('he4_boundary_mass'),label='He boundary')
+	ax.plot(xxx,self.get('c12_boundary_mass'),label='C boundary')
+
+        pl.show()
 # below are some utilities that the user typically never calls directly
 
 def read_mesafile(filename,data_rows=0,only='all'):
