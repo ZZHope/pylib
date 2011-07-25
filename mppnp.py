@@ -1143,6 +1143,8 @@ class se(DataPlot,Utils):
         
         #    if not self.se.cycles.count(str(cycle)):
         #        print 'I was unable to correct your cycle.  Please check that it exists in your dataset.'
+	print 'cycle=',cycle
+	print 'mass_range=',mass_range
         masses = self.se.get(cycle,'mass')
         if mass_range == None:
             print 'Using default mass range'
@@ -1381,11 +1383,14 @@ class se(DataPlot,Utils):
             elif str(spe[i][0:2]) == 'At':
                 znum_int[i] = 85
 
+	if spe[0] == 'N   1':
+		znum_int[0] = 0
+
         # here the index to connect name and atomic numbers.
-        global i_znum
-        i_znum = {}    
+        global index_atomic_number
+        index_atomic_number = {}    
         for a,b in zip(spe,znum_int):
-            i_znum[a]=b
+            index_atomic_number[a]=b
                         
         #connect name to column number
         global cl
@@ -1395,15 +1400,9 @@ class se(DataPlot,Utils):
 
         # from here below I read the abundance.
         
-        abunds = []
         name_specie_in_file=self.se.dcols[5]
+	abunds=self.se.get(cycle,name_specie_in_file)
 
-        for i in range(len(spe)):
-            #print spe[i],self.se.isotopes[i]
-            abunds.append(self.se.get(cycle,name_specie_in_file,self.se.isotopes[i]))
-            #print abunds[0][0],abunds[0][len(masses)-1]
-            # abunds[i] is giving abundances for isotope i. I want mass_frac[i],
-        # the isotopic distribution for mass zone i
         global used_masses
         used_masses = []
         global mass_frac
@@ -1411,15 +1410,10 @@ class se(DataPlot,Utils):
         for i in range(len(masses)):
             if mass_range[0] <=  masses[i]  and mass_range[1] >=  masses[i] :
                 used_masses.append(masses[i])
-            	temp = []
-            	for j in range (len(spe)):
-                	temp.append(abunds[j][i])
-            		mass_frac.append(temp)    
-        #print mass_frac[len(masses)-1][cl['H   1']]        
-        #print len(mass_frac)
+            	mass_frac.append(abunds[i])
 
 
-    def decay(self):
+    def decay(self,mass_frac):
 
         '''this module simply calculate abundances of isotopes after decay
         it requires before being used a call to read_iso_abund_marco and stable_species.
@@ -1469,6 +1463,411 @@ class se(DataPlot,Utils):
         #print spe,len(spe)
         #print cl,len(cl)
 
+    def stable_specie(self):
+
+    	''' provide the list of stable species, and decay path feeding stables '''
+
+
+    	#from numpy import *
+    	#from define_input import *
+
+
+    	stable_raw=[]
+    	stable_raw = ['H   1', 'H   2',\
+    	'HE  3', 'HE  4',\
+    	'LI  6', 'LI  7',\
+    	'BE  9',\
+    	'B  10', 'B  11',\
+    	'C  12', 'C  13',\
+    	'N  14', 'N  15',\
+    	'O  16', 'O  17', 'O  18',\
+    	'F  19',\
+    	'NE 20', 'NE 21', 'NE 22',\
+    	'NA 23',\
+    	'MG 24', 'MG 25', 'MG 26',\
+    	'AL 27',\
+    	'SI 28', 'SI 29', 'SI 30',\
+    	'P  31',\
+    	'S  32', 'S  33', 'S  34', 'S  36',\
+    	'CL 35', 'CL 37',\
+    	'AR 36', 'AR 38', 'AR 40',\
+    	'K  39', 'K  40', 'K  41',\
+    	'CA 40', 'CA 42', 'CA 43', 'CA 44', 'CA 46', 'CA 48',\
+    	'SC 45',\
+    	'TI 46', 'TI 47', 'TI 48', 'TI 49', 'TI 50',\
+    	'V  50', 'V  51',\
+    	'CR 50', 'CR 52', 'CR 53', 'CR 54',\
+    	'MN 55',\
+    	'FE 54', 'FE 56', 'FE 57', 'FE 58',\
+    	'CO 59',\
+    	'NI 58', 'NI 60', 'NI 61', 'NI 62', 'NI 64',\
+    	'CU 63', 'CU 65',\
+    	'ZN 64', 'ZN 66', 'ZN 67', 'ZN 68', 'ZN 70',\
+    	'GA 69', 'GA 71',\
+    	'GE 70', 'GE 72', 'GE 73', 'GE 74', 'GE 76',\
+    	'AS 75',\
+    	'SE 74', 'SE 76', 'SE 77', 'SE 78', 'SE 80', 'SE 82',\
+    	'BR 79', 'BR 81',\
+    	'KR 78', 'KR 80', 'KR 82', 'KR 83', 'KR 84', 'KR 86',\
+    	'RB 85', 'RB 87',\
+    	'SR 84', 'SR 86', 'SR 87', 'SR 88',\
+    	'Y  89',\
+    	'ZR 90', 'ZR 91', 'ZR 92', 'ZR 94', 'ZR 96',\
+    	'NB 93',\
+    	'MO 92', 'MO 94', 'MO 95', 'MO 96', 'MO 97', 'MO 98', 'MO100',\
+    	'RU 96', 'RU 98', 'RU 99', 'RU100', 'RU101', 'RU102', 'RU104',\
+    	'RH103',\
+   	'PD102', 'PD104', 'PD105', 'PD106', 'PD108', 'PD110',\
+    	'AG107', 'AG109',\
+    	'CD106', 'CD108', 'CD110', 'CD111', 'CD112', 'CD113', 'CD114', 'CD116',\
+    	'IN113',  'IN115',\
+    	'SN112', 'SN114', 'SN115', 'SN116', 'SN117', 'SN118', 'SN119', 'SN120', 'SN122', 'SN124',\
+    	'SB121', 'SB123',\
+    	'TE120', 'TE122', 'TE123', 'TE124', 'TE125', 'TE126', 'TE128', 'TE130',\
+    	'I 127',\
+    	'XE124', 'XE126', 'XE128', 'XE129', 'XE130', 'XE131', 'XE132', 'XE134', 'XE136',\
+    	'CS133',\
+    	'BA130', 'BA132', 'BA134', 'BA135', 'BA136', 'BA137', 'BA138',\
+    	'LA138', 'LA139',\
+    	'CE136', 'CE138', 'CE140', 'CE142',\
+    	'PR141',\
+    	'ND142', 'ND143', 'ND144', 'ND145', 'ND146', 'ND148', 'ND150',\
+    	'SM144', 'SM147', 'SM148', 'SM149', 'SM150', 'SM152', 'SM154',\
+    	'EU151', 'EU153',\
+    	'GD152', 'GD154', 'GD155', 'GD156', 'GD157', 'GD158', 'GD160',\
+    	'TB159',\
+    	'DY156', 'DY158', 'DY160', 'DY161', 'DY162', 'DY163', 'DY164',\
+    	'HO165',\
+    	'ER162', 'ER164', 'ER166', 'ER167', 'ER168', 'ER170',\
+    	'TM169',\
+    	'YB168', 'YB170', 'YB171', 'YB172', 'YB173', 'YB174', 'YB176',\
+    	'LU175', 'LU176',\
+    	'HF174', 'HF176', 'HF177', 'HF178', 'HF179', 'HF180',\
+    	'TA180', 'TA181',\
+    	'W 180', 'W 182', 'W 183', 'W 184', 'W 186',\
+    	'RE185', 'RE187',\
+    	'OS184', 'OS186', 'OS187', 'OS188', 'OS189', 'OS190', 'OS192',\
+    	'IR191', 'IR193',\
+    	'PT190', 'PT192', 'PT194', 'PT195', 'PT196', 'PT198',\
+    	'AU197',\
+    	'HG196', 'HG198', 'HG199', 'HG200', 'HG201', 'HG202', 'HG204',\
+    	'TL203', 'TL205',\
+    	'PB204', 'PB206', 'PB207', 'PB208',\
+    	'BI209']
+
+    	jj=-1
+    	global count_size_stable
+    	count_size_stable=[]
+    	global stable
+    	stable=[]
+    	global jdum
+    	jdum=np.zeros(len(stable_raw))
+   	global jjdum
+    	jjdum=np.zeros(len(spe))
+    	for i in range(len(stable_raw)):
+       		dum_str = stable_raw[i]
+       		for j in range(len(spe)):
+               		if stable_raw[i].capitalize() == spe[j]:
+                   		stable.append(stable_raw[i]) 
+                   		jdum[i]=1
+		   		jjdum[j]=1
+                   		jj=jj+1
+                   		count_size_stable.append(int(jj))
+    	#print stable
+    	# back_ind is an index to go back, to use the order of stable
+    	# useful for example for decayed yields.
+    	global back_ind
+    	back_ind={}     
+    	for a,b in zip(stable,count_size_stable):
+         	back_ind[a]=b       
+    	#print 'in stable:',back_ind['SE 74']   
+    	# definition of decay paths
+    	global decay_raw
+    	decay_raw=[]
+    	decay_raw=[['H   1'],\
+    	['H   2'],\
+    	['HE  3'],\
+    	['HE  4','B   8'],\
+    	['LI  6'],\
+    	['LI  7','BE  7'],\
+    	['BE  9'],\
+    	['B  10','BE 10'],\
+    	['B  11','C  11','BE 11'],\
+    	['C  12'],\
+    	['C  13','N  13','O  13'],\
+    	['N  14','C  14','O  14'],\
+    	['N  15','C  15','O  15','F  15'],\
+    	['O  16'],\
+    	['O  17','F  17'],\
+   	['O  18','F  18','NE 18'],\
+    	['F  19','O  19','NE 19'],\
+    	['NE 20','F  20','NA 20'],\
+    	['NE 21','F  21','NA 21'],\
+    	['NE 22','NA 22','MG 22','F  22'],\
+    	['NA 23','MG 23','NE 23'],\
+    	['MG 24','AL 24','NA 24','NE 24',],\
+    	['MG 25','NA 25','AL 25'],\
+    	['MG 26','SI 26','AL 26','NA 26','AL*26'],\
+    	['AL 27','SI 27','MG 27'],\
+    	['SI 28','AL 28','MG 28'],\
+    	['SI 29','P  29','AL 29','MG 29'],\
+    	['SI 30','S  30','P  30','AL 30','MG 30'],\
+    	['P  31','S  31','SI 31'],\
+    	['S  32','P  32','SI 32'],\
+    	['S  33','CL 33','P  33','SI 33'],\
+    	['S  34','CL 34','P  34'],\
+    	['S  36','P  36'],\
+    	['CL 35','S  35','AR 35'],\
+    	['CL 37','S  37','AR 37'],\
+    	['AR 36','CL 36'],\
+    	['AR 38','CL 38'],\
+    	['AR 40','CL 40'],\
+    	['K  39','AR 39'],\
+    	['K  40'],\
+    	['K  41','AR 41','CA 41'],\
+    	['CA 40'],\
+    	['CA 42','K  42','AR 42'],\
+    	['CA 43','K  43','AR 43'],\
+    	['CA 44','K  44','AR 44'],\
+    	['CA 46','K  46'],\
+    	['CA 48','K  48'],\
+    	['SC 45','CA 45','K  45'],\
+    	['TI 46','SC 46'],\
+    	['TI 47','SC 47','CA 47'],\
+    	['TI 48','SC 48'],\
+    	['TI 49','SC 49','CA 49'],\
+    	['TI 50','SC 50'],\
+    	['V  50'],\
+    	['V  51','CR 51','TI 51'],\
+    	['CR 50'],\
+    	['CR 52','MN 52','V  52','TI 52'],\
+    	['CR 53','MN 53','V  53'],\
+    	['CR 54','MN 54','V  54'],\
+    	['MN 55','FE 55','CR 55'],\
+    	['FE 54'],\
+    	['FE 56','NI 56','CO 56','MN 56','CR 56'],\
+    	['FE 57','NI 57','CO 57','MN 57'],\
+    	['FE 58','CO 58'],\
+    	['CO 59','FE 59'],\
+    	['NI 58'],\
+    	['NI 60','CO 60'],\
+    	['NI 61','CO 61','FE 61','CU 61'],\
+    	['NI 62','CO 62','CU 62'],\
+    	['NI 64','CU 64'],\
+    	['CU 63','NI 63','ZN 63'],\
+    	['CU 65','NI 65','ZN 65'],\
+    	['ZN 64','CU 64'],\
+    	['ZN 66','CU 66','NI 66','GA 66','GE 66'],\
+    	['ZN 67','CU 67','GA 67'],\
+    	['ZN 68','GA 68','GE 68','CU 68'],\
+    	['ZN 70'],\
+    	['GA 69','ZN 69','GE 69'],\
+    	['GA 71','ZN 71','GE 71'],\
+    	['GE 70','GA 70'],\
+    	['GE 72','GA 72','ZN 72','AS 72'],\
+    	['GE 73','GA 73','AS 73'],\
+    	['GE 74','GA 74'],\
+    	['GE 76'],\
+    	['AS 75','GE 75','GA 75','SE 75'],\
+    	['SE 74','BR 74','KR 74'],\
+    	['SE 76','AS 76','BR 76'],\
+    	['SE 77','AS 77','GE 77','BR 77'],\
+    	['SE 78','AS 78','GE 78','BR 75'],\
+   	['SE 80'],\
+    	['SE 82'],\
+    	['BR 79','SE 79','AS 79','KR 79'],\
+    	['BR 81','SE 81','KR 81'],\
+    	['KR 78','RB 78','SR 78'],\
+    	['KR 80','BR 80'],\
+    	['KR 82','BR 82','RB 82'],\
+    	['KR 83','BR 83','RB 83'],\
+    	['KR 84','BR 84','RB 84'],\
+    	['KR 86'],\
+    	['RB 85','KR 85','SR 85','KR*85'],\
+    	['RB 87','KR 87'],\
+    	['SR 84','Y  84','ZR 84'],\
+    	['SR 86','RB 86'],\
+    	['SR 87','Y  87'],\
+    	['SR 88','RB 88','KR 88','Y  88','ZR 88'],\
+    	['Y  89','SR 89','RB 89','KR 89','ZR 89'],\
+    	['ZR 90','Y  90','SR 90','NB 90'],\
+    	['ZR 91','Y  91','SR 91','NB 91'],\
+    	['ZR 92','Y  92','SR 92','NB 92'],\
+   	['ZR 94','Y  94'],\
+    	['ZR 96'],\
+    	['NB 93','ZR 93','MO 93'],\
+    	['MO 92','TC 92','RU 92'],\
+    	['MO 94','NB 94','TC 94','RU 94'],\
+    	['MO 95','NB 95','ZR 95','Y  95'],\
+    	['MO 96','NB 96','TC 96'],\
+   	['MO 97','NB 97','ZR 97','TC 97'],\
+    	['MO 98','NB 98'],\
+    	['MO100'],\
+    	['RU 96','RH 96','PD 96'],\
+    	['RU 98','TC 98','RH 98','PD 98'],\
+    	['RU 99','TC 99','MO 99'],\
+    	['RU100','TC100','RH100'],\
+    	['RU101','TC101','RH101','MO101'],\
+    	['RU102','MO102','TC102'],\
+    	['RU104','TC104'],\
+   	['RH103','RU103','TC103','PD103'],\
+   	['PD102','AG102','CD102'],\
+    	['PD104','RH104'],\
+    	['PD105','RH105','RU105','AG105','AG105'],\
+    	['PD106','RH106','RU106','AG106'],\
+    	['PD108'],\
+    	['PD110'],\
+    	['AG107','PD107','CD107'],\
+    	['AG109','PD109','CD109'],\
+    	['CD106','IN106','SN106'],\
+    	['CD108','AG108','IN108','SN108'],\
+    	['CD110','AG110'],\
+    	['CD111','AG111','PD111','IN111'],\
+    	['CD112','AG112','PD112'],\
+    	['CD113','AG113'],\
+    	['CD114'],\
+    	['CD116'],\
+    	['IN113','SN113','SB113','TE113'],\
+    	['IN115','CD115'],\
+    	['SN112','IN112','SB112','TE112'],\
+   	['SN114','IN114','SB114','TE114'],\
+    	['SN115','SB115','TE115','I 115'],\
+    	['SN116','IN116'],\
+    	['SN117','IN117','SB117','CD117'],\
+    	['SN118','SB118'],\
+    	['SN119','SB119'],\
+    	['SN120','SB120'],\
+    	['SN122'],\
+    	['SN124'],\
+    	['SB121','SN121','TE121'],\
+    	['SB123','SN123'],\
+    	['TE120','I 120','XE120'],\
+    	['TE122','SB122'],\
+    	['TE123','I 123'],\
+    	['TE124','SB124','I 124'],\
+    	['TE125','SB125','I 125','SN125'],\
+    	['TE126','SB126','SN126'],\
+    	['TE128','SB128','SN128','I 128'],\
+    	['TE130'],\
+    	['I 127','TE127','XE127'],\
+    	['XE124','CS124','BA124'],\
+    	['XE126','CS126','BA126'],\
+   	['XE128','I 128'],\
+   	['XE129','I 129','TE129','SB129'],\
+    	['XE130','I 130'],\
+    	['XE131','I 131','TE131','CS131'],\
+    	['XE132','I 132','TE132','CS132'],\
+    	['XE134','I 134'],\
+    	['XE136'],\
+   	['CS133','XE133','I 133','BA133'],\
+    	['BA130','LA130','CE130','PR130'],\
+    	['BA132','LA132','CE132','PR132'],\
+    	['BA134','CS134'],\
+    	['BA135','CS135','XE135','I 135'],\
+    	['BA136','CS136'],\
+    	['BA137','CS137','XE137','LA137'],\
+    	['BA138','CS138','XE138'],\
+    	['LA138'],\
+   	['LA139','BA139','CS139','CE139'],\
+   	['CE136','PR136','ND136'],\
+    	['CE138','PR138','ND138','PM138','SM138'],\
+    	['CE140','LA140','BA140'],\
+    	['CE142','LA142','BA142'],\
+    	['PR141','CE141','LA141','BA141'],\
+    	['ND142','PR142'],\
+    	['ND143','PR143','CE143','LA143','PM143'],\
+    	['ND144','PR144','CE144','LA144','PM144'],\
+    	['ND145','PR145','CE145','PM145'],\
+    	['ND146','PR146','CE146'],\
+    	['ND148'],\
+    	['ND150'],\
+    	['SM144','EU144','GD144'],\
+    	['SM147','PM147','ND147'],\
+    	['SM148','PM148'],\
+    	['SM149','PM149','ND149'],\
+    	['SM150','PM150'],\
+    	['SM152','PM152','ND152','EU152'],\
+    	['SM154','PM154'],\
+    	['EU151','SM151','PM151','ND151'],\
+    	['EU153','SM153','PM153','GD153'],\
+    	['GD152','EU152','TB152','DY152','HO152'],\
+    	['GD154','EU154'],\
+    	['GD155','EU155','SM155','TB155'],\
+    	['GD156','EU156','SM156'],\
+    	['GD157','EU157','SM157','TB157'],\
+    	['GD158','EU158','SM158'],\
+    	['GD160'],\
+    	['TB159','GD159','EU159'],\
+    	['DY156','HO156','ER156','TM156','YB156'],\
+    	['DY158','HO158','ER158','TM158','YB158'],\
+    	['DY160','TB160'],\
+    	['DY161','TB161','GD161'],\
+    	['DY162','TB162','GD162'],\
+    	['DY163','TB163','HO163'],\
+    	['DY164','TB164'],\
+    	['HO165','DY165','ER165'],\
+    	['ER162','TM162','YB162','LU162'],\
+    	['ER164','TM164','YB164','LU164'],\
+    	['ER166','HO166','DY166'],\
+    	['ER167','HO167','DY167'],\
+    	['ER168','HO168','DY168','TB161','TM168'],\
+    	['ER170'],\
+    	['TM169','ER169','HO169','YB169'],\
+    	['YB168','LU168','HF168','TA168','W 168'],\
+    	['YB170','TM170'],\
+    	['YB171','TM171','ER171','LU171'],\
+    	['YB172','TM172','ER172','LU172'],\
+    	['YB173','TM173','ER173','LU173'],\
+    	['YB174','TM174','ER174','LU174'],\
+    	['YB176'],\
+    	['LU175','YB175','TM175','HF175'],\
+    	['LU176'],\
+    	['HF174','TA174','W 174','RE174','OS174'],\
+    	['HF176'],\
+    	['HF177','LU177','YB177'],\
+    	['HF178','LU178','YB178'],\
+    	['HF179','LU179','TA179'],\
+    	['HF180','LU180'],\
+    	['TA180'],\
+    	['TA181','HF181','W 181'],\
+    	['W 180','RE180','OS180','IR180','PT180'],\
+    	['W 182','TA182','HF182'],\
+    	['W 183','TA183','HF183','RE183'],\
+    	['W 184','TA184','HF184','RE184'],\
+    	['W 186','TA186'],\
+    	['RE185','W 185','TA185'],\
+    	['RE187','W 187'],\
+    	['OS184','IR184','PT184','AU184'],\
+    	['OS186','RE186'],\
+    	['OS187'],\
+    	['OS188','RE188','W 188','IR188'],\
+    	['OS189','RE189','W 189','IR189'],\
+    	['OS190','RE190','W 190','IR190'],\
+    	['OS192'],\
+    	['IR191','OS191','RE191','PT191'],\
+    	['IR193','OS193','PT193'],\
+    	['PT190','AU190','HG190','TL190','PB190'],\
+    	['PT192','IR192'],\
+    	['PT194','IR194','OS194'],\
+    	['PT195','IR195','OS195','AU195'],\
+    	['PT196','IR196','AU196'],\
+    	['PT198'],\
+    	['AU197','PT197','HG197'],\
+    	['HG196','TL196','PB196'],\
+    	['HG198','AU198'],\
+    	['HG199','AU199','PT199'],\
+    	['HG200','AU200','PT200'],\
+    	['HG201','AU201','PT201'],\
+    	['HG202','AU202','PT202'],\
+    	['HG204'],\
+    	['TL203','HG203','PB203'],\
+    	['TL205','HG205','PB205'],\
+    	['PB204','TL204'],\
+    	['PB206','TL206','HG206','PO210'],\
+    	['PB207','TL207','HG207','BI207'],\
+    	['PB208','TL208','HG208','BI208'],\
+    	['BI209','PB209','TL209']]
+    	#print decay_raw
     
     
     
@@ -2831,6 +3230,7 @@ class se(DataPlot,Utils):
                 for j in range(nshells-k1):
                     X_i[i] = X_i[i] + ((0.5*(yarray[j+1] + yarray[j]) - isoXini[-1,i]) * \
                     (xarray[j+1] - xarray[j]))
+
         
         return X_i
     
@@ -2846,7 +3246,7 @@ class se(DataPlot,Utils):
         wind yields, X_i, and a list of ejected masses, E_i, in whichever mass units were
         used (usually solar masses).
  
-        The following keywords can also be used:
+        The following keywords cand also be used:
 
         | Keyword argument | Default Value:
         ------------------------------------------------------------------------------
@@ -3398,8 +3798,8 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
     data.read_iso_abund_marco(mass_range,cycle)
     #print spe
     if i_decay == 2:
-        mp.stable_specie()
-        data.decay()
+        data.stable_specie()
+        data.decay(mass_frac)
 
 
     
@@ -3414,13 +3814,11 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
     
     if len(used_masses) >= 2:
         dm_tot = abs(used_masses[len(used_masses)-1]-used_masses[0])
-        for j in range(len(spe)):
+        for j in range(len(spe)-1):
             temp = 0.
             for i in range(len(used_masses)-1):
 	        dm_i = abs(used_masses[i+1]-used_masses[i])
             	temp = float(mass_frac[i][j]*dm_i/dm_tot) + temp
-            	#temp = float(mass_frac[i][j]*abs(used_masses[i+1]-used_masses[i])) + temp
-            	#temp = temp/abs(used_masses[len(used_masses)-1]-used_masses[0])    
             average_mass_frac.append(temp)
         #print average_mass_frac
     elif  len(used_masses) == 1:
@@ -3429,8 +3827,7 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
     
         
     somma = 0.
-    for i in range(len(spe)):
-        somma = float(average_mass_frac[i]) + somma
+    somma = sum(average_mass_frac)
     print 'departure from 1 of sum of average_mass_frac=',abs(1. - somma)
     
     # not let's do it over decayed also, if i_decay = 2
@@ -3445,13 +3842,10 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
            	for i in range(len(used_masses)-1):
 		        dm_i = abs(used_masses[i+1]-used_masses[i])
 	            	temp = float(decayed_multi_d[i][j]*dm_i/dm_tot) + temp
-           		#temp = float(decayed_multi_d[i][j]*abs(used_masses[i+1]-used_masses[i])) + temp
-            		#temp = temp/abs(used_masses[len(used_masses)-1]-used_masses[0])    
             	average_mass_frac_decay.append(temp)
 
         somma = 0.
-        for i in range(len(back_ind)):
-            somma = float(average_mass_frac[i]) + somma
+	somma = sum(average_mass_frac_decay)
         print 'departure from 1 of sum of average_mass_frac_decay=',abs(1. - somma)
 
     # now I have the average abundances. We can do the plot.
