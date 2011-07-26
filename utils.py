@@ -386,3 +386,13 @@ def   convert_specie_naming_from_h5_to_ppn(isotope_names):
         for a,b in zip(spe,znum_int):
             index_atomic_number[a]=b
 
+
+def   define_zip_index_for_species(names_ppn_world,number_names_ppn_world):
+    	''' This just give back cl, that is the original index as it is read from files from a data file. 	 '''
+
+        #connect the specie number in the list, with the specie name
+        global cl
+        cl={}
+        for a,b in zip(names_ppn_world,number_names_ppn_world):
+            cl[a] = b  
+

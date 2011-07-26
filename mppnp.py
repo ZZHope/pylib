@@ -1162,15 +1162,11 @@ class se(DataPlot,Utils):
         print '\tcycle:', cycle
 
         isotope_names = self.se.isotopes
-	u.convert_specie_naming_from_h5_to_ppn(isotope_names)	
-
+	u.convert_specie_naming_from_h5_to_ppn(isotope_names)
+	names_ppn_world = u.spe
+	number_names_ppn_world = u.n_array	
+	u.define_zip_index_for_species(names_ppn_world,number_names_ppn_world)
                         
-        #connect name to column number
-        global cl
-        cl={}
-        for a,b in zip(u.spe,u.n_array):
-            cl[a] = b  
-
         # from here below I read the abundance.
         
         name_specie_in_file=self.se.dcols[5]
@@ -1192,6 +1188,8 @@ class se(DataPlot,Utils):
         it requires before being used a call to read_iso_abund_marco and stable_species.
         see e.g., function interface'''
 
+	import utils as u
+
         global decayed_multi_d
         decayed_multi_d=[]
 	#print len(mass_frac)
@@ -1206,7 +1204,7 @@ class se(DataPlot,Utils):
                     for j in range(len(decay_raw[i])):             
                         try:    
                             dum_str = decay_raw[i][j]    
-                            dummy = dummy + float(mass_frac[iii][cl[dum_str.lower().capitalize()]])
+                            dummy = dummy + float(mass_frac[iii][u.cl[dum_str.lower().capitalize()]])
 			    #print cl[dum_str.lower().capitalize()]		
                             #print dum_str, mass_frac[iii][cl[dum_str.capitalize()]]
                         except KeyError:
@@ -3627,7 +3625,7 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
  
     if not logic_stable:
         for i in range(len(u.spe)):
-            pl.plot(amass_int[cl[spe[i]]],average_mass_frac[cl[spe[i]]],'ko')
+            pl.plot(amass_int[u.cl[spe[i]]],average_mass_frac[u.cl[spe[i]]],'ko')
 
         pl.xlabel('$Mass$ $number$', fontsize=20)
         pl.ylabel('$X_{i}$', fontsize=20)
@@ -3643,14 +3641,14 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
         if i_decay == 2:
             for j in range(len(stable)):
                     #print cl[stable[j].capitalize()],stable[j].capitalize(),amass_int[cl[stable[j].capitalize()]]
-                    pl.plot(amass_int[cl[stable[j].capitalize()]],average_mass_frac_decay[back_ind[stable[j]]]/u.solar_abundance[stable[j].lower()],'Dk')
+                    pl.plot(amass_int[u.cl[stable[j].capitalize()]],average_mass_frac_decay[back_ind[stable[j]]]/u.solar_abundance[stable[j].lower()],'Dk')
     
         for i in range(len(stable)):
             for j in range(len(stable)): 
                 if stable[i][:2] == stable[j][:2]:
                     if stable[i] == stable[j-1]:
-                        adum  =[amass_int[cl[stable[i].capitalize()]],amass_int[cl[stable[j].capitalize()]]]
-                        mfdum =[float(average_mass_frac[cl[stable[i].capitalize()]])/float(u.solar_abundance[stable[i].lower()]),float(average_mass_frac[cl[stable[j].capitalize()]])/float(u.solar_abundance[stable[j].lower()])]
+                        adum  =[amass_int[u.cl[stable[i].capitalize()]],amass_int[u.cl[stable[j].capitalize()]]]
+                        mfdum =[float(average_mass_frac[u.cl[stable[i].capitalize()]])/float(u.solar_abundance[stable[i].lower()]),float(average_mass_frac[u.cl[stable[j].capitalize()]])/float(u.solar_abundance[stable[j].lower()])]
                         mfddum=[float(average_mass_frac_decay[back_ind[stable[i]]])/float(u.solar_abundance[stable[i].lower()]),float(average_mass_frac_decay[back_ind[stable[j]]])/float(u.solar_abundance[stable[j].lower()])]
                         #pl.plot(adum,mfdum,'k-')
 			# I had to add this try/except...why? I guess is someone related to H2, that I spotted that was wrong in stable_raw...
@@ -3714,7 +3712,7 @@ def element_abund_marco(i_decay,solar_factor):
         for i in range(u.z_bismuth):
             dummy = 0.
             for j in range(len(average_mass_frac_decay)):
-                if u.znum_int[cl[stable[j].capitalize()]] == i+1:
+                if u.znum_int[u.cl[stable[j].capitalize()]] == i+1:
                     #print znum_int[cl[stable[j].capitalize()]],cl[stable[j].capitalize()],stable[j]
                     dummy = dummy + float(average_mass_frac_decay[j])
        	    elem_abund_decayed[i] = dummy
