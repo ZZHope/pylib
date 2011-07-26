@@ -77,7 +77,12 @@ def make_list(default_symbol_list,len_list_to_print):
 	return symbol_used
 		
 def solar(filename_solar,solar_factor):
-    ''' read solar abundances from filename_solar'''
+    ''' read solar abundances from filename_solar.
+    solar_factor is the correction factor to apply, in case filename_solar is not solar,
+    but some file used to get initial abundances at metallicity lower than solar. However, notice 
+    that this is really  rude, since alpha-enahncements and things like that are not properly considered.
+    Only H and He4 are not multiplied. So, for publications PLEASE use proper filename_solar at...solar, and 
+    use solar_factor = 1. Marco 	 '''
 
     import numpy as np	
 
@@ -98,6 +103,8 @@ def solar(filename_solar,solar_factor):
         names_sol.extend([sol[i].split("         ")[0][4:]])
         yps[i]=float(sol[i].split("         ")[1]) * solar_factor
         mass_number[i]=int(names_sol[i][2:5])
+	if mass_number[i] == 1 or mass_number[i] == 4:
+		yps[i] = yps[i]/solar_factor
     #  convert 'h   1' in prot, not needed any more??
     #names_sol[0] = 'prot '
     
@@ -107,4 +114,32 @@ def solar(filename_solar,solar_factor):
     solar_abundance={}
     for a,b in zip(names_sol,yps):
         solar_abundance[a] = b
+
+
+
+    global z_bismuth
+    z_bismuth = 83
+    global z_for_elem
+    z_for_elem = []
+    global index_stable
+    index_stable = []
+    global solar_elem_abund
+    solar_elem_abund = np.zeros(z_bismuth)
+
+    i_for_stable = 1
+    i_for_unstable = 0
+    for i in range(z_bismuth):
+        z_for_elem.append(int(i+1))
+    	# the only elements below bismuth with no stable isotopes are Tc and Pm
+    	if i+1 == 43 or i+1 == 61:
+        	index_stable.append(i_for_unstable) 
+    	else:
+        	index_stable.append(i_for_stable)
+
+    for i in range(z_bismuth):
+        dummy = 0.
+        for j in range(len(solar_abundance)):
+            if z_sol[j] == i+1:
+                dummy = dummy + float(solar_abundance[names_sol[j]])
+    	solar_elem_abund[i] = dummy
 

@@ -1149,8 +1149,9 @@ class se(DataPlot,Utils):
         if mass_range == None:
             print 'Using default mass range'
             mass_range = [min(masses),max(masses)]    
-        masses.sort()
-        mass_range.sort()
+	# what this was for??? Marco        
+	#masses.sort()
+        #mass_range.sort()
 
         
         
@@ -3909,60 +3910,35 @@ def element_abund_marco(i_decay,solar_factor):
     
     import utils as u	
 
-    global z_bismuth
-    z_bismuth = 83
-
-    global z_for_elem
-    z_for_elem = []
-    global index_stable
-    index_stable = []
     global elem_abund
-    elem_abund = np.zeros(z_bismuth)
+    elem_abund = np.zeros(u.z_bismuth)
     global elem_abund_decayed
-    elem_abund_decayed = np.zeros(z_bismuth)
-    global solar_elem_abund
-    solar_elem_abund = np.zeros(z_bismuth)
+    elem_abund_decayed = np.zeros(u.z_bismuth)
     global elem_prod_fac
-    elem_prod_fac = np.zeros(z_bismuth)
+    elem_prod_fac = np.zeros(u.z_bismuth)
     global elem_prod_fac_decayed
-    elem_prod_fac_decayed = np.zeros(z_bismuth)
+    elem_prod_fac_decayed = np.zeros(u.z_bismuth)
     
-    i_for_stable = 1
-    i_for_unstable = 0
-    for i in range(z_bismuth):
-        z_for_elem.append(int(i+1))
-    	# the only elements below bismuth with no stable isotopes are Tc and Pm
-    	if i+1 == 43 or i+1 == 61:
-        	index_stable.append(i_for_unstable) 
-    	else:
-        	index_stable.append(i_for_stable)
         
     # notice that elem_abund include all contribution, both from stables and unstables in
     # that moment.
-    for i in range(z_bismuth):
+    for i in range(u.z_bismuth):
         dummy = 0.
         for j in range(len(spe)):
             if znum_int[j] == i+1 and jjdum[j] > 0.5:
                 dummy = dummy + float(average_mass_frac[j])
     	elem_abund[i] = dummy
 
-    for i in range(z_bismuth):
-        dummy = 0.
-        for j in range(len(u.solar_abundance)):
-            if u.z_sol[j] == i+1:
-                dummy = dummy + float(u.solar_abundance[u.names_sol[j]])
-    	solar_elem_abund[i] = dummy
 
-
-    for i in range(z_bismuth):
-        if index_stable[i] == 1:
-            elem_prod_fac[i] = float(elem_abund[i]/solar_elem_abund[i]/solar_factor)
-        elif index_stable[i] == 0:
+    for i in range(u.z_bismuth):
+        if u.index_stable[i] == 1:
+            elem_prod_fac[i] = float(elem_abund[i]/u.solar_elem_abund[i])
+        elif u.index_stable[i] == 0:
             elem_prod_fac[i] = 0.    
 
 
     if i_decay == 2:
-        for i in range(z_bismuth):
+        for i in range(u.z_bismuth):
             dummy = 0.
             for j in range(len(average_mass_frac_decay)):
                 if znum_int[cl[stable[j].capitalize()]] == i+1:
@@ -3971,10 +3947,10 @@ def element_abund_marco(i_decay,solar_factor):
        	    elem_abund_decayed[i] = dummy
 
 
-        for i in range(z_bismuth):
-            if index_stable[i] == 1:
-                elem_prod_fac_decayed[i] = float(elem_abund_decayed[i]/solar_elem_abund[i]/solar_factor)
-            elif index_stable[i] == 0:
+        for i in range(u.z_bismuth):
+            if u.index_stable[i] == 1:
+                elem_prod_fac_decayed[i] = float(elem_abund_decayed[i]/u.solar_elem_abund[i])
+            elif u.index_stable[i] == 0:
                 elem_prod_fac_decayed[i] = 0.    
 
 
@@ -4014,7 +3990,7 @@ def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_d
     ax.set_yscale('log')
  
     if not logic_stable:
-        for i in range(z_bismuth):
+        for i in range(u.z_bismuth):
             pl.plot(z_for_elem[i],elem_prod_fac[i],symbol,markersize=10.)
 
         pl.xlabel('$Atomic$ $number$', fontsize=20)
@@ -4024,12 +4000,12 @@ def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_d
         pl.xlim(0,95)
     
     elif logic_stable:
-        for i in range(z_bismuth):
+        for i in range(u.z_bismuth):
             if index_stable[i] == 1:
 		continue
                 #pl.plot(z_for_elem[i],elem_prod_fac[i],'ko')
         if i_decay == 2:
-            for i in range(z_bismuth):
+            for i in range(u.z_bismuth):
                 if index_stable[i] == 1:
                     pl.plot(z_for_elem[i],elem_prod_fac_decayed[i],symbol,markersize=10.)
 
