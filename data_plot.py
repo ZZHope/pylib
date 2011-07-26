@@ -1639,7 +1639,8 @@ class DataPlot:
 		symbol       - indicate which symbol you want to use, if required. '''
 		plotType=self.classTest()
 		if plotType=='se':
-			tot_mass=self.se.get(keystring,'total_mass')    
+			#tot_mass=self.se.get(keystring,'total_mass')    
+			tot_mass=self.se.get('mini')   
 			age=self.se.get(keystring,'age')    
 			mass=self.se.get(keystring,'mass')    
 			Xspecies=self.se.get(keystring,'iso_massf',species)
@@ -1732,7 +1733,8 @@ def flux_chart(file_name,plotaxis,plot_type):
     	print 'file read!'
 
         if plot_type == 1:
-		I_am_the_target = [23.-11.,11.]
+		I_am_the_target = [1.-1.,1.]
+		#I_am_the_target = [56.-26.,26.]
                 #I_am_the_target = [13.-7.,7.]
 		#I_am_the_target = [22.-10.,10.]
                 # = [79.-34.,34.]
@@ -1751,7 +1753,7 @@ def flux_chart(file_name,plotaxis,plot_type):
 	imagic = 0
 
 	# flow is plotted over "prange" dex. If flow < maxflow-prange it is not plotted
-	prange = 8.
+	prange = 4 #8.
 
         ############################################# 
 

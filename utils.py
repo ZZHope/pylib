@@ -76,4 +76,35 @@ def make_list(default_symbol_list,len_list_to_print):
 			
 	return symbol_used
 		
+def solar(filename_solar,solar_factor):
+    ''' read solar abundances from filename_solar'''
+
+    import numpy as np	
+
+    f0=open(filename_solar)
+    sol=f0.readlines()
+    f0.close 
+    sol[0].split("         ")
+
+    # Now read in the whole file and create a hashed array:
+    global names_sol
+    names_sol=[]
+    global z_sol
+    z_sol=[]    
+    yps=np.zeros(len(sol))
+    mass_number=np.zeros(len(sol))
+    for i in range(len(sol)):
+        z_sol.append(int(sol[i][1:3]))
+        names_sol.extend([sol[i].split("         ")[0][4:]])
+        yps[i]=float(sol[i].split("         ")[1]) * solar_factor
+        mass_number[i]=int(names_sol[i][2:5])
+    #  convert 'h   1' in prot, not needed any more??
+    #names_sol[0] = 'prot '
+    
+    
+    # now zip them together:
+    global solar_abundance
+    solar_abundance={}
+    for a,b in zip(names_sol,yps):
+        solar_abundance[a] = b
 

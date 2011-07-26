@@ -3337,37 +3337,6 @@ class se(DataPlot,Utils):
 
         return X_i, E_i
 
-# this belongs into a superclass (check with Marco?)
-def solar(filename_solar):
-    ''' read solar abundances from filename_solar'''
-
-    f0=open(filename_solar)
-    sol=f0.readlines()
-    f0.close 
-    sol[0].split("         ")
-
-    # Now read in the whole file and create a hashed array:
-    global names_sol
-    names_sol=[]
-    global z_sol
-    z_sol=[]    
-    yps=np.zeros(len(sol))
-    mass_number=np.zeros(len(sol))
-    for i in range(len(sol)):
-        z_sol.append(int(sol[i][1:3]))
-        names_sol.extend([sol[i].split("         ")[0][4:]])
-        yps[i]=float(sol[i].split("         ")[1])
-        mass_number[i]=int(names_sol[i][2:5])
-    #  convert 'h   1' in prot, not needed any more??
-    #names_sol[0] = 'prot '
-    
-    
-    # now zip them together:
-    global solar_abundance
-    solar_abundance={}
-    for a,b in zip(names_sol,yps):
-        solar_abundance[a] = b
-
 
 # this belongs into a superclass (check with Marco?)
 def stable_specie():
@@ -3864,7 +3833,7 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
 
 
     # solar abundances are read here
-    solar(file_solar)
+    u.solar(file_solar,solar_factor)
     # from here I have average abundances in mass_range to plot
     average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay)
     
@@ -3895,20 +3864,20 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
     elif logic_stable:
     # plot stable
         #for i in range(len(stable)):
-        #    pl.plot(amass_int[cl[stable[i].capitalize()]],average_mass_frac[cl[stable[i].capitalize()]]/solar_abundance[stable[i].lower()]/solar_factor,'ko')
+        #    pl.plot(amass_int[cl[stable[i].capitalize()]],average_mass_frac[cl[stable[i].capitalize()]]/u.solar_abundance[stable[i].lower()],'ko')
         
         if i_decay == 2:
             for j in range(len(stable)):
                     #print cl[stable[j].capitalize()],stable[j].capitalize(),amass_int[cl[stable[j].capitalize()]]
-                    pl.plot(amass_int[cl[stable[j].capitalize()]],average_mass_frac_decay[back_ind[stable[j]]]/solar_abundance[stable[j].lower()]/solar_factor,'Dk')
+                    pl.plot(amass_int[cl[stable[j].capitalize()]],average_mass_frac_decay[back_ind[stable[j]]]/u.solar_abundance[stable[j].lower()],'Dk')
     
         for i in range(len(stable)):
             for j in range(len(stable)): 
                 if stable[i][:2] == stable[j][:2]:
                     if stable[i] == stable[j-1]:
                         adum  =[amass_int[cl[stable[i].capitalize()]],amass_int[cl[stable[j].capitalize()]]]
-                        mfdum =[float(average_mass_frac[cl[stable[i].capitalize()]])/float(solar_abundance[stable[i].lower()]*solar_factor),float(average_mass_frac[cl[stable[j].capitalize()]])/float(solar_abundance[stable[j].lower()]*solar_factor)]
-                        mfddum=[float(average_mass_frac_decay[back_ind[stable[i]]])/float(solar_abundance[stable[i].lower()]*solar_factor),float(average_mass_frac_decay[back_ind[stable[j]]])/float(solar_abundance[stable[j].lower()]*solar_factor)]
+                        mfdum =[float(average_mass_frac[cl[stable[i].capitalize()]])/float(u.solar_abundance[stable[i].lower()]),float(average_mass_frac[cl[stable[j].capitalize()]])/float(u.solar_abundance[stable[j].lower()])]
+                        mfddum=[float(average_mass_frac_decay[back_ind[stable[i]]])/float(u.solar_abundance[stable[i].lower()]),float(average_mass_frac_decay[back_ind[stable[j]]])/float(u.solar_abundance[stable[j].lower()])]
                         #pl.plot(adum,mfdum,'k-')
 			# I had to add this try/except...why? I guess is someone related to H2, that I spotted that was wrong in stable_raw...
 			# should deal without this. Have to be solved when I have time Marco (June 7 2011)
@@ -3938,6 +3907,7 @@ def element_abund_marco(i_decay,solar_factor):
     # this way is done in a really simple way. May be done better for sure, in a couple of loops.
     # I keep this, since I have only to copy over old script. Falk will probably redo it.
     
+    import utils as u	
 
     global z_bismuth
     z_bismuth = 83
@@ -3978,9 +3948,9 @@ def element_abund_marco(i_decay,solar_factor):
 
     for i in range(z_bismuth):
         dummy = 0.
-        for j in range(len(solar_abundance)):
-            if z_sol[j] == i+1:
-                dummy = dummy + float(solar_abundance[names_sol[j]])
+        for j in range(len(u.solar_abundance)):
+            if u.z_sol[j] == i+1:
+                dummy = dummy + float(u.solar_abundance[u.names_sol[j]])
     	solar_elem_abund[i] = dummy
 
 
@@ -4022,7 +3992,7 @@ def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_d
     solar_factor      - float to correct initial abundances to solar, e.g. for Z=0.01 and AG89 solar_factor = 2.'''
 
     # solar abundances are read here
-    solar(file_solar)
+    u.solar(file_solar,solar_factor)
     # from here I have average abundances in mass_range to plot
     average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay)
     # element abundances are calculated here
