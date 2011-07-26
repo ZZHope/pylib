@@ -1128,6 +1128,8 @@ class se(DataPlot,Utils):
             
         '''
 
+	import utils as u
+
         masses = []
         #    Check the inputs
         #if not self.se.cycles.count(str(cycle)):
@@ -1159,244 +1161,14 @@ class se(DataPlot,Utils):
         print '\tmass_range:', mass_range[0], mass_range[1]
         print '\tcycle:', cycle
 
-        
-        spe_rude1 = []
-        spe_rude2 = []
-        spe_rude3 = []
-        for i in range(len(self.se.isotopes)):
-            spe_rude1.append(self.se.isotopes[i].split('-')[0])
-            spe_rude2.append(self.se.isotopes[i].split('-')[1])
-        # spe_rude1 is elem name and spe_rude2 is mass number.
-        #print spe_rude1,spe_rude2
-        k = 0
-        for i in range(len(spe_rude1)):
-            try: 
-            	if int(spe_rude2[i]) < 10:
-            	    spe_rude3.append(str(spe_rude1[i][0:2])+str('  ')+str(spe_rude2[i][0:3]))    
-            	elif int(spe_rude2[i]) >= 10 and int(spe_rude2[i]) < 100 :    
-            	    spe_rude3.append(str(spe_rude1[i][0:2])+str(' ')+str(spe_rude2[i][0:3]))    
-            	elif int(spe_rude2[i]) >= 100 :    
-            	    spe_rude3.append(str(spe_rude1[i][0:2])+str(spe_rude2[i][0:3]))    
-            except ValueError:
-                k = k+1
-                None
+        isotope_names = self.se.isotopes
+	u.convert_specie_naming_from_h5_to_ppn(isotope_names)	
 
-        global spe
-        spe = []
-        n_array = []
-        for i in range(len(spe_rude3)):
-            if len(str(spe_rude1[i])) == 1:
-                spe.append(str(spe_rude3[i][0:1])+str(' ')+str(spe_rude3[i][1:4]))        
-            else:
-                spe.append(spe_rude3[i]) 
-	    n_array.append(i)
-        if spe[0]=='Ne  1':
-		spe[0] = 'N   1' 
-                                          
-        # spe_rude is the isotope name, in agreement with what we use in ppn, etc.
-        # need to do this to can use other functions without changing them drastically.
-
-                 
-        
-        # here I skip isomers...
-        global amass_int
-        amass_int=np.zeros(len(spe_rude2)) 
-        for i in range(len(spe_rude2)-k):   
-            amass_int[i]=int(spe_rude2[i])
-            #print amass_int
-
-
-        # here I have to create an array for the atomic numbers.
-        # I need to this when I calculate and plot element abundances 
-        
-        global znum_int
-        znum_int=np.zeros(len(spe)) 
-        
-        for i in range(len(spe)):
-            if str(spe[i][0:2]) == 'H ':
-                znum_int[i] = 1        
-            elif str(spe[i][0:2]) == 'He':
-                znum_int[i] = 2
-            elif str(spe[i][0:2]) == 'Li':
-                znum_int[i] = 3
-            elif str(spe[i][0:2]) == 'Be':
-                znum_int[i] = 4
-            elif str(spe[i][0:2]) == 'B ':
-                znum_int[i] = 5
-            elif str(spe[i][0:2]) == 'C ':
-                znum_int[i] = 6
-            elif str(spe[i][0:2]) == 'N ':
-                znum_int[i] = 7
-            elif str(spe[i][0:2]) == 'O ':
-                znum_int[i] = 8
-            elif str(spe[i][0:2]) == 'F ':
-                znum_int[i] = 9
-            elif str(spe[i][0:2]) == 'Ne':
-                znum_int[i] = 10
-            elif str(spe[i][0:2]) == 'Na':
-                znum_int[i] = 11
-            elif str(spe[i][0:2]) == 'Mg':
-                znum_int[i] = 12
-            elif str(spe[i][0:2]) == 'Al':
-                znum_int[i] = 13
-            elif str(spe[i][0:2]) == 'Si':
-                znum_int[i] = 14
-            elif str(spe[i][0:2]) == 'P ':
-                znum_int[i] = 15
-            elif str(spe[i][0:2]) == 'S ':
-                znum_int[i] = 16
-            elif str(spe[i][0:2]) == 'Cl':
-                znum_int[i] = 17
-            elif str(spe[i][0:2]) == 'Ar':
-                znum_int[i] = 18
-            elif str(spe[i][0:2]) == 'K ':
-                znum_int[i] = 19
-            elif str(spe[i][0:2]) == 'Ca':
-                znum_int[i] = 20
-            elif str(spe[i][0:2]) == 'Sc':
-                znum_int[i] = 21
-            elif str(spe[i][0:2]) == 'Ti':
-                znum_int[i] = 22
-            elif str(spe[i][0:2]) == 'V ':
-                znum_int[i] = 23
-            elif str(spe[i][0:2]) == 'Cr':
-                znum_int[i] = 24
-            elif str(spe[i][0:2]) == 'Mn':
-                znum_int[i] = 25
-            elif str(spe[i][0:2]) == 'Fe':
-                znum_int[i] = 26
-            elif str(spe[i][0:2]) == 'Co':
-                znum_int[i] = 27
-            elif str(spe[i][0:2]) == 'Ni':
-                znum_int[i] = 28
-            elif str(spe[i][0:2]) == 'Cu':
-                znum_int[i] = 29
-            elif str(spe[i][0:2]) == 'Zn':
-                znum_int[i] = 30
-            elif str(spe[i][0:2]) == 'Ga':
-                znum_int[i] = 31
-            elif str(spe[i][0:2]) == 'Ge':
-                znum_int[i] = 32
-            elif str(spe[i][0:2]) == 'As':
-                znum_int[i] = 33
-            elif str(spe[i][0:2]) == 'Se':
-                znum_int[i] = 34
-            elif str(spe[i][0:2]) == 'Br':
-                znum_int[i] = 35
-            elif str(spe[i][0:2]) == 'Kr':
-                znum_int[i] = 36
-            elif str(spe[i][0:2]) == 'Rb':
-                znum_int[i] = 37
-            elif str(spe[i][0:2]) == 'Sr':
-                znum_int[i] = 38
-            elif str(spe[i][0:2]) == 'Y ':
-                znum_int[i] = 39
-            elif str(spe[i][0:2]) == 'Zr':
-                znum_int[i] = 40
-            elif str(spe[i][0:2]) == 'Nb':
-                znum_int[i] = 41
-            elif str(spe[i][0:2]) == 'Mo':
-                znum_int[i] = 42
-            elif str(spe[i][0:2]) == 'Tc':
-                znum_int[i] = 43
-            elif str(spe[i][0:2]) == 'Ru':
-                znum_int[i] = 44
-            elif str(spe[i][0:2]) == 'Rh':
-                znum_int[i] = 45
-            elif str(spe[i][0:2]) == 'Pd':
-                znum_int[i] = 46
-            elif str(spe[i][0:2]) == 'Ag':
-                znum_int[i] = 47
-            elif str(spe[i][0:2]) == 'Cd':
-                znum_int[i] = 48
-            elif str(spe[i][0:2]) == 'In':
-                znum_int[i] = 49
-            elif str(spe[i][0:2]) == 'Sn':
-                znum_int[i] = 50
-            elif str(spe[i][0:2]) == 'Sb':
-                znum_int[i] = 51
-            elif str(spe[i][0:2]) == 'Te':
-                znum_int[i] = 52
-            elif str(spe[i][0:2]) == 'I ':
-                znum_int[i] = 53
-            elif str(spe[i][0:2]) == 'Xe':
-                znum_int[i] = 54
-            elif str(spe[i][0:2]) == 'Cs':
-                znum_int[i] = 55
-            elif str(spe[i][0:2]) == 'Ba':
-                znum_int[i] = 56
-            elif str(spe[i][0:2]) == 'La':
-                znum_int[i] = 57
-            elif str(spe[i][0:2]) == 'Ce':
-                znum_int[i] = 58
-            elif str(spe[i][0:2]) == 'Pr':
-                znum_int[i] = 59
-            elif str(spe[i][0:2]) == 'Nd':
-                znum_int[i] = 60
-            elif str(spe[i][0:2]) == 'Pm':
-                znum_int[i] = 61
-            elif str(spe[i][0:2]) == 'Sm':
-                znum_int[i] = 62
-            elif str(spe[i][0:2]) == 'Eu':
-                znum_int[i] = 63
-            elif str(spe[i][0:2]) == 'Gd':
-                znum_int[i] = 64
-            elif str(spe[i][0:2]) == 'Tb':
-                znum_int[i] = 65
-            elif str(spe[i][0:2]) == 'Dy':
-                znum_int[i] = 66
-            elif str(spe[i][0:2]) == 'Ho':
-                znum_int[i] = 67
-            elif str(spe[i][0:2]) == 'Er':
-                znum_int[i] = 68
-            elif str(spe[i][0:2]) == 'Tm':
-                znum_int[i] = 69
-            elif str(spe[i][0:2]) == 'Yb':
-                znum_int[i] = 70
-            elif str(spe[i][0:2]) == 'Lu':
-                znum_int[i] = 71
-            elif str(spe[i][0:2]) == 'Hf':
-                znum_int[i] = 72
-            elif str(spe[i][0:2]) == 'Ta':
-                znum_int[i] = 73
-            elif str(spe[i][0:2]) == 'W ':
-                znum_int[i] = 74
-            elif str(spe[i][0:2]) == 'Re':
-                znum_int[i] = 75
-            elif str(spe[i][0:2]) == 'Os':
-                znum_int[i] = 76
-            elif str(spe[i][0:2]) == 'Ir':
-                znum_int[i] = 77
-            elif str(spe[i][0:2]) == 'Pt':
-                znum_int[i] = 78
-            elif str(spe[i][0:2]) == 'Au':
-                znum_int[i] = 79
-            elif str(spe[i][0:2]) == 'Hg':
-                znum_int[i] = 80
-            elif str(spe[i][0:2]) == 'Tl':
-                znum_int[i] = 81
-            elif str(spe[i][0:2]) == 'Pb':
-                znum_int[i] = 82
-            elif str(spe[i][0:2]) == 'Bi':
-                znum_int[i] = 83
-            elif str(spe[i][0:2]) == 'Po':
-                znum_int[i] = 84
-            elif str(spe[i][0:2]) == 'At':
-                znum_int[i] = 85
-
-	if spe[0] == 'N   1':
-		znum_int[0] = 0
-
-        # here the index to connect name and atomic numbers.
-        global index_atomic_number
-        index_atomic_number = {}    
-        for a,b in zip(spe,znum_int):
-            index_atomic_number[a]=b
                         
         #connect name to column number
         global cl
         cl={}
-        for a,b in zip(spe,n_array):
+        for a,b in zip(u.spe,u.n_array):
             cl[a] = b  
 
         # from here below I read the abundance.
@@ -1461,7 +1233,7 @@ class se(DataPlot,Utils):
         #print mass_frac[0][cl[('zr 96').capitalize()]],spe[cl[('zr 96').capitalize()]]
         #print decayed_multi_d[0][back_ind['CS133']]
         #print mass_frac[0][cl[('cs133').capitalize()]],spe[cl[('cs133').capitalize()]]
-        #print spe,len(spe)
+        #print spe,len(u.spe)
         #print cl,len(cl)
 
     def stable_specie(self):
@@ -1471,7 +1243,7 @@ class se(DataPlot,Utils):
 
     	#from numpy import *
     	#from define_input import *
-
+	import utils as u
 
     	stable_raw=[]
     	stable_raw = ['H   1', 'H   2',\
@@ -1564,11 +1336,11 @@ class se(DataPlot,Utils):
     	global jdum
     	jdum=np.zeros(len(stable_raw))
    	global jjdum
-    	jjdum=np.zeros(len(spe))
+    	jjdum=np.zeros(len(u.spe))
     	for i in range(len(stable_raw)):
        		dum_str = stable_raw[i]
-       		for j in range(len(spe)):
-               		if stable_raw[i].capitalize() == spe[j]:
+       		for j in range(len(u.spe)):
+               		if stable_raw[i].capitalize() == u.spe[j]:
                    		stable.append(stable_raw[i]) 
                    		jdum[i]=1
 		   		jjdum[j]=1
@@ -3440,10 +3212,10 @@ def stable_specie():
     global jdum
     jdum=np.zeros(len(stable_raw))
     global jjdum
-    jjdum=np.zeros(len(spe))
+    jjdum=np.zeros(len(u.spe))
     for i in range(len(stable_raw)):
        dum_str = stable_raw[i]
-       for j in range(len(spe)):
+       for j in range(len(u.spe)):
                if stable_raw[i].capitalize() == spe[j]:
                    stable.append(stable_raw[i]) 
                    jdum[i]=1
@@ -3759,6 +3531,7 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
 
     #import nuh5p 
     import mppnp as mp 	    
+    import utils as u
 
     if not stable and i_decay == 2:
         print 'ERROR: choose i_decay = 1'  
@@ -3784,7 +3557,7 @@ def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_dec
     
     if len(used_masses) >= 2:
         dm_tot = abs(used_masses[len(used_masses)-1]-used_masses[0])
-        for j in range(len(spe)-1):
+        for j in range(len(u.spe)-1):
             temp = 0.
             for i in range(len(used_masses)-1):
 	        dm_i = abs(used_masses[i+1]-used_masses[i])
@@ -3853,7 +3626,7 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
     ax.set_yscale('log')
  
     if not logic_stable:
-        for i in range(len(spe)):
+        for i in range(len(u.spe)):
             pl.plot(amass_int[cl[spe[i]]],average_mass_frac[cl[spe[i]]],'ko')
 
         pl.xlabel('$Mass$ $number$', fontsize=20)
@@ -3924,8 +3697,8 @@ def element_abund_marco(i_decay,solar_factor):
     # that moment.
     for i in range(u.z_bismuth):
         dummy = 0.
-        for j in range(len(spe)):
-            if znum_int[j] == i+1 and jjdum[j] > 0.5:
+        for j in range(len(u.spe)):
+            if u.znum_int[j] == i+1 and jjdum[j] > 0.5:
                 dummy = dummy + float(average_mass_frac[j])
     	elem_abund[i] = dummy
 
@@ -3941,7 +3714,7 @@ def element_abund_marco(i_decay,solar_factor):
         for i in range(u.z_bismuth):
             dummy = 0.
             for j in range(len(average_mass_frac_decay)):
-                if znum_int[cl[stable[j].capitalize()]] == i+1:
+                if u.znum_int[cl[stable[j].capitalize()]] == i+1:
                     #print znum_int[cl[stable[j].capitalize()]],cl[stable[j].capitalize()],stable[j]
                     dummy = dummy + float(average_mass_frac_decay[j])
        	    elem_abund_decayed[i] = dummy
