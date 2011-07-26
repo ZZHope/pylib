@@ -3109,6 +3109,80 @@ class se(DataPlot,Utils):
         return X_i, E_i
 
 
+    def average_iso_abund_marco(self,mass_range,cycle,stable,i_decay):
+    	''' Interface to average over mass_range. 
+    	directory     -  location of h5 file to plot. Needed for plot_tools
+    	name_h5_file  -  name of h5 file. Needed for plot_tools
+    	mass_range    - required to plot data in a certain mass range. Needed for read_iso_abund_marco
+    	cycle         - which cycle from the h5 file?. Needed for read_iso_abund_marco
+    	stable        - logic if want to plot only stable or not.  
+    	i_decay       - if = 1 I plot not decayed, if = 2 I plot decayed. Make sense only if stable is true.'''
+
+
+    	import utils as u
+
+    	if not stable and i_decay == 2:
+        	print 'ERROR: choose i_decay = 1'  
+        	return
+    
+    	#data=mp.se(directory,name_h5_file)
+    	self.read_iso_abund_marco(mass_range,cycle)
+    	#print spe
+    	if i_decay == 2:
+        	self.stable_specie()
+        	self.decay(mass_frac)
+
+
+    
+    	# here I am calculating average mass fraction for all isotopes in given mass range, and then
+    	# if needed calculating average over decayed.
+    	# warning: mass_range is bigger than used_masses range, by definition. Should I use it?
+    	print 'average over used_masses range, not over original mass_range'
+    	print used_masses[0],used_masses[len(used_masses)-1],'instead of',mass_range[0],mass_range[1]
+    
+    	global average_mass_frac
+    	average_mass_frac = []
+    
+    	if len(used_masses) >= 2:
+     		dm_tot = abs(used_masses[len(used_masses)-1]-used_masses[0])
+        	for j in range(len(u.spe)-1):
+            		temp = 0.
+            		for i in range(len(used_masses)-1):
+	        		dm_i = abs(used_masses[i+1]-used_masses[i])
+            			temp = float(mass_frac[i][j]*dm_i/dm_tot) + temp
+            		average_mass_frac.append(temp)
+        	#print average_mass_frac
+    	elif  len(used_masses) == 1:
+        	print 'case with 1 mass zone only, not implemented yet'
+    
+    
+        
+    	somma = 0.
+    	somma = sum(average_mass_frac)
+   	print 'departure from 1 of sum of average_mass_frac=',abs(1. - somma)
+    
+    	# not let's do it over decayed also, if i_decay = 2
+    	if i_decay == 2:
+        	global average_mass_frac_decay
+        	average_mass_frac_decay = []
+		dm_tot = abs(used_masses[len(used_masses)-1]-used_masses[0])
+		#
+		#print len(decayed_multi_d[0]),decayed_multi_d[0]        
+		for j in range(len(back_ind)):
+        		temp = 0.
+           		for i in range(len(used_masses)-1):
+		        	dm_i = abs(used_masses[i+1]-used_masses[i])
+	            		temp = float(decayed_multi_d[i][j]*dm_i/dm_tot) + temp
+            		average_mass_frac_decay.append(temp)
+
+        	somma = 0.
+		somma = sum(average_mass_frac_decay)
+        	print 'departure from 1 of sum of average_mass_frac_decay=',abs(1. - somma)
+
+    	# now I have the average abundances. We can do the plot.
+    
+
+
 # this belongs into a superclass (check with Marco?)
 def stable_specie():
 
@@ -3514,83 +3588,7 @@ def stable_specie():
     ['PB207','TL207','HG207','BI207'],\
     ['PB208','TL208','HG208','BI208'],\
     ['BI209','PB209','TL209']]
-    #print decay_raw
-
-# is this redundant with  def iso_abund(self, mass_range, cycle, stable) ???
-def average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,stable,i_decay):
-    ''' Interface to average over mass_range. 
-    directory     -  location of h5 file to plot. Needed for plot_tools
-    name_h5_file  -  name of h5 file. Needed for plot_tools
-    mass_range    - required to plot data in a certain mass range. Needed for read_iso_abund_marco
-    cycle         - which cycle from the h5 file?. Needed for read_iso_abund_marco
-    stable        - logic if want to plot only stable or not.  
-    i_decay       - if = 1 I plot not decayed, if = 2 I plot decayed. Make sense only if stable is true.'''
-
-
-    #import nuh5p 
-    import mppnp as mp 	    
-    import utils as u
-
-    if not stable and i_decay == 2:
-        print 'ERROR: choose i_decay = 1'  
-        return
-    
-    data=mp.se(directory,name_h5_file)
-    data.read_iso_abund_marco(mass_range,cycle)
-    #print spe
-    if i_decay == 2:
-        data.stable_specie()
-        data.decay(mass_frac)
-
-
-    
-    # here I am calculating average mass fraction for all isotopes in given mass range, and then
-    # if needed calculating average over decayed.
-    # warning: mass_range is bigger than used_masses range, by definition. Should I use it?
-    print 'average over used_masses range, not over original mass_range'
-    print used_masses[0],used_masses[len(used_masses)-1],'instead of',mass_range[0],mass_range[1]
-    
-    global average_mass_frac
-    average_mass_frac = []
-    
-    if len(used_masses) >= 2:
-        dm_tot = abs(used_masses[len(used_masses)-1]-used_masses[0])
-        for j in range(len(u.spe)-1):
-            temp = 0.
-            for i in range(len(used_masses)-1):
-	        dm_i = abs(used_masses[i+1]-used_masses[i])
-            	temp = float(mass_frac[i][j]*dm_i/dm_tot) + temp
-            average_mass_frac.append(temp)
-        #print average_mass_frac
-    elif  len(used_masses) == 1:
-        print 'case with 1 mass zone only, not implemented yet'
-    
-    
-        
-    somma = 0.
-    somma = sum(average_mass_frac)
-    print 'departure from 1 of sum of average_mass_frac=',abs(1. - somma)
-    
-    # not let's do it over decayed also, if i_decay = 2
-    if i_decay == 2:
-        global average_mass_frac_decay
-        average_mass_frac_decay = []
-	dm_tot = abs(used_masses[len(used_masses)-1]-used_masses[0])
-	#
-	#print len(decayed_multi_d[0]),decayed_multi_d[0]        
-	for j in range(len(back_ind)):
-        	temp = 0.
-           	for i in range(len(used_masses)-1):
-		        dm_i = abs(used_masses[i+1]-used_masses[i])
-	            	temp = float(decayed_multi_d[i][j]*dm_i/dm_tot) + temp
-            	average_mass_frac_decay.append(temp)
-
-        somma = 0.
-	somma = sum(average_mass_frac_decay)
-        print 'departure from 1 of sum of average_mass_frac_decay=',abs(1. - somma)
-
-    # now I have the average abundances. We can do the plot.
-    
+    #print decay_raw    
 
 def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor):
     ''' Interface to plot average over mass_range. 
@@ -3607,7 +3605,7 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
     # solar abundances are read here
     u.solar(file_solar,solar_factor)
     # from here I have average abundances in mass_range to plot
-    average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay)
+    average_iso_abund_marco(mass_range,cycle,logic_stable,i_decay)
     
     fig = pl.figure()            # Figure object
     ax = fig.add_subplot(1,1,1)     # Axes object: one row, one column, first plot (one plot!)
@@ -3641,7 +3639,7 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
         if i_decay == 2:
             for j in range(len(stable)):
                     #print cl[stable[j].capitalize()],stable[j].capitalize(),amass_int[cl[stable[j].capitalize()]]
-                    pl.plot(amass_int[u.cl[stable[j].capitalize()]],average_mass_frac_decay[back_ind[stable[j]]]/u.solar_abundance[stable[j].lower()],'Dk')
+                    pl.plot(amass_int[u.cl[stable[j].capitalize()]],u.mass_fractions_array_decayed[back_ind[stable[j]]]/u.solar_abundance[stable[j].lower()],'Dk')
     
         for i in range(len(stable)):
             for j in range(len(stable)): 
@@ -3649,7 +3647,7 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
                     if stable[i] == stable[j-1]:
                         adum  =[amass_int[u.cl[stable[i].capitalize()]],amass_int[u.cl[stable[j].capitalize()]]]
                         mfdum =[float(average_mass_frac[u.cl[stable[i].capitalize()]])/float(u.solar_abundance[stable[i].lower()]),float(average_mass_frac[u.cl[stable[j].capitalize()]])/float(u.solar_abundance[stable[j].lower()])]
-                        mfddum=[float(average_mass_frac_decay[back_ind[stable[i]]])/float(u.solar_abundance[stable[i].lower()]),float(average_mass_frac_decay[back_ind[stable[j]]])/float(u.solar_abundance[stable[j].lower()])]
+                        mfddum=[float(u.average_mass_frac_decay[back_ind[stable[i]]])/float(u.solar_abundance[stable[i].lower()]),float(u.average_mass_frac_decay[back_ind[stable[j]]])/float(u.solar_abundance[stable[j].lower()])]
                         #pl.plot(adum,mfdum,'k-')
 			# I had to add this try/except...why? I guess is someone related to H2, that I spotted that was wrong in stable_raw...
 			# should deal without this. Have to be solved when I have time Marco (June 7 2011)
@@ -3672,59 +3670,6 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
       
 
 
-def element_abund_marco(i_decay,solar_factor):
-    ''' Here elements abundances, solar element abundances and production factors for elements are calculated'''
-
-
-    # this way is done in a really simple way. May be done better for sure, in a couple of loops.
-    # I keep this, since I have only to copy over old script. Falk will probably redo it.
-    
-    import utils as u	
-
-    global elem_abund
-    elem_abund = np.zeros(u.z_bismuth)
-    global elem_abund_decayed
-    elem_abund_decayed = np.zeros(u.z_bismuth)
-    global elem_prod_fac
-    elem_prod_fac = np.zeros(u.z_bismuth)
-    global elem_prod_fac_decayed
-    elem_prod_fac_decayed = np.zeros(u.z_bismuth)
-    
-        
-    # notice that elem_abund include all contribution, both from stables and unstables in
-    # that moment.
-    for i in range(u.z_bismuth):
-        dummy = 0.
-        for j in range(len(u.spe)):
-            if u.znum_int[j] == i+1 and jjdum[j] > 0.5:
-                dummy = dummy + float(average_mass_frac[j])
-    	elem_abund[i] = dummy
-
-
-    for i in range(u.z_bismuth):
-        if u.index_stable[i] == 1:
-            elem_prod_fac[i] = float(elem_abund[i]/u.solar_elem_abund[i])
-        elif u.index_stable[i] == 0:
-            elem_prod_fac[i] = 0.    
-
-
-    if i_decay == 2:
-        for i in range(u.z_bismuth):
-            dummy = 0.
-            for j in range(len(average_mass_frac_decay)):
-                if u.znum_int[u.cl[stable[j].capitalize()]] == i+1:
-                    #print znum_int[cl[stable[j].capitalize()]],cl[stable[j].capitalize()],stable[j]
-                    dummy = dummy + float(average_mass_frac_decay[j])
-       	    elem_abund_decayed[i] = dummy
-
-
-        for i in range(u.z_bismuth):
-            if u.index_stable[i] == 1:
-                elem_prod_fac_decayed[i] = float(elem_abund_decayed[i]/u.solar_elem_abund[i])
-            elif u.index_stable[i] == 0:
-                elem_prod_fac_decayed[i] = 0.    
-
-
                          
 
 def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor,symbol='ko'):
@@ -3741,9 +3686,11 @@ def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_d
     # solar abundances are read here
     u.solar(file_solar,solar_factor)
     # from here I have average abundances in mass_range to plot
-    average_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay)
+    average_iso_abund_marco(mass_range,cycle,logic_stable,i_decay)
     # element abundances are calculated here
-    element_abund_marco(i_decay,solar_factor)
+    mass_fractions_array_decayed = average_mass_frac_decay 	
+    mass_fractions_array_not_decayed = average_mass_frac 	
+    u.element_abund_marco(i_decay,stable,jjdum,mass_fractions_array_not_decayed,mass_fractions_array_decayed)
     
     
     fig = pl.figure()            # Figure object

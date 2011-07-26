@@ -396,3 +396,59 @@ def   define_zip_index_for_species(names_ppn_world,number_names_ppn_world):
         for a,b in zip(names_ppn_world,number_names_ppn_world):
             cl[a] = b  
 
+
+
+def element_abund_marco(i_decay,stable_isotope_list,stable_isotope_identifier,mass_fractions_array_not_decayed,mass_fractions_array_decayed):
+    ''' Given an array of isotopic abundances not decayed and a similar array of isotopic abundances not decayed, 
+    here elements abundances, and production factors for elements are calculated'''
+
+
+    # this way is done in a really simple way. May be done better for sure, in a couple of loops.
+    # I keep this, since I have only to copy over old script. Falk will probably redo it.
+    
+    import numpy as np
+    #import utils as u
+
+    global elem_abund
+    elem_abund = np.zeros(z_bismuth)
+    global elem_abund_decayed
+    elem_abund_decayed = np.zeros(z_bismuth)
+    global elem_prod_fac
+    elem_prod_fac = np.zeros(z_bismuth)
+    global elem_prod_fac_decayed
+    elem_prod_fac_decayed = np.zeros(z_bismuth)
+    
+        
+    # notice that elem_abund include all contribution, both from stables and unstables in
+    # that moment.
+    for i in range(z_bismuth):
+        dummy = 0.
+        for j in range(len(spe)):
+            if znum_int[j] == i+1 and stable_isotope_identifier[j] > 0.5:
+                dummy = dummy + float(mass_fractions_array_not_decayed[j])
+    	elem_abund[i] = dummy
+
+
+    for i in range(z_bismuth):
+        if index_stable[i] == 1:
+            elem_prod_fac[i] = float(elem_abund[i]/solar_elem_abund[i])
+        elif index_stable[i] == 0:
+            elem_prod_fac[i] = 0.    
+
+
+    if i_decay == 2:
+        for i in range(z_bismuth):
+            dummy = 0.
+            for j in range(len(mass_fractions_array_decayed)):
+                if znum_int[cl[stable_isotope_list[j].capitalize()]] == i+1:
+                    #print znum_int[cl[stable[j].capitalize()]],cl[stable[j].capitalize()],stable[j]
+                    dummy = dummy + float(mass_fractions_array_decayed[j])
+       	    elem_abund_decayed[i] = dummy
+
+
+        for i in range(z_bismuth):
+            if index_stable[i] == 1:
+                elem_prod_fac_decayed[i] = float(elem_abund_decayed[i]/solar_elem_abund[i])
+            elif index_stable[i] == 0:
+                elem_prod_fac_decayed[i] = 0.    
+
