@@ -117,24 +117,9 @@ def solar(filename_solar,solar_factor):
 
 
 
-    global z_bismuth
-    z_bismuth = 83
-    global z_for_elem
-    z_for_elem = []
-    global index_stable
-    index_stable = []
     global solar_elem_abund
     solar_elem_abund = np.zeros(z_bismuth)
 
-    i_for_stable = 1
-    i_for_unstable = 0
-    for i in range(z_bismuth):
-        z_for_elem.append(int(i+1))
-    	# the only elements below bismuth with no stable isotopes are Tc and Pm
-    	if i+1 == 43 or i+1 == 61:
-        	index_stable.append(i_for_unstable) 
-    	else:
-        	index_stable.append(i_for_stable)
 
     for i in range(z_bismuth):
         dummy = 0.
@@ -857,4 +842,212 @@ def stable_specie():
     ['PB208','TL208','HG208','BI208'],\
     ['BI209','PB209','TL209']]
     #print decay_raw    
+
+
+def give_zip_element_z_and_names(element_name):
+    ''' create 2 indexes that, given the name of the element/specie, give the atomic number.	 '''
+
+    import numpy as np	
+
+    global z_bismuth
+    z_bismuth = 83
+    global z_for_elem
+    z_for_elem = []
+    global index_stable
+    index_stable = []
+
+    i_for_stable = 1
+    i_for_unstable = 0
+    for i in range(z_bismuth):
+        z_for_elem.append(int(i+1))
+    	# the only elements below bismuth with no stable isotopes are Tc and Pm
+    	if i+1 == 43 or i+1 == 61:
+        	index_stable.append(i_for_unstable) 
+    	else:
+        	index_stable.append(i_for_stable)
+
+        dummy_index = np.zeros(len(element_name))
+        for i in range(len(element_name)):
+            if element_name[i] == 'Neutron':
+                dummy_index[i] = 0        
+            elif element_name[i] == 'H':
+                dummy_index[i] = 1        
+            elif element_name[i] == 'He':
+                dummy_index[i] = 2
+            elif element_name[i] == 'Li':
+                dummy_index[i] = 3
+            elif element_name[i] == 'Be':
+                dummy_index[i] = 4
+            elif element_name[i] == 'B':
+                dummy_index[i] = 5
+            elif element_name[i] == 'C':
+                dummy_index[i] = 6
+            elif element_name[i] == 'N':
+                dummy_index[i] = 7
+            elif element_name[i] == 'O':
+                dummy_index[i] = 8
+            elif element_name[i] == 'F':
+                dummy_index[i] = 9
+            elif element_name[i] == 'Ne':
+                dummy_index[i] = 10
+            elif element_name[i] == 'Na':
+                dummy_index[i] = 11
+            elif element_name[i] == 'Mg':
+                dummy_index[i] = 12
+            elif element_name[i] == 'Al':
+                dummy_index[i] = 13
+            elif element_name[i] == 'Si':
+                dummy_index[i] = 14
+            elif element_name[i] == 'P':
+                dummy_index[i] = 15
+            elif element_name[i] == 'S':
+                dummy_index[i] = 16
+            elif element_name[i] == 'Cl':
+                dummy_index[i] = 17
+            elif element_name[i] == 'Ar':
+                dummy_index[i] = 18
+            elif element_name[i] == 'K':
+                dummy_index[i] = 19
+            elif element_name[i] == 'Ca':
+                dummy_index[i] = 20
+            elif element_name[i] == 'Sc':
+                dummy_index[i] = 21
+            elif element_name[i] == 'Ti':
+                dummy_index[i] = 22
+            elif element_name[i] == 'V':
+                dummy_index[i] = 23
+            elif element_name[i] == 'Cr':
+                dummy_index[i] = 24
+            elif element_name[i] == 'Mn':
+                dummy_index[i] = 25
+            elif element_name[i] == 'Fe':
+                dummy_index[i] = 26
+            elif element_name[i] == 'Co':
+                dummy_index[i] = 27
+            elif element_name[i] == 'Ni':
+                dummy_index[i] = 28
+            elif element_name[i] == 'Cu':
+                dummy_index[i] = 29
+            elif element_name[i] == 'Zn':
+                dummy_index[i] = 30
+            elif element_name[i] == 'Ga':
+                dummy_index[i] = 31
+            elif element_name[i] == 'Ge':
+                dummy_index[i] = 32
+            elif element_name[i] == 'As':
+                dummy_index[i] = 33
+            elif element_name[i] == 'Se':
+                dummy_index[i] = 34
+            elif element_name[i] == 'Br':
+                dummy_index[i] = 35
+            elif element_name[i] == 'Kr':
+                dummy_index[i] = 36
+            elif element_name[i] == 'Rb':
+                dummy_index[i] = 37
+            elif element_name[i] == 'Sr':
+                dummy_index[i] = 38
+            elif element_name[i] == 'Y':
+                dummy_index[i] = 39
+            elif element_name[i] == 'Zr':
+                dummy_index[i] = 40
+            elif element_name[i] == 'Nb':
+                dummy_index[i] = 41
+            elif element_name[i] == 'Mo':
+                dummy_index[i] = 42
+            elif element_name[i] == 'Tc':
+                dummy_index[i] = 43
+            elif element_name[i] == 'Ru':
+                dummy_index[i] = 44
+            elif element_name[i] == 'Rh':
+                dummy_index[i] = 45
+            elif element_name[i] == 'Pd':
+                dummy_index[i] = 46
+            elif element_name[i] == 'Ag':
+                dummy_index[i] = 47
+            elif element_name[i] == 'Cd':
+                dummy_index[i] = 48
+            elif element_name[i] == 'In':
+                dummy_index[i] = 49
+            elif element_name[i] == 'Sn':
+                dummy_index[i] = 50
+            elif element_name[i] == 'Sb':
+                dummy_index[i] = 51
+            elif element_name[i] == 'Te':
+                dummy_index[i] = 52
+            elif element_name[i] == 'I':
+                dummy_index[i] = 53
+            elif element_name[i] == 'Xe':
+                dummy_index[i] = 54
+            elif element_name[i] == 'Cs':
+                dummy_index[i] = 55
+            elif element_name[i] == 'Ba':
+                dummy_index[i] = 56
+            elif element_name[i] == 'La':
+                dummy_index[i] = 57
+            elif element_name[i] == 'Ce':
+                dummy_index[i] = 58
+            elif element_name[i] == 'Pr':
+                dummy_index[i] = 59
+            elif element_name[i] == 'Nd':
+                dummy_index[i] = 60
+            elif element_name[i] == 'Pm':
+                dummy_index[i] = 61
+            elif element_name[i] == 'Sm':
+                dummy_index[i] = 62
+            elif element_name[i] == 'Eu':
+                dummy_index[i] = 63
+            elif element_name[i] == 'Gd':
+                dummy_index[i] = 64
+            elif element_name[i] == 'Tb':
+                dummy_index[i] = 65
+            elif element_name[i] == 'Dy':
+                dummy_index[i] = 66
+            elif element_name[i] == 'Ho':
+                dummy_index[i] = 67
+            elif element_name[i] == 'Er':
+                dummy_index[i] = 68
+            elif element_name[i] == 'Tm':
+                dummy_index[i] = 69
+            elif element_name[i] == 'Yb':
+                dummy_index[i] = 70
+            elif element_name[i] == 'Lu':
+                dummy_index[i] = 71
+            elif element_name[i] == 'Hf':
+                dummy_index[i] = 72
+            elif element_name[i] == 'Ta':
+                dummy_index[i] = 73
+            elif element_name[i] == 'W':
+                dummy_index[i] = 74
+            elif element_name[i] == 'Re':
+                dummy_index[i] = 75
+            elif element_name[i] == 'Os':
+                dummy_index[i] = 76
+            elif element_name[i] == 'Ir':
+                dummy_index[i] = 77
+            elif element_name[i] == 'Pt':
+                dummy_index[i] = 78
+            elif element_name[i] == 'Au':
+                dummy_index[i] = 79
+            elif element_name[i] == 'Hg':
+                dummy_index[i] = 80
+            elif element_name[i] == 'Tl':
+                dummy_index[i] = 81
+            elif element_name[i] == 'Pb':
+                dummy_index[i] = 82
+            elif element_name[i] == 'Bi':
+                dummy_index[i] = 83
+            elif element_name[i] == 'Po':
+                dummy_index[i] = 84
+            elif element_name[i] == 'At':
+                dummy_index[i] = 85
+
+	#if spe[0] == 'N   1':
+	#	znum_int[0] = 0
+
+        # here the index to connect name and atomic numbers.
+        global index_z_for_elements
+        index_z_for_elements = {}    
+        for a,b in zip(element_name,dummy_index):
+            index_z_for_elements[a]=b
+
 

@@ -1169,7 +1169,9 @@ class se(DataPlot,Utils):
                         
         # from here below I read the abundance.
         
-        name_specie_in_file=self.se.dcols[5]
+        #name_specie_in_file=self.se.dcols[5]
+	# I am using directly 'iso_massf' only because somehow m20 explosive do not have dcols....
+	name_specie_in_file='iso_massf'
 	abunds=self.se.get(cycle,name_specie_in_file)
 
         global used_masses
@@ -2774,10 +2776,20 @@ class se(DataPlot,Utils):
 
     	# now I have the average abundances. We can do the plot.
     
+    def get_elem_names(self):
+    	''' returns for one cycle an element name dictionary.'''
 
 
+    	import utils as u
 
-def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor):
+	# provide library for Z versus element names, and Z for elements        
+	element_name = self.se.elements
+	u.give_zip_element_z_and_names(element_name)
+	self.z_of_element_name = u.index_z_for_elements      
+
+	
+
+def obsolete_plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor):
     ''' Interface to plot average over mass_range. 
     directory     -  location of h5 file to plot. Needed for plot_tools
     name_h5_file  -  name of h5 file. Needed for plot_tools
@@ -2789,6 +2801,8 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
     solar_factor      - float to correct initial abundances to solar, e.g. for Z=0.01 and AG89 solar_factor = 2.'''
 
 
+    # provide library for Z versus element names, and Z for elements 	
+    u.give_zip_element_z_and_names()
     # solar abundances are read here
     u.solar(file_solar,solar_factor)
     # from here I have average abundances in mass_range to plot
@@ -2859,7 +2873,7 @@ def plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_
 
                          
 
-def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor,symbol='ko'):
+def obsolete_plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor,symbol='ko'):
     ''' Interface to plot elements abundances averaged over mass_range. 
     directory     -  location of h5 file to plot. Needed for plot_tools
     name_h5_file  -  name of h5 file. Needed for plot_tools
@@ -2870,6 +2884,8 @@ def plot_el_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_d
     file_solar        - file where to take solar abundances
     solar_factor      - float to correct initial abundances to solar, e.g. for Z=0.01 and AG89 solar_factor = 2.'''
 
+    # provide library for Z versus element names, and Z for elements 	
+    u.give_zip_element_z_and_names()
     # solar abundances are read here
     u.solar(file_solar,solar_factor)
     # from here I have average abundances in mass_range to plot
