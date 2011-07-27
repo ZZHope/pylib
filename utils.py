@@ -438,7 +438,6 @@ def element_abund_marco(i_decay,stable_isotope_list,stable_isotope_identifier,ma
                 elem_prod_fac_decayed[i] = 0.    
 
 
-# this belongs into a superclass (check with Marco?)
 def stable_specie():
     ''' provide the list of stable species, and decay path feeding stables '''
 
