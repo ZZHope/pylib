@@ -1145,8 +1145,7 @@ class se(DataPlot,Utils):
         
         #    if not self.se.cycles.count(str(cycle)):
         #        print 'I was unable to correct your cycle.  Please check that it exists in your dataset.'
-	print 'cycle=',cycle
-	print 'mass_range=',mass_range
+
         masses = self.se.get(cycle,'mass')
         if mass_range == None:
             print 'Using default mass range'
@@ -2779,7 +2778,6 @@ class se(DataPlot,Utils):
     def get_elem_names(self):
     	''' returns for one cycle an element name dictionary.'''
 
-
     	import utils as u
 
 	# provide library for Z versus element names, and Z for elements        
@@ -2787,6 +2785,56 @@ class se(DataPlot,Utils):
 	u.give_zip_element_z_and_names(element_name)
 	self.z_of_element_name = u.index_z_for_elements      
 
+
+    def get_abundance_iso_decay(self,cycle):
+    	''' returns the decayed stable isotopes.
+	If average is True, than is peforming an average over the given mass range.'''
+
+    	import utils as u
+
+	masses_for_this_cycle = self.se.get(cycle,'mass')
+    	self.read_iso_abund_marco([min(masses_for_this_cycle),max(masses_for_this_cycle)],cycle)
+
+        u.stable_specie()
+        self.decay(mass_frac)
+
+	self.decayed_stable_isotopes_per_cycle = decayed_multi_d	
+
+
+    def get_abundance_elem(self,cycle):
+    	''' returns the undecayed element profile (all elements that are in elem_names).'''
+
+    	import utils as u
+
+	masses_for_this_cycle = self.se.get(cycle,'mass')
+    	self.read_iso_abund_marco([min(masses_for_this_cycle),max(masses_for_this_cycle)],cycle)
+
+        u.stable_specie()
+        self.decay(mass_frac)
+
+	# provide library for Z versus element names, and Z for elements        	
+	element_name = self.se.elements
+	u.give_zip_element_z_and_names(element_name)
+	# from here read solar abundances
+	solar_factor = 2.
+	u.solar('iniab1.0E-02.ppn_GN93',solar_factor)
+
+	stable_isotope_identifier=u.jjdum
+	stable_isotope_list=u.stable
+		
+
+	self.element_abundance_not_decayed=[]
+	self.element_abundance_decayed =[]
+	self.element_production_factors=[]
+	for i in range(len(masses_for_this_cycle)):
+		mass_fractions_array_decayed = decayed_multi_d[i]
+		mass_fractions_array_not_decayed = mass_frac[i]
+		u.element_abund_marco(2,stable_isotope_list,stable_isotope_identifier,mass_fractions_array_not_decayed,mass_fractions_array_decayed)
+		self.element_abundance_not_decayed.append(u.elem_abund)
+		self.element_abundance_decayed.append(u.elem_abund_decayed)
+		self.element_production_factors.append(u.elem_prod_fac)
+		
+	#self.decayed_stable_isotopes_per_cycle = decayed_multi_d	
 	
 
 def obsolete_plot_iso_abund_marco(directory,name_h5_file,mass_range,cycle,logic_stable,i_decay,file_solar,solar_factor):
