@@ -412,13 +412,13 @@ class star_log(DataPlot):
                     pyl.ylim(h1_min,h1_max)
 
     def kippenhahn(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
-                       tp_agb=0.):
+                       tp_agb=0.,t_eps=5.e2):
 		''' Kippenhahn plot as a function of time or model
 		
 		num_frame    number of frame to plot this plot into 
-                xax          string that is either model or time to
+                xax          string that is either 'model', 'time' or 'logtimerev' to
                              indicate what is to be used on the x-axis
-
+                t_eps        final time for logtimerev             
                 t0_model     model for the zero point in time, for AGB
                              plots this would be usually the model of
                              the 1st TP, which can be found with the
@@ -435,13 +435,17 @@ class star_log(DataPlot):
 		
 		if xax == 'time':
 		    xaxisarray = self.get('star_age')
+                    t0_mod=xaxisarray[t0_model]
 		elif xax == 'model':
 		    xaxisarray = self.get('model_number')
+		elif xax == 'logtimerev':
+                    xaxi    = self.get('star_age')
+                    xaxisarray = np.log10(np.max(xaxi)+t_eps-xaxi)
+                    t0_mod = 0.
 		else:
 		    print 'kippenhahn_error: invalid string for x-axis selction.'+\
 			  ' needs to be "time" or "model"'
 		
-                t0_mod=xaxisarray[t0_model]
 	    
 		h1_boundary_mass  = self.get('h1_boundary_mass')
 		he4_boundary_mass = self.get('he4_boundary_mass')

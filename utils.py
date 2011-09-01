@@ -34,7 +34,7 @@ def species_list(what_list):
 	s-process   s-process indicators
 	'''
 	if what_list is "CNONe":
-		list_to_print = ['H-1','He-4','C-12','O-16','Ne-20']
+		list_to_print = ['H-1','He-4','C-12','N-14','O-16','Ne-20']
 	elif what_list is "sprocess":
 		list_to_print = ['Fe-56','Ge-70','Zn-70','Se-76','Kr-80','Kr-82','Kr-86','Sr-88','Ba-138','Pb-208']
 	elif what_list is "burn_stages":
