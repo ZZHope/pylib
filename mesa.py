@@ -434,7 +434,9 @@ class star_log(DataPlot):
                 '''
 	
 		pyl.figure(num_frame)
-		
+
+		t0_mod=[]
+
 		if xax == 'time':
 		    xaxisarray = self.get('star_age')
                     t0_mod=xaxisarray[t0_model]
@@ -828,14 +830,13 @@ class star_log(DataPlot):
 #        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5)
         	CBARBURN1 = pl.colorbar(CBURN1)
         	CBARBURN2 = pl.colorbar(CBURN2)
+        	CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
         if engenstyle == 'twozone':
                 print V
                 ax.contourf(xxx[::dx],y,V, cmap=cmapB1, alpha=0.5)
 
 	print 'plotting patches'
 	ax.plot(xxx[::dx],self.get('star_mass')[modstart:modstop][::dx],'k-')
-
-	CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
 
 	print 'plotting abund boundaries'
 	ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary')
