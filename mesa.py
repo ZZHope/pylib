@@ -442,6 +442,7 @@ class star_log(DataPlot):
                     t0_mod=xaxisarray[t0_model]
 		elif xax == 'model':
 		    xaxisarray = self.get('model_number')
+                    t0_mod=xaxisarray[t0_model]
 		elif xax == 'logtimerev':
                     xaxi    = self.get('star_age')
                     xaxisarray = np.log10(np.max(xaxi)+t_eps-xaxi)
@@ -841,7 +842,7 @@ class star_log(DataPlot):
 	print 'plotting abund boundaries'
 	ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary')
 	ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary')
-	ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary')
+#	ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary')
 
         ax.axis([xlims[0],xlims[1],ylims[0],ylims[1]])
 

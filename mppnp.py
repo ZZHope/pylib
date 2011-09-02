@@ -635,7 +635,13 @@ class se(DataPlot,Utils):
             ax.set_xlabel('$\mathrm{CYCLE}$',fontsize=fsize-1)
         # Y-axis limits and resolution:
         totalmass = []
-        m_ini = float(self.se.get('mini'))
+        try:
+            m_ini = float(self.se.get('mini'))
+        except:
+            mini=m.se.get(0,'total_mass')
+            mini=mini/constants.mass_sun
+            print 'getting Mini from 1st cycle'
+
         if yulim==0.:
             yulim = m_ini 
         dy = m_ini/float(y_res)

@@ -6,6 +6,10 @@ Utility class for holding extra methods from mesa.py, nuh5p.py
 
 '''
 
+class constants():
+	mass_sun=1.9891e+33
+	mass_sun_unit='g'
+
 class Utils():
 	
 	#List of element names and stable elements for mppnp.py
