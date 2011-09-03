@@ -433,22 +433,46 @@ class se(DataPlot,Utils):
 
         pl.show()
 
-    def kip_cont(self,cycle_end,sparse):
+    def kip_cont(self,sparse=100,cycle_range=[-1,-1],mass_range=[-1,-1],y_res=2000,t_eps=1.e0,xax='time',tzero=True):
         '''
         This function creates a Kippenhahn diagram as a contour plot of the
-        se output using convection_indicator'''
+        se output using convection_indicator
+
+        sparse         sparsity factor in cycle
+        cycle_range    all if -1,-1, otherwise range of models to take data from, assuming index 
+                       and cycle number are the same or offset only by one
+        y_res          number of equidistant mass points in y-direction onto
+                       which the data will be interpolated
+        mass_range     mass_range over which y-res points will be distributed
+        t_eps          eps to be added to final time to control detail of output at end of plotted evolution
+        xax            'time' for linear time, 'logtimerev' for log(time to end)
+        tzero          True - take age at cycle_range[0] as zero time
+        '''
 
         original_cyclelist = self.se.cycles
-        cyclelist = original_cyclelist[0:cycle_end:sparse]
+        cycle_start=cycle_range[0]
+        cycle_end=cycle_range[1]
+        if cycle_start==-1 :
+            cycle_start=0
+        if cycle_end==-1 :
+            cycle_end=len(original_cyclelist)-1
+        cyclelist = original_cyclelist[cycle_start:cycle_end:sparse]
+        xx = self.se.ages[cycle_start:cycle_end:sparse]
+        age_unit=self.get('age_unit')
+        one_year=self.get('one_year')
+        if age_unit==1.0: 
+            xx = xx/one_year
 
-        xx = self.se.ages[0:cycle_end:sparse]
+        m_min=mass_range[0]
+        m_max=mass_range[1]
+        if m_min==-1 :
+            m_min=0.
+        if m_max==-1 :
+            m_max=float(self.se.get('mini'))
 
-        totalmass = []
-        m_ini = float(self.se.get('mini'))
 
-        y_res = 2000
-        dy = m_ini/float(y_res)
-        y = np.arange(0., m_ini, dy)
+        dy = (m_max-m_min)/float(y_res)
+        y = np.arange(m_min, m_max, dy)
 
         fig = pl.figure(1)
         ax = pl.subplot(1,1,1)
@@ -511,14 +535,19 @@ class se(DataPlot,Utils):
 	                Z[f,i]=1.
 
 
+        print xx[0]
         # Set up x-axis
-        for i in range(len(xx)):
-            xx[i] = np.log10(xx[-1]-xx[i])
-        xx[-2] = xx[-3]-abs(xx[-4]-xx[-3])
-        xx[-1] = xx[-2]-abs(xx[-3]-xx[-2])
-        ax.set_xlabel('log$_{10}$(time until collapse) [yr]',fontsize=fsize)
+        if xax is 'logtimerev': 
+            xx=np.log10(np.max(xx)+t_eps-xx)                
+            ax.set_xlabel('$\log(t_{final} - t)$  $\mathrm{[yr]}$',fontsize=fsize)
+        elif xax is 'time':
+            ax.set_xlabel('$t$ $\mathrm{[yr]}$',fontsize=fsize)
+            if tzero is True:
+                print 'zero time is '+str(xx[0])
+                xx=xx-xx[0]
+                ax.set_xlabel('$t - t_0$ $\mathrm{[yr]}$',fontsize=fsize)
 
-        print xx
+        print xx[0]
 
         #cmap=mpl.cm.get_cmap('Blues')
         cmap = mpl.colors.ListedColormap(['w','b'])
@@ -526,7 +555,7 @@ class se(DataPlot,Utils):
         print 'plotting contours'
         print len(xx),len(y)
         ax.contourf(xx,y,Z, cmap=cmap, alpha=0.7)
-        ax.axis([xx[0],xx[-1],0.,float(m_ini)])
+        ax.axis([xx[0],xx[-1],m_min,m_max])
         pl.show()
 
     def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[1.0],yllim=0.,yulim=0.,y_res=2000,xllim=0.,xulim=0.,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6,outfile='',annotation=''):
@@ -613,7 +642,7 @@ class se(DataPlot,Utils):
                 xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
             else:
                 for i in range(len(cyclelist)):
-                    xxtmp[i] = self.se.ages[cycle_start:cycle_end:sparse][i]/31536000.0
+                    xxtmp[i] = self.se.ages[cycle_start:cycle_end:sparse][i]/31558149.984
         if xax == 'cycles':
             xx = cyclelist
             xxtmp = cyclelist

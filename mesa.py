@@ -414,7 +414,7 @@ class star_log(DataPlot):
                     pyl.ylim(h1_min,h1_max)
 
     def kippenhahn(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
-                       tp_agb=0.,t_eps=5.e2):
+                       tp_agb=0.,t_eps=5.e2,plot_star_mass=True,symbol_size=8):
 		''' Kippenhahn plot as a function of time or model
 		
 		num_frame    number of frame to plot this plot into 
@@ -431,6 +431,8 @@ class star_log(DataPlot):
                              ylim=[h1_min*1.-tp_agb/100 : h1_max*1.+tp_agb/100] 
                              with h1_min, h1_max the min and max H-free 
                              core mass coordinate
+                plot_star_mass    True - then plot the stellar mass as a line as well
+                symbol_size  size of convection boundary marker
                 '''
 	
 		pyl.figure(num_frame)
@@ -440,6 +442,7 @@ class star_log(DataPlot):
 		if xax == 'time':
 		    xaxisarray = self.get('star_age')
                     t0_mod=xaxisarray[t0_model]
+                    print 'zero time is '+str(t0_mod)
 		elif xax == 'model':
 		    xaxisarray = self.get('model_number')
                     t0_mod=xaxisarray[t0_model]
@@ -462,18 +465,24 @@ class star_log(DataPlot):
 	
 
 		if xax == 'time':
-		    pyl.xlabel('t / yrs')
+                    if t0_model>0:
+                        pyl.xlabel('$t - t_0$ $\mathrm{[yr]}$')
+                    else:
+                        pyl.xlabel('t / yrs')
 		elif xax == 'model':
 		    pyl.xlabel('model number')
+		elif xax == 'logtimerev':
+                    pyl.xlabel('$\log(t_{final} - t)$  $\mathrm{[yr]}$')
 	
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,h1_boundary_mass[t0_model:],label='h1_boundary_mass')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,he4_boundary_mass[t0_model:],label='he4_boundary_mass')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx1_bot[t0_model:],',r',label='conv bound')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx1_top[t0_model:],',r')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_bot[t0_model:],',r')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_top[t0_model:],',r')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='star_mass')
-		pyl.ylabel('mass coordinate')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx1_bot[t0_model:],linestyle='None',color='blue',alpha=0.3,marker='o',markersize=symbol_size,label='convection zones')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx1_top[t0_model:],linestyle='None',color='blue',alpha=0.3,marker='o',markersize=symbol_size)
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_bot[t0_model:],linestyle='None',color='blue',alpha=0.3,marker='o',markersize=symbol_size)
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_top[t0_model:],linestyle='None',color='blue',alpha=0.3,marker='o',markersize=symbol_size)
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,h1_boundary_mass[t0_model:],color='red',linewidth=2,label='H-free core')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,he4_boundary_mass[t0_model:],color='green',linewidth=2,linestyle='dashed',label='He-free core')
+                if plot_star_mass is True:
+                    pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='$M_\star$')
+		pyl.ylabel('$m_\mathrm{r}/\mathrm{M}_\odot$')
 		pyl.legend(loc=2)
                 if tp_agb > 0.:
                     h1_min = min(h1_boundary_mass[t0_model:])
