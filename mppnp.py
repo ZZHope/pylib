@@ -576,7 +576,7 @@ class se(DataPlot,Utils):
         sparse:              x-axis (timestep) sparsity;
                              true sparsity = sparse*sparse_intrinsic
                              Try 100 or 500 for .se.h5 and 20 for .out.h5 files
-                             for preliminary plots
+                             for preliminaxllimry plots
         sparse_intrinsic:    sparsity of timesteps in the data provided (usually
                              20 for .out.h5 
                              files and 1 for .se.h5 files
@@ -625,14 +625,14 @@ class se(DataPlot,Utils):
             cycle_start = int(cycle_start)/sparse_intrinsic - 1
         cyclelist = original_cyclelist[cycle_start:cycle_end:sparse]
         # Figure:
-        fig = pl.figure(1)
-        ax = pl.subplot(1,1,1)
+        fig = pl.figure()
+        ax = pl.axes()
 	params = {'axes.labelsize':  15,
           'text.fontsize':   15,
           'legend.fontsize': 15,
           'xtick.labelsize': 15,
           'ytick.labelsize': 15,
-          'text.usetex': True}
+          'text.usetex': False}
         fsize=18
 	pl.rcParams.update(params)
         # X-axis:
@@ -761,12 +761,12 @@ class se(DataPlot,Utils):
                 for k in range(0,len(plotlimits[g]),2):
                     llimit = plotlimits[g][k]
                     ulimit = plotlimits[g][k+1]
-                    if xx[i] >= 0:
-                        for f in range(y_res):
-                            if llimit<=y[f] and ulimit>y[f]:
-                                Z[f,i,g]=1.
-                    else:
-                        ax.axvline(xx[i],ymin=llimit/m_ini,ymax=ulimit/m_ini,color='#8B8386',alpha=alphas[0],linewidth=0.5)
+                    #if xx[i] >= 0:
+                    for f in range(y_res):
+                        if llimit<=y[f] and ulimit>y[f]:
+                            Z[f,i,g]=1.
+                    #else:
+                     #   ax.axvline(xx[i],ymin=llimit/m_ini,ymax=ulimit/m_ini,color='#8B8386',alpha=alphas[0],linewidth=0.5)
         # This function determines the adjacent two mass cells to a point in the
         # y-vector (which contains mass co-ordinates centre to surface, split into
         # y_res chunks), returning their index in the mass co-ordinate vector for
@@ -809,7 +809,12 @@ class se(DataPlot,Utils):
                 max_energy_gen = 0.
                 min_energy_gen = 0.
                 massco = self.se.get(cyclelist[i],'mass')
+                if len(massco) <= 10:
+                    massco=massco[0]
                 log_epsnuc = np.log10(self.se.get(cyclelist[i],netnuc_name))
+                if len(log_epsnuc) <= 2:
+                    log_epsnuc = log_epsnuc[0]
+                    print log_epsnuc
                 for f in range(len(log_epsnuc)):
                     if log_epsnuc[f] < 0.: log_epsnuc[f] = 0.
 #                print log_epsnuc
@@ -870,14 +875,15 @@ class se(DataPlot,Utils):
 #            if min_energy_gen != 0:
 #                closs = ax.contourf(xx,y,Z[:,:,2],cmap=enloss_cmap,locator=mpl.ticker.LogLocator(),alpha=engenalpha)
 #                cbarloss = pl.colorbar(closs)
-#        ax.axis([float(xx[0]),float(xx[-1]),yllim,yulim])
-        ax.axis([xllim,xulim,yllim,yulim])
+        if xllim==0. and xulim==0.:
+            ax.axis([float(xx[0]),float(xx[-1]),yllim,yulim])
+        else:
+            ax.axis([xllim,xulim,yllim,yulim])
         pl.text(0.9,0.9,annotation,horizontalalignment='right',transform = ax.transAxes,fontsize=fsize)
         pl.ylabel('$\mathrm{Mass}\;[M_\odot]$',fontsize=fsize-1)
         pl.savefig(outfile, dpi=400)
         print outfile+' is done.'
-        pl.clf()
-#        pl.show()
+        pl.show()
 
 
     def abup_se_plot(mod,species):
