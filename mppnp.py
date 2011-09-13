@@ -2860,8 +2860,8 @@ class se(DataPlot,Utils):
 	solar_factor = 2.
 	u.solar('iniab1.0E-02.ppn_GN93',solar_factor)
 
-	stable_isotope_identifier=u.jjdum
-	stable_isotope_list=u.stable
+	self.stable_isotope_identifier=u.jjdum
+	self.stable_isotope_list=u.stable
 		
 
 	self.element_abundance_not_decayed=[]
@@ -2870,7 +2870,7 @@ class se(DataPlot,Utils):
 	for i in range(len(masses_for_this_cycle)):
 		mass_fractions_array_decayed = decayed_multi_d[i]
 		mass_fractions_array_not_decayed = mass_frac[i]
-		u.element_abund_marco(2,stable_isotope_list,stable_isotope_identifier,mass_fractions_array_not_decayed,mass_fractions_array_decayed)
+		u.element_abund_marco(2,self.stable_isotope_list,self.stable_isotope_identifier,mass_fractions_array_not_decayed,mass_fractions_array_decayed)
 		self.element_abundance_not_decayed.append(u.elem_abund)
 		self.element_abundance_decayed.append(u.elem_abund_decayed)
 		self.element_production_factors.append(u.elem_prod_fac)
