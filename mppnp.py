@@ -2822,10 +2822,12 @@ class se(DataPlot,Utils):
     	import utils as u
 
 	# provide library for Z versus element names, and Z for elements        
-	element_name = self.se.elements
+	#element_name = self.se.elements
+	element_name = self.elements_names
 	u.give_zip_element_z_and_names(element_name)
 	self.z_of_element_name = u.index_z_for_elements      
-
+	# notice that z is not the element index! Z and indexing of elements can be different
+	
 
     def get_abundance_iso_decay(self,cycle):
     	''' returns the decayed stable isotopes.
@@ -2838,6 +2840,9 @@ class se(DataPlot,Utils):
 
         u.stable_specie()
         self.decay(mass_frac)
+
+	self.index_for_all_species = u.cl
+	self.index_for_stable_species = u.back_ind
 
 	self.decayed_stable_isotopes_per_cycle = decayed_multi_d	
 
