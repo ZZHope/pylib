@@ -2872,6 +2872,7 @@ class se(DataPlot,Utils):
 	self.element_abundance_not_decayed=[]
 	self.element_abundance_decayed =[]
 	self.element_production_factors=[]
+	self.element_production_factors_decayed=[]
 	for i in range(len(masses_for_this_cycle)):
 		mass_fractions_array_decayed = decayed_multi_d[i]
 		mass_fractions_array_not_decayed = mass_frac[i]
@@ -2879,6 +2880,7 @@ class se(DataPlot,Utils):
 		self.element_abundance_not_decayed.append(u.elem_abund)
 		self.element_abundance_decayed.append(u.elem_abund_decayed)
 		self.element_production_factors.append(u.elem_prod_fac)
+		self.element_production_factors_decayed.append(u.elem_prod_fac_decayed)
 		
 	#self.decayed_stable_isotopes_per_cycle = decayed_multi_d	
 	
