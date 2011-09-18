@@ -1245,7 +1245,7 @@ class se(DataPlot,Utils):
                     for j in range(len(u.decay_raw[i])):             
                         try:    
                             dum_str = u.decay_raw[i][j]    
-                            dummy = dummy + float(mass_frac[iii][u.cl[dum_str.lower().capitalize()]])
+                            dummy = dummy + float(self.mass_frac[iii][u.cl[dum_str.lower().capitalize()]])
 			    #print cl[dum_str.lower().capitalize()]		
                             #print dum_str, mass_frac[iii][cl[dum_str.capitalize()]]
                         except KeyError:
@@ -2783,7 +2783,7 @@ class se(DataPlot,Utils):
             		temp = 0.
             		for i in range(len(used_masses)-1):
 	        		dm_i = abs(used_masses[i+1]-used_masses[i])
-            			temp = float(mass_frac[i][j]*dm_i/dm_tot) + temp
+            			temp = float(self.mass_frac[i][j]*dm_i/dm_tot) + temp
             		average_mass_frac.append(temp)
         	#print average_mass_frac
     	elif  len(used_masses) == 1:
@@ -2906,7 +2906,7 @@ class se(DataPlot,Utils):
 	self.element_production_factors_decayed=[]
 	for i in range(len(masses_for_this_cycle)):
 		mass_fractions_array_decayed = decayed_multi_d[i]
-		mass_fractions_array_not_decayed = mass_frac[i]
+		mass_fractions_array_not_decayed = self.mass_frac[i]
 		u.element_abund_marco(2,self.stable_isotope_list,self.stable_isotope_identifier,mass_fractions_array_not_decayed,mass_fractions_array_decayed)
 		self.element_abundance_not_decayed.append(u.elem_abund)
 		self.element_abundance_decayed.append(u.elem_abund_decayed)
