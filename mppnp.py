@@ -1216,12 +1216,11 @@ class se(DataPlot,Utils):
 
         global used_masses
         used_masses = []
-        global mass_frac
-        mass_frac = []
+        self.mass_frac = []
         for i in range(len(masses)):
             if mass_range[0] <=  masses[i]  and mass_range[1] >=  masses[i] :
                 used_masses.append(masses[i])
-            	mass_frac.append(abunds[i])
+            	self.mass_frac.append(abunds[i])
 
 
     def decay(self,mass_frac):
@@ -2765,7 +2764,7 @@ class se(DataPlot,Utils):
     	#print spe
     	if i_decay == 2:
         	u.stable_specie()
-        	self.decay(mass_frac)
+        	self.decay(self.mass_frac)
 
 
     
@@ -2839,12 +2838,44 @@ class se(DataPlot,Utils):
     	self.read_iso_abund_marco([min(masses_for_this_cycle),max(masses_for_this_cycle)],cycle)
 
         u.stable_specie()
-        self.decay(mass_frac)
+        self.decay(self.mass_frac)
 
 	self.index_for_all_species = u.cl
 	self.index_for_stable_species = u.back_ind
 
 	self.decayed_stable_isotopes_per_cycle = decayed_multi_d	
+
+	# from here read solar abundances
+	solar_factor = 2.
+	u.solar('iniab1.0E-02.ppn_GN93',solar_factor)
+
+	self.stable_isotope_identifier=u.jjdum
+	self.stable_isotope_list=u.stable
+
+	self.isotopic_production_factors=[]
+	for i in range(len(masses_for_this_cycle)):
+		pf_dum=[]
+		jj=0
+    		for j in range(len(self.stable_isotope_identifier)):
+        		if self.stable_isotope_identifier[j] == 1:
+            			pf_dum.append(float(self.mass_frac[i][self.index_for_all_species[self.stable_isotope_list
+[jj].capitalize()]]/u.solar_abundance[self.stable_isotope_list[jj].lower()]))
+				jj=jj+1
+        		#elif self.stable_isotope_identifier[j] == 0:
+            		#	pf_dum.append(float(0.))
+		self.isotopic_production_factors.append(pf_dum)	
+
+	self.isotopic_production_factors_decayed=[]
+	for i in range(len(masses_for_this_cycle)):
+		pf_dum_d=[]
+		jj=0
+    		for j in range(len(self.stable_isotope_identifier)):
+        		if self.stable_isotope_identifier[j] == 1:
+				pf_dum_d.append(float(self.decayed_stable_isotopes_per_cycle[i][self.index_for_stable_species[self.stable_isotope_list
+[jj].upper()]]/u.solar_abundance[self.stable_isotope_list[jj].lower()]))
+				jj=jj+1
+	        self.isotopic_production_factors_decayed.append(pf_dum_d)	
+
 
 
     def get_abundance_elem(self,cycle):
@@ -2856,7 +2887,7 @@ class se(DataPlot,Utils):
     	self.read_iso_abund_marco([min(masses_for_this_cycle),max(masses_for_this_cycle)],cycle)
 
         u.stable_specie()
-        self.decay(mass_frac)
+        self.decay(self.mass_frac)
 
 	# provide library for Z versus element names, and Z for elements        	
 	element_name = self.se.elements
