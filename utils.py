@@ -121,6 +121,7 @@ def solar(filename_solar,solar_factor):
 
 
 
+    z_bismuth = 83
     global solar_elem_abund
     solar_elem_abund = np.zeros(z_bismuth)
 
