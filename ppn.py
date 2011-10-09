@@ -110,15 +110,17 @@ class xtime(DataPlot):
 		cols.append(line[15:17])
 		cols.append(line[23:26])
 		cols.append('sum_yps')
-		cols.append('NEUT')
-		cols.append('PROT')
-		i=81
-		ispec=2
+		cols.append('ye')
+		i=68
+		ispec=0
 		while True:
 		    if line[i:i+5] is '':
 			break
 		    else:
-			cols.append(line[i:i+5])
+                        this_header=line[i:i+5]
+                        if this_header[4] is ' ':
+                            this_header=this_header[0:4]
+			cols.append(this_header)
 			ispec+=1
 			i+=13
 		print "There are "+str(ispec)+" species found."

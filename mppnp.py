@@ -558,7 +558,7 @@ class se(DataPlot,Utils):
         ax.axis([xx[0],xx[-1],m_min,m_max])
         pl.show()
 
-    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[1.0],yllim=0.,yulim=0.,y_res=2000,xllim=0.,xulim=0.,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6,outfile='',annotation=''):
+    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[1.0],yllim=0.,yulim=0.,y_res=2000,xllim=0.,xulim=0.,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6,outfile='plot.pdf',annotation=''):
         '''
         This function creates a Kippenhahn diagram as a contour plot of the
         .se.h5 or .out.h5 files using any continuous variable (columns in the
@@ -881,7 +881,7 @@ class se(DataPlot,Utils):
             ax.axis([xllim,xulim,yllim,yulim])
         pl.text(0.9,0.9,annotation,horizontalalignment='right',transform = ax.transAxes,fontsize=fsize)
         pl.ylabel('$\mathrm{Mass}\;[M_\odot]$',fontsize=fsize-1)
-        pl.savefig(outfile, dpi=400)
+        pl.savefig(outfile)
         print outfile+' is done.'
         pl.show()
 

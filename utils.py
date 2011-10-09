@@ -6,6 +6,10 @@ Utility class for holding extra methods from mesa.py, nuh5p.py
 
 '''
 
+import numpy as np
+import scipy as sc
+import ascii_table as att
+
 class constants():
 	mass_sun=1.9891e+33
 	mass_sun_unit='g'
@@ -21,6 +25,112 @@ class Utils():
 	    'W','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu']
 
     	stable_el = [['Neutron','999'],['H',1, 2],['He', 3, 4],['Li', 6, 7],['Be', 9],['B', 10, 11],['C', 12, 13],['N', 14, 15],['O', 16, 17, 18],['F', 19],['Ne', 20, 21, 22],['Na', 23],['Mg', 24, 25, 26],['Al', 27],['Si', 28, 29, 30],['P', 31],['S', 32, 33, 34, 36],['Cl', 35, 37],['Ar', 36, 38, 40],['K', 39, 40, 41],['Ca', 40, 42, 43, 44, 46, 48],['Sc', 45],['Ti', 46, 47, 48, 49, 50],['V', 50, 51],['Cr', 50, 52, 53, 54],['Mn', 55],['Fe', 54, 56, 57, 58],['Co', 59],['Ni', 58, 60, 61, 62, 64],['Cu', 63, 65],['Zn', 64, 66, 67, 68, 70],['Ga', 69, 71],['Ge', 70, 72, 73, 74, 76],['As', 75],['Se', 74, 76, 77, 78, 80, 82],['Br', 79, 81],['Kr', 78, 80, 82, 83, 84, 86],['Rb', 85, 87],['Sr', 84, 86, 87, 88],['Y', 89],['Zr', 90, 91, 92, 94, 96],['Nb', 93],['Mo', 92, 94, 95, 96, 97, 98, 100],['Tc',999],['Ru', 96, 98, 99, 100, 101, 102, 104],['Rh', 103],['Pd', 102, 104, 105, 106, 108, 110],['Ag', 107, 109],['Cd', 106, 108, 110, 111, 112, 113, 114, 116],['In', 113, 115],['Sn', 112, 114, 115, 116, 117, 118, 119, 120, 122, 124],['Sb', 121, 123],['Te', 120, 122, 123, 124, 125, 126, 128, 130],['I', 127],['Xe', 124, 126, 128, 129, 130, 131, 132, 134, 136],['Cs', 133],['Ba', 130, 132, 134, 135, 136, 137, 138],['La', 138, 139],['Ce', 136, 138, 140, 142],['Pr', 141],['Nd', 142, 143, 144, 145, 146, 148, 150],['Pm',999],['Sm', 144, 147, 148, 149, 150, 152, 154],['Eu', 151, 153],['Gd', 152, 154, 155, 156, 157, 158, 160],['Tb', 159],['Dy', 156, 158, 160, 161, 162, 163, 164],['Ho', 165],['Er', 162, 164, 166, 167, 168, 170],['Tm', 169],['Yb', 168, 170, 171, 172, 173, 174, 176],['Lu', 175, 176],['Hf', 174, 176, 177, 178, 179, 180],['Ta', 180, 181],['W', 180, 182, 183, 184, 186],['Re', 185, 187],['Os', 184, 186, 187, 188, 189, 190, 192],['Ir', 191, 193],['Pt', 190, 192, 194, 195, 196, 198],['Au', 197],['Hg', 196, 198, 199, 200, 201, 202, 204],['Tl', 203, 205],['Pb', 204, 206, 207, 208],['Bi', 209],['Th', 232],['U',235,238]] 
+
+class iniabu():
+	'''
+	This class in the utils package reads an abundance
+	distribution file of the type iniab.dat. It then provides you
+	with methods to change some abundances, modify, normalise and
+	eventually write out the final distribution in a format that
+	can be used as an initial abundance file for ppn.
+	'''
+	# clean variables that we will use in this class
+	
+	filename = ''
+    
+	def __init__(self,filename):
+		'''
+		Init method will read file of type iniab.dat, as they are for
+		example found in the frames/mppnp/USEPP directory.
+
+		An instance of this class will have the following data arrays
+		z      charge number
+		a      mass number
+		abu    abundance
+		names  name of species
+		habu   a hash array opf abundances, referenced by species name
+
+		E.g. if x is an instance then x.names[4] gives you the name of
+		species 4, and x.habu['c  12'] gives you the abundance of C12. Note,
+		that you have to use the species names as they are provided in the
+		iniabu.dat file.
+		'''
+		f0=open(filename)
+		sol=f0.readlines()
+		f0.close 
+
+		# Now read in the whole file and create a hashed array:
+		names=[]
+		z=[]    
+                yps=np.zeros(len(sol))
+                mass_number=np.zeros(len(sol))
+		for i in range(len(sol)):
+		    z.append(int(sol[i][1:3]))
+		    names.extend([sol[i].split("         ")[0][4:]])
+		    yps[i]=float(sol[i].split("         ")[1])
+		    try:
+			mass_number[i]=int(names[i][2:5])
+		    except ValueError:
+			print "WARNING:"
+			print "This initial abundance file uses an element name that does"
+			print "not contain the mass number in the 3rd to 5th position."
+			print "It is assumed that this is the proton and we will change"
+			print "the name to 'h   1' to be consistent with the notation used"
+			print "in iniab.dat files"
+			names[i]='h   1'
+		    mass_number[i]=int(names[i][2:5])
+		# now zip them together:
+                hash_abu={}
+                hash_index={}
+		for a,b in zip(names,yps):
+		   hash_abu[a] = b
+
+		for i in range(len(names)):
+		   hash_index[names[i]] = i
+
+		self.z=z
+		self.abu=yps
+		self.a=mass_number
+		self.names=names
+		self.habu=hash_abu
+		self.hindex=hash_index
+
+	def write(self,outfile='initial_abundance.dat',header_string='initial abundances for a PPN run'):
+		'''
+		Write initial abundance file
+
+                outfile          name of output file
+		header_string    srting with header line
+		'''
+		dcols=['Z', 'species','mass fraction']
+		data=[self.z,self.names,self.abu]
+		hd=[header_string]
+		att.write(outfile,hd,dcols,data)
+
+
+	def set_and_normalize(self,species_hash):
+		'''
+		species_hash is a hash array in which you provide
+		abundances referenced by species names that you want
+		to set to some particular value; all other species are
+		then normalised so that that the total sum is 1
+
+		You can set up the argument array for this method for
+		example in the following way:		
+		In [117]: sp={}
+		In [118]: sp['he  4']=0.2
+		In [119]: sp['h   1']=0.5
+		'''
+		sum_before = 1.
+		for i in range(len(species_hash)):
+			sum_before -=  self.abu[self.hindex[species_hash.keys()[i]]]
+		normalization_factor=(1.-sum(species_hash.values()))/sum_before
+		print "normalizing the rest witih factor "+str(normalization_factor)
+		self.abu *= normalization_factor
+		for i in range(len(species_hash)):
+			self.abu[self.hindex[species_hash.keys()[i]]]=species_hash.values()[i]
+		for name in self.habu:
+			self.habu[name]=self.abu[self.hindex[name]]
 
 def close_wins(win_min,win_max):
 	''' close all windows in a certain window number range
@@ -71,9 +181,7 @@ def make_list(default_symbol_list,len_list_to_print):
 	default_symbol_list = list of symbols that the user choose to use.  	    	
 	len_list_to_print   = len of list of species/arrays to print.
 	'''
-
-	import scipy as sc
-
+	
 	symbol_used = []
 	for i in range(len_list_to_print):
 		symbol_used.append(default_symbol_list[sc.mod(i,len(default_symbol_list))])
@@ -81,14 +189,14 @@ def make_list(default_symbol_list,len_list_to_print):
 	return symbol_used
 		
 def solar(filename_solar,solar_factor):
-    ''' read solar abundances from filename_solar.
-    solar_factor is the correction factor to apply, in case filename_solar is not solar,
-    but some file used to get initial abundances at metallicity lower than solar. However, notice 
-    that this is really  rude, since alpha-enahncements and things like that are not properly considered.
-    Only H and He4 are not multiplied. So, for publications PLEASE use proper filename_solar at...solar, and 
-    use solar_factor = 1. Marco 	 '''
-
-    import numpy as np	
+    ''' read solar abundances from filename_solar. solar_factor is
+    the correction factor to apply, in case filename_solar is not
+    solar, but some file used to get initial abundances at metallicity
+    lower than solar. However, notice that this is really rude, since
+    alpha-enahncements and things like that are not properly
+    considered.  Only H and He4 are not multiplied. So, for
+    publications PLEASE use proper filename_solar at...solar, and use
+    solar_factor = 1. Marco'''
 
     f0=open(filename_solar)
     sol=f0.readlines()
@@ -106,7 +214,17 @@ def solar(filename_solar,solar_factor):
         z_sol.append(int(sol[i][1:3]))
         names_sol.extend([sol[i].split("         ")[0][4:]])
         yps[i]=float(sol[i].split("         ")[1]) * solar_factor
-        mass_number[i]=int(names_sol[i][2:5])
+        try:
+		mass_number[i]=int(names_sol[i][2:5])
+	except ValueError:
+		print "WARNING:"
+		print "This initial abundance file uses an element name that does"
+		print "not contain the mass number in the 3rd to 5th position."
+		print "It is assumed that this is the proton and we will change"
+		print "the name to 'h   1' to be consistent with the notation used in"
+		print "iniab.dat files"
+		names_sol[i]='h   1'
+		mass_number[i]=int(names_sol[i][2:5])
 	if mass_number[i] == 1 or mass_number[i] == 4:
 		yps[i] = yps[i]/solar_factor
     #  convert 'h   1' in prot, not needed any more??
@@ -134,13 +252,14 @@ def solar(filename_solar,solar_factor):
     	solar_elem_abund[i] = dummy
 
 
-def   convert_specie_naming_from_h5_to_ppn(isotope_names):
-    	''' read isotopes names from h5 files, and convert them according to standard scheme used inside ppn and mppnp.
-    	Also Z and A are recalculated, for these species. Isomers are excluded for now, since there were recent changes 
-    	in isomers name. As soon as the isomers names are settled, than Z and A provided here will be obsolete, and can be
-    	changed by usual Z and A. 	 '''
-
-	import numpy as np
+def convert_specie_naming_from_h5_to_ppn(isotope_names):
+	''' read isotopes names from h5 files, and convert them
+    	according to standard scheme used inside ppn and mppnp.  Also
+    	Z and A are recalculated, for these species. Isomers are
+    	excluded for now, since there were recent changes in isomers
+    	name. As soon as the isomers names are settled, than Z and A
+    	provided here will be obsolete, and can be changed by usual Z
+    	and A.  '''
 
         spe_rude1 = []
         spe_rude2 = []
