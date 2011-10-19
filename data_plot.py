@@ -539,10 +539,10 @@ class DataPlot:
 			else:
 				name='AbuChart'
 			if not pdf:
-				pl.savefig(name+str(cyclist[i])+'.png', dpi=400)
+				pl.savefig(name+str(cyclist[i])+'.png', dpi=200)
 			else:
-				pl.savefig(name+cyclist[i]+'.pdf', dpi=400)
-			pl.clf()
+				pl.savefig(name+cyclist[i]+'.pdf', dpi=200)
+			pl.close()
 		
 		return None
 	#from mppnp.se

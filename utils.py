@@ -13,7 +13,9 @@ import ascii_table as att
 class constants():
 	mass_sun=1.9891e+33
 	mass_sun_unit='g'
-	one_year=31558149.984	
+	one_year=31558149.984
+	avogadro=6.02214179e23
+	avogadro_unit='mol^-1'
 class Utils():
 	
 	#List of element names and stable elements for mppnp.py
@@ -124,6 +126,7 @@ class iniabu():
 		sum_before = 1.
 		for i in range(len(species_hash)):
 			sum_before -=  self.abu[self.hindex[species_hash.keys()[i]]]
+		print "sum_before = "+str(sum_before)
 		normalization_factor=(1.-sum(species_hash.values()))/sum_before
 		print "normalizing the rest witih factor "+str(normalization_factor)
 		self.abu *= normalization_factor
