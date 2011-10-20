@@ -209,10 +209,10 @@ class abu_vector(DataPlot,Utils):
 	
 	To find the data column attributes
 	>>> p.dcols
-	['NUM', 'Z', 'A', 'ISOM', 'ABUNDNACE_MF', 'ISOTP']
+	['NUM', 'Z', 'A', 'ISOM', 'ABUNDANCE_MF', 'ISOTP']
 	>>> p.get('Z',0)
 	array([1, 2, 2, 4, 5, 3, 6, 6, 7, 7, 6, 7, 8, 8, 8, 9, 9, 9])
-	>>> p.get('ABUNDNACE_MF',0)
+	>>> p.get('ABUNDANCE_MF',0)
 	array([  1.43722000e-10,   1.00000000e-99,   9.81499000e-01,
          4.08738000e-20,   1.00000000e-99,   2.06944000e-21,
          3.42800000e-04,   9.62307000e-05,   1.05081000e-12,
@@ -221,7 +221,7 @@ class abu_vector(DataPlot,Utils):
          9.85201000e-17,   6.30866000e-16,   9.12726000e-11])
          
         or if the user wants the data from the first 3 cycles:
-        >>> p.get('ABUNDNACE_MF',[0,1,2])
+        >>> p.get('ABUNDANCE_MF',[0,1,2])
         [array([  1.43722000e-10,   ...,   9.81499000e-01,],
         array([  1.43722000e-10,   ...,   9.81499000e-01,],
         array([  1.43722000e-10,   ...,   9.81499000e-01,]

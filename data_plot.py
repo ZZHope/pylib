@@ -641,7 +641,7 @@ class DataPlot:
 			zin=self.get('Z',cycle)
 			for i in xrange(len(nin)):
 				nin[i]=nin[i]-zin[i]
-			yin=self.get('ABUNDNACE_MF',cycle)
+			yin=self.get('ABUNDANCE_MF',cycle)
 			isom=self.get('ISOM',cycle)
 			
 			if mass_range != None:
@@ -1116,11 +1116,11 @@ class DataPlot:
 			a=self.get('A', cycle) #mass
 			isomers=self.get('ISOM', cycle)
 			if ref > -2:
-				yps=self.get('ABUNDNACE_MF', cycle)
+				yps=self.get('ABUNDANCE_MF', cycle)
 			if ref == -2:
 				yps=given_abund_array
 			if ref >-1:
-				ypsRef=self.get('ABUNDNACE_MF', ref)
+				ypsRef=self.get('ABUNDANCE_MF', ref)
 			if stringRef:
 				ypsRef=self.read(fileName )
 				tmpypsRef=zeros(len(yps))
