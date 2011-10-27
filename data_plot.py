@@ -33,7 +33,7 @@ class DataPlot:
 	def classTest(self):
 		'''
 		Determines what the type of class instance the subclass is, so
-		we can dynically determine the behaviour of methods.
+		we can dynamically determine the behaviour of methods.
 		
 		This method NEEDS to be modified if any names of files or classes
 		are changed
@@ -1174,7 +1174,6 @@ class DataPlot:
 					else:
 						
 						yps[i]=yps[i]/1e-99
-			tmp1=[]
 			tmp=[]
 			isom=[]
 			

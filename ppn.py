@@ -289,7 +289,7 @@ class abu_vector(DataPlot,Utils):
 			self.files[i]=self.sldir+self.files[i]
 		print str(len(self.files))+' cycle numbers found in '+sldir
 		print 'Rangeing from 0 to '+str(len(self.files)-1)
-		isotops=self.get(self.dcols[-1],0)
+		self.isotopes=self.get('ISOTP',0)
 		
 	
 	def getCycleData(self,attri,fname,numType='cycNum'):
@@ -385,8 +385,8 @@ class abu_vector(DataPlot,Utils):
 					data.append(tmp1+'-'+tmp2)
 				elif tmp=='PROT':
 					data.append('H-1')
-				elif tmp==('NEUT'or'NEUTR'or'nn'or'N   1'):
-					data.append('NEUT')
+				elif tmp==('NEUT'or'NEUTR'or'nn'or'N   1'or'N-1'):
+					data.append('N-1')
 				else:
 					data.append(tmp)
 			elif index==0:
