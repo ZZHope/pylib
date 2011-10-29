@@ -198,12 +198,12 @@ def strictly_monotonic(bb):
     decay_index_pointer. This method removes all entries <= -, then
     all dubliates and finally returns a sorted list of indices.
     '''
-    cc=bb[where(bb>=0)]
+    cc=bb[np.where(bb>=0)]
     cc.sort()
     dc=cc[1:]-cc[:-1] # subsequent equal entries have 0 in db
-    dc=insert(dc,0,1) # the first element is always unique (the second occurence is the dublicate)
-    dc_mask=ma.masked_equal(dc,0)
-    return ma.array(cc,mask=dc_mask.mask).compressed()
+    dc=np.insert(dc,0,1) # the first element is always unique (the second occurence is the dublicate)
+    dc_mask=np.ma.masked_equal(dc,0)
+    return np.ma.array(cc,mask=dc_mask.mask).compressed()
 
 def solar(filename_solar,solar_factor):
     ''' read solar abundances from filename_solar. solar_factor is
