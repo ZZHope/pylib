@@ -1122,7 +1122,7 @@ class DataPlot:
 			if ref >-1:
 				ypsRef=self.get('ABUNDANCE_MF', ref)
 			if stringRef:
-				ypsRef=self.read(fileName )
+                                ypsRef=self.read(fileName )
 				tmpypsRef=zeros(len(yps))
 				for i in xrange(len(z)):
 					for j in xrange(len(ypsRef['z'])):
@@ -1140,30 +1140,16 @@ class DataPlot:
 				ypsRef=tmpypsRef
 				
 			if amass_range != None:
-				tmpA=[]
-				tmpZ=[]
-				tmpIso=[]
-				tmpIsom=[]
-				tmpyps=[]
-				tmpypsRef=[]
-				for i in xrange(len(a)):
-					if (a[i] >=amass_range[0] and a[i]<=amass_range[1]):
-						tmpA.append(a[i])
-						tmpZ.append(z[i])
-						tmpIso.append(isotope_to_plot[i])
-						tmpIsom.append(isomers[i])
-						tmpyps.append(yps[i])
-						if ref >-1 or stringRef:
-							tmpypsRef.append(ypsRef[i])
-				isotope_to_plot=tmpIso
-				z=tmpZ
-				a=tmpA
-				isomers=tmpIsom
-				yps=tmpyps
-				ypsRef=tmpypsRef
+                                a=ma.masked_outside(a,amass_range[0],amass_range[1])
+				isotope_to_plot=ma.array(isotope_to_plot,mask=a.mask)
+				z=ma.array(z,mask=a.mask)
+				isomers=ma.array(isomers,mask=a.mask)
+				yps=ma.array(yps,mask=a.mask)
+                                if ref >-1 or stringRef:
+				    ypsRef=ma.array(ypsRef,mask=a.mask)
 				
 			if ref >-1 and len(yps)!=len(ypsRef):
-				print 'Refrence Cycle mismatch, Aborting plot'
+                                print 'Refrence Cycle mismatch, Aborting plot'
 				return None
 			
 				
