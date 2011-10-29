@@ -1111,6 +1111,13 @@ class DataPlot:
 			
 			
 		elif plotType=='PPN':
+			print "This method adds the following variables to the instance:"
+			print "a_iso_to_plot      mass number of plotted range of species"
+			print "isotope_to_plot    corresponding list of isotopes"
+			print "z_iso_to_plot      corresponding charge numbers"
+			print "el_iso_to_plot     corresponding element names"
+			print "abunds             corresponding abundances"
+
 			isotope_to_plot = self.get('ISOTP', cycle)
 			z=self.get('Z', cycle) #charge
 			a=self.get('A', cycle) #mass
@@ -1139,14 +1146,6 @@ class DataPlot:
 							
 				ypsRef=tmpypsRef
 				
-			if amass_range != None:
-                                a=ma.masked_outside(a,amass_range[0],amass_range[1])
-				isotope_to_plot=ma.array(isotope_to_plot,mask=a.mask)
-				z=ma.array(z,mask=a.mask)
-				isomers=ma.array(isomers,mask=a.mask)
-				yps=ma.array(yps,mask=a.mask)
-                                if ref >-1 or stringRef:
-				    ypsRef=ma.array(ypsRef,mask=a.mask)
 				
 			if ref >-1 and len(yps)!=len(ypsRef):
                                 print 'Refrence Cycle mismatch, Aborting plot'
@@ -1162,10 +1161,17 @@ class DataPlot:
 						yps[i]=yps[i]/1e-99
 			tmp=[]
 			isom=[]
-			
+
+			# Below there is a treatment of isomers, which
+			# is not correct. If you are interested in the
+			# correct plotting and treatement of isomers
+			# some decisions about nameing standards, and
+			# probably modifications to the decay routine
+			# need to be made. Presently isomers are
+			# ignored here.
 			for i in range (len(isotope_to_plot)):
 				if z[i]!=0 and isomers[i]==1: #if its not 'NEUt and not an isomer'
-					tmp.append([self.elements_names[int(z[i])]+'-'+str(int(a[i])),yps[i]])
+					tmp.append([self.elements_names[int(z[i])]+'-'+str(int(a[i])),yps[i],z[i],a[i]])
 				elif isomers[i]!=1: #if it is an isomer
 					
 					if yps[i]==0:
@@ -1174,16 +1180,35 @@ class DataPlot:
 					else:
 						isom.append([self.elements_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)),yps[i]])	
 					
-			
 			tmp.sort(self.compar)
 			tmp.sort(self.comparator)
 			
 			abunds=[]
 			isotope_to_plot=[]
+			z_iso_to_plot=[]
+			a_iso_to_plot=[]
+			el_iso_to_plot=[]
 			for i in xrange(len(tmp)):
 				isotope_to_plot.append(tmp[i][0])
 				abunds.append(tmp[i][1])
-			
+				z_iso_to_plot.append(int(tmp[i][2]))
+				a_iso_to_plot.append(int(tmp[i][3]))
+				el_iso_to_plot.append(self.elements_names[int(tmp[i][2])])
+
+			if amass_range != None:
+				aa=ma.masked_outside(a_iso_to_plot,amass_range[0],amass_range[1])
+				isotope_to_plot=ma.array(isotope_to_plot,mask=aa.mask).compressed()
+				z_iso_to_plot=ma.array(z_iso_to_plot,mask=aa.mask).compressed()
+				el_iso_to_plot=ma.array(el_iso_to_plot,mask=aa.mask).compressed()
+				abunds=ma.array(abunds,mask=aa.mask).compressed()
+				a_iso_to_plot=aa.compressed()
+
+			self.a_iso_to_plot=a_iso_to_plot
+			self.isotope_to_plot=isotope_to_plot
+			self.z_iso_to_plot=z_iso_to_plot
+			self.el_iso_to_plot=el_iso_to_plot
+			self.abunds=abunds
+
 		else:
 			print 'This method, iso_abund, is not supported by this class'
 			print 'Returning None'
