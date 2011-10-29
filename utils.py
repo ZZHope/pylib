@@ -16,6 +16,7 @@ class constants():
 	one_year=31558149.984
 	avogadro=6.02214179e23
 	avogadro_unit='mol^-1'
+
 class Utils():
 	
 	#List of element names and stable elements for mppnp.py
@@ -191,6 +192,19 @@ def make_list(default_symbol_list,len_list_to_print):
 			
 	return symbol_used
 		
+def strictly_monotonic(bb):
+    '''bb is an index array which may have numerous double or triple
+    occurrences of indices, such as for example the
+    decay_index_pointer. This method removes all entries <= -, then
+    all dubliates and finally returns a sorted list of indices.
+    '''
+    cc=bb[where(bb>=0)]
+    cc.sort()
+    dc=cc[1:]-cc[:-1] # subsequent equal entries have 0 in db
+    dc=insert(dc,0,1) # the first element is always unique (the second occurence is the dublicate)
+    dc_mask=ma.masked_equal(dc,0)
+    return ma.array(cc,mask=dc_mask.mask).compressed()
+
 def solar(filename_solar,solar_factor):
     ''' read solar abundances from filename_solar. solar_factor is
     the correction factor to apply, in case filename_solar is not
