@@ -18,8 +18,14 @@ class constants():
 	avogadro_unit='mol^-1'
 
 class Utils():
-	
-	#List of element names and stable elements for mppnp.py
+	'''This private class contains utilities that are used by methods,
+	mostly in the ppn and mppnp classes. Users what normally not use these
+	methods directly. Things go here when it can be imagined that they may
+	be used not in immediate conjunction with plotting. Otherwise they
+	would go into the superclass data_plot.'''
+
+	#elements_names is marked for deletion (FH, Oct2011) and
+	#should be replaced with self.stable_names from self._stable_names()
 	elements_names = ['Neutron','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al',
 	    'Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni',
 	    'Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc',
@@ -27,7 +33,234 @@ class Utils():
 	    'Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta',
 	    'W','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu']
 
-    	stable_el = [['Neutron','999'],['H',1, 2],['He', 3, 4],['Li', 6, 7],['Be', 9],['B', 10, 11],['C', 12, 13],['N', 14, 15],['O', 16, 17, 18],['F', 19],['Ne', 20, 21, 22],['Na', 23],['Mg', 24, 25, 26],['Al', 27],['Si', 28, 29, 30],['P', 31],['S', 32, 33, 34, 36],['Cl', 35, 37],['Ar', 36, 38, 40],['K', 39, 40, 41],['Ca', 40, 42, 43, 44, 46, 48],['Sc', 45],['Ti', 46, 47, 48, 49, 50],['V', 50, 51],['Cr', 50, 52, 53, 54],['Mn', 55],['Fe', 54, 56, 57, 58],['Co', 59],['Ni', 58, 60, 61, 62, 64],['Cu', 63, 65],['Zn', 64, 66, 67, 68, 70],['Ga', 69, 71],['Ge', 70, 72, 73, 74, 76],['As', 75],['Se', 74, 76, 77, 78, 80, 82],['Br', 79, 81],['Kr', 78, 80, 82, 83, 84, 86],['Rb', 85, 87],['Sr', 84, 86, 87, 88],['Y', 89],['Zr', 90, 91, 92, 94, 96],['Nb', 93],['Mo', 92, 94, 95, 96, 97, 98, 100],['Tc',999],['Ru', 96, 98, 99, 100, 101, 102, 104],['Rh', 103],['Pd', 102, 104, 105, 106, 108, 110],['Ag', 107, 109],['Cd', 106, 108, 110, 111, 112, 113, 114, 116],['In', 113, 115],['Sn', 112, 114, 115, 116, 117, 118, 119, 120, 122, 124],['Sb', 121, 123],['Te', 120, 122, 123, 124, 125, 126, 128, 130],['I', 127],['Xe', 124, 126, 128, 129, 130, 131, 132, 134, 136],['Cs', 133],['Ba', 130, 132, 134, 135, 136, 137, 138],['La', 138, 139],['Ce', 136, 138, 140, 142],['Pr', 141],['Nd', 142, 143, 144, 145, 146, 148, 150],['Pm',999],['Sm', 144, 147, 148, 149, 150, 152, 154],['Eu', 151, 153],['Gd', 152, 154, 155, 156, 157, 158, 160],['Tb', 159],['Dy', 156, 158, 160, 161, 162, 163, 164],['Ho', 165],['Er', 162, 164, 166, 167, 168, 170],['Tm', 169],['Yb', 168, 170, 171, 172, 173, 174, 176],['Lu', 175, 176],['Hf', 174, 176, 177, 178, 179, 180],['Ta', 180, 181],['W', 180, 182, 183, 184, 186],['Re', 185, 187],['Os', 184, 186, 187, 188, 189, 190, 192],['Ir', 191, 193],['Pt', 190, 192, 194, 195, 196, 198],['Au', 197],['Hg', 196, 198, 199, 200, 201, 202, 204],['Tl', 203, 205],['Pb', 204, 206, 207, 208],['Bi', 209],['Th', 232],['U',235,238]] 
+    	stable_el = [['Neutron','999'],['H',1, 2],['He', 3, 4],['Li', 6, 7],['Be', 9],
+		     ['B', 10, 11],['C', 12, 13],['N', 14, 15],['O', 16, 17, 18],['F', 19],
+		     ['Ne', 20, 21, 22],['Na', 23],['Mg', 24, 25, 26],['Al', 27],['Si', 28, 29, 30],
+		     ['P', 31],['S', 32, 33, 34, 36],['Cl', 35, 37],['Ar', 36, 38, 40],['K', 39, 40, 41],
+		     ['Ca', 40, 42, 43, 44, 46, 48],['Sc', 45],['Ti', 46, 47, 48, 49, 50],['V', 50, 51],
+		     ['Cr', 50, 52, 53, 54],['Mn', 55],['Fe', 54, 56, 57, 58],['Co', 59],
+		     ['Ni', 58, 60, 61, 62, 64],['Cu', 63, 65],['Zn', 64, 66, 67, 68, 70],['Ga', 69, 71],
+		     ['Ge', 70, 72, 73, 74, 76],['As', 75],['Se', 74, 76, 77, 78, 80, 82],['Br', 79, 81],
+		     ['Kr', 78, 80, 82, 83, 84, 86],['Rb', 85, 87],['Sr', 84, 86, 87, 88],['Y', 89],
+		     ['Zr', 90, 91, 92, 94, 96],['Nb', 93],['Mo', 92, 94, 95, 96, 97, 98, 100],
+		     ['Tc',999],['Ru', 96, 98, 99, 100, 101, 102, 104],['Rh', 103],
+		     ['Pd', 102, 104, 105, 106, 108, 110],['Ag', 107, 109],
+		     ['Cd', 106, 108, 110, 111, 112, 113, 114, 116],['In', 113, 115],
+		     ['Sn', 112, 114, 115, 116, 117, 118, 119, 120, 122, 124],['Sb', 121, 123],
+		     ['Te', 120, 122, 123, 124, 125, 126, 128, 130],['I', 127],
+		     ['Xe', 124, 126, 128, 129, 130, 131, 132, 134, 136],['Cs', 133],
+		     ['Ba', 130, 132, 134, 135, 136, 137, 138],['La', 138, 139],['Ce', 136, 138, 140, 142],
+		     ['Pr', 141],['Nd', 142, 143, 144, 145, 146, 148, 150],['Pm',999],
+		     ['Sm', 144, 147, 148, 149, 150, 152, 154],['Eu', 151, 153],
+		     ['Gd', 152, 154, 155, 156, 157, 158, 160],['Tb', 159],
+		     ['Dy', 156, 158, 160, 161, 162, 163, 164],['Ho', 165],
+		     ['Er', 162, 164, 166, 167, 168, 170],['Tm', 169],['Yb', 168, 170, 171, 172, 173, 174, 176],
+		     ['Lu', 175, 176],['Hf', 174, 176, 177, 178, 179, 180],['Ta', 180, 181],
+		     ['W', 180, 182, 183, 184, 186],['Re', 185, 187],['Os', 184, 186, 187, 188, 189, 190, 192],
+		     ['Ir', 191, 193],['Pt', 190, 192, 194, 195, 196, 198],['Au', 197],
+		     ['Hg', 196, 198, 199, 200, 201, 202, 204],['Tl', 203, 205],['Pb', 204, 206, 207, 208],
+		     ['Bi', 209],['Th', 232],['U',235,238]] 
+
+	def _stable_names(self):
+		'''This private method extracts the element names from stable_el. Note
+		that stable_names is a misnomer as stable_el also contains unstable
+		element names with a number 999 for the *stable* mass numbers. (FH
+		wonders who would come up up with this name ...)'''
+		stable_names=[]
+		for i in range(len(self.stable_el)):
+			stable_names.append(self.stable_el[i][0])
+		self.stable_names=stable_names
+
+	def _process_abundance_vector(self,a,z,isomers,yps):
+		'''This private method takes as input one vector definition and
+		processes it, including sorting by charge number and
+		mass number. It returns the processed input variables
+		plus an element and isotope vector and a list of
+		isomers.'''
+		
+		tmp=[]
+		isom=[]
+		for i in xrange(len(a)):
+			if z[i]!=0 and isomers[i]==1: #if its not 'NEUt and not an isomer'
+				tmp.append([self.stable_names[int(z[i])]+'-'+str(int(a[i])),yps[i],z[i],a[i]])
+			elif isomers[i]!=1: #if it is an isomer
+				if yps[i]==0:
+					isom.append([self.stable_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)),1e-99])
+				else:
+					isom.append([self.stable_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)),yps[i]])	
+		tmp.sort(self.compar)
+		tmp.sort(self.comparator)
+		abunds=[]
+		isotope_to_plot=[]
+		z_iso_to_plot=[]
+		a_iso_to_plot=[]
+		el_iso_to_plot=[]
+		for i in xrange(len(tmp)):
+			isotope_to_plot.append(tmp[i][0])
+			abunds.append(tmp[i][1])
+			z_iso_to_plot.append(int(tmp[i][2]))
+			a_iso_to_plot.append(int(tmp[i][3]))
+			el_iso_to_plot.append(self.stable_names[int(tmp[i][2])])
+
+		return a_iso_to_plot,z_iso_to_plot,abunds,isotope_to_plot,el_iso_to_plot,isom
+
+	def compar(self,x, y):
+		'''
+		simple comparator method
+		'''
+		
+		indX=0
+		indY=0
+		
+		a= int(x[0].split('-')[1])
+		
+		b= int(y[0].split('-')[1])
+		
+
+		if a>b:
+			return 1
+		if a==b:
+			return 0
+		if a<b:
+			return -1
+	
+	def comparator(self,x, y):
+		'''
+		simple comparator method
+		'''
+		
+		indX=0
+		indY=0
+		for i in xrange(len(self.stable_names)):
+			if self.stable_names[i] == x[0].split('-')[0]:
+				indX=i
+			if self.stable_names[i] == y[0].split('-')[0]:
+				indY=i
+
+		if indX>indY:
+			return 1
+		if indX==indY:
+			return 0
+		if indX<indY:
+			return -1
+
+	def _read_isotopedatabase(self,ffname='isotopedatabase.txt'):
+		'''This private method reads the isotopedatabase.txt file in sldir run
+		dictory and returns z, a, elements, the cutoff mass
+		for each species that delineate beta+ and beta- decay
+		and the logical in the last column. Also provides
+		charge_from_element dictionary according to
+		isotopedatabase.txt.''' 
+		name=self.sldir+ffname
+		z_db, a_db, el_db, stable_a_db,logic_db=\
+		    np.loadtxt(name,unpack=True,dtype='str') 
+		z_db=np.array(z_db,dtype='int')
+		a_db=np.array(a_db,dtype='int')
+		stable_a_db=np.array(stable_a_db,dtype='int')
+
+		# charge number for element name from dictionary in isotopedatabase.txt
+		charge_from_element_name={}
+		for name in self.stable_names:
+			if name=='Neutron' or name=='Neut' or name=='NEUT' or name=='N-1':
+				name='nn'
+			try:
+				zz=z_db[np.where(el_db==name)][0]
+				charge_from_element_name[name]=zz
+			except IndexError:
+				print name+" does not exist in this run"
+		return z_db, a_db, el_db, stable_a_db,logic_db,charge_from_element_name
+	
+	def decay_indexpointer(self):
+		'''This private method provides decay indexpointers which allow to
+		instantaneously decay an abundance vector an abundance
+		vector instantaneously. These are:
+
+		self.decay_idp                        points in the iso_to_plot (i.e. the 
+		                                      undecayed abundance vector 
+		                                      index space) to the decay target
+		self.idp_to_stables_in_isostoplot     points to the stable isotopes in the 
+		                                      undecayed abundance vector index space
+		For an application example see ppn.py-abu_vector-_getcycle.
+		'''
+		a_iso_to_plot   =self.a_iso_to_plot
+		isotope_to_plot =self.isotope_to_plot
+		z_iso_to_plot   =self.z_iso_to_plot
+		el_iso_to_plot  =self.el_iso_to_plot
+		abunds          =self.abunds
+		isom            =self.isom
+
+		z_db, a_db, el_db, stable_a_db,logic_db,charge_from_element_name=\
+		    self._read_isotopedatabase()
+		# find out which species  beta+ and which beta- decay: 
+		beta=np.sign(stable_a_db-a_db) # if a species is unstable and if beta < 0 => beta- decay
+		                            # else beta > 0 => beta+ decay
+
+		# now we need an index array on the scale of the abundance
+		# distribution to be plotted that points to itself for stable species,
+		# and to the stable element to which it decays in case of an unstable
+		# species
+		decay_index_pointer=np.zeros(len(isotope_to_plot), dtype='int')-1
+		idp_to_stables_in_isostoplot=[]
+		for i in range(len(isotope_to_plot)):
+		    element_name=isotope_to_plot[i].split('-')[0] 
+		    try:
+			stable_a=stable_a_db[np.where(el_db==element_name)][0] # 4th column for that element in isotopedatabase.txt
+		    except IndexError:
+			print "Can't find element "+element_name+" in isotopedatabase.txt"
+		    if a_iso_to_plot[i] <= 209 and stable_a <=209:  # Bi209 is last stable element        
+			stable_mass_numbers=self.stable_el[self.stable_names.index(element_name)][1:]
+			iso_db_index_range_el=np.where(el_db==element_name)
+			beta_for_this_species=\
+			    beta[iso_db_index_range_el][np.where(a_db[iso_db_index_range_el]==a_iso_to_plot[i])]
+			if beta_for_this_species == 0:  # if there are no stable species for an element (Tc,Pm) the cutoff specifies 
+			    beta_for_this_species = -1  # the lowest mass beta- isotope
+			if a_iso_to_plot[i] in stable_mass_numbers:
+			    # print isotope_to_plot[i]+" is stable"
+			    decay_index_pointer[i]=i
+			    idp_to_stables_in_isostoplot.append(i)
+			elif  a_iso_to_plot[i]==8: # Be8 -> He4
+			   decay_index_pointer[i]=isotope_to_plot.index('He-4')
+			else: # beta decay
+			    found_decay_target=False
+			    i_search=-1*beta_for_this_species
+			    while not found_decay_target:
+				try:
+				    try_target_el=self.stable_names[charge_from_element_name[element_name]+i_search]
+				except TypeError:
+				    print "Maybe information about species "+isotope_to_plot[i]+" is not available in isotopedatabase.txt"
+				    decay_index_pointer[i]=-1
+				    break
+				# print try_target_el
+				try:
+				    stable_mass_numbers=self.stable_el[self.stable_names.index(try_target_el)][1:]
+				except ValueError:
+				    print "Can not find decay target for "+isotope_to_plot[i]
+				if a_iso_to_plot[i] in stable_mass_numbers:
+				    ind_range=np.where(np.array(el_iso_to_plot)==try_target_el)[0]
+				    if a_iso_to_plot[i] in np.array(a_iso_to_plot)[ind_range]:
+					this_ind=\
+					    ind_range[np.where(np.array(a_iso_to_plot)[ind_range]==a_iso_to_plot[i])[0]]
+					# print isotope_to_plot[i]+" is unstable and decays to "+isotope_to_plot[this_ind]
+					decay_index_pointer[i]=this_ind
+				    else:
+					print "It seems unstable species "+isotope_to_plot[i]+" wants to decay to " \
+					    +try_target_el+"-"+str(a_iso_to_plot[i])+", however this species is not in this run." \
+					    +" This points to an inconsistency in the network build. Here we will ignore the abundance of " \
+					    +isotope_to_plot[i]+'.'
+					decay_index_pointer[i]=-1                            
+				    found_decay_target=True
+				else:
+				    i_search += -1*beta_for_this_species
+		if self.debug:
+			print "Decay rules:"
+			for i in range(len(isotope_to_plot)):
+				if decay_index_pointer[i]>= 0:
+					print isotope_to_plot[i]+" -> "+isotope_to_plot[decay_index_pointer[i]]					
+		ind_tmp=idp_to_stables_in_isostoplot
+                #ind_tmp=utils.strictly_monotonic(decay_index_pointer)  # this would do the same, but the method above is more straight forward
+
+		self.decay_idp=decay_index_pointer
+		self.idp_to_stables_in_isostoplot=ind_tmp
 
 class iniabu():
 	'''

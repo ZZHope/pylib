@@ -472,45 +472,6 @@ class DataPlot:
 		xmax,xmin=pyl.xlim()
 		pyl.xlim(xmin,xmax)
 		
-	def compar(self,x, y):
-		'''
-		simple comparator method
-		'''
-		
-		indX=0
-		indY=0
-		
-		a= int(x[0].split('-')[1])
-		
-		b= int(y[0].split('-')[1])
-		
-
-		if a>b:
-			return 1
-		if a==b:
-			return 0
-		if a<b:
-			return -1
-	
-	def comparator(self,x, y):
-		'''
-		simple comparator method
-		'''
-		
-		indX=0
-		indY=0
-		for i in xrange(len(self.elements_names)):
-			if self.elements_names[i] == x[0].split('-')[0]:
-				indX=i
-			if self.elements_names[i] == y[0].split('-')[0]:
-				indY=i
-
-		if indX>indY:
-			return 1
-		if indX==indY:
-			return 0
-		if indX<indY:
-			return -1
 	def abu_chartMulti(self,cyclist, mass_range=None ,ilabel = True,imlabel = True,imagic =  False,boxstable=True,lbound=20,plotaxis=[0,0,0,0],pdf=False,title=None):
 		'''
 		Method that plots abundence chart and saves those figures to a .png file 
@@ -881,7 +842,7 @@ class DataPlot:
 		return
 		
 	def iso_abundMulti(self,cyclist, stable=False,amass_range=None,mass_range=None,
-		ylim=[1e-13,10],shape='o',ref=-1,title=None,pdf=False):
+		ylim=[1e-13,10],shape='o',ref=-1,decayed=False,title=None,pdf=False):
 		'''
 		Method that plots figures and saves those figures to a .png file 
 		(by default). Plots a figure for each cycle in the argument cycle
@@ -917,15 +878,15 @@ class DataPlot:
 			
 		
 		for i in xrange(len(cyclist)):
-			self.iso_abund(cyclist[i],stable,amass_range,mass_range,ylim,shape,ref,False)
+			self.iso_abund(cyclist[i],stable,amass_range,mass_range,ylim,shape,ref,decayed=decayed,show=False)
 			if title !=None:
 				pl.title(title)
 			else:
 				name='IsoAbund'
 			if not pdf:
-				pl.savefig(name+str(cyclist[i])+'.png', dpi=400)
+				pl.savefig(name+str(cyclist[i])+'.png', dpi=200)
 			else:
-				pl.savefig(name+cyclist[i]+'.pdf', dpi=400)
+				pl.savefig(name+cyclist[i]+'.pdf', dpi=200)
 			pl.clf()
 		
 		return None
@@ -969,7 +930,9 @@ class DataPlot:
 		dat={'z':z, 'name':name,'abu':abu}
 		return dat
 		
-	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,ylim=[1e-13,10],shape='o',ref=-1,show=True,given_abund_array=None,log_logic=True):
+	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,\
+			      ylim=[1e-13,10],shape='o',ref=-1,show=True,given_abund_array=None,\
+			      log_logic=True,decayed=False):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
@@ -1006,14 +969,15 @@ class DataPlot:
                            If ref=-2, than the array given_abund_array is plotted.
 		    Shape -The Shape of the dataplots, will default to circles 
 		    given_abund_array - array of abundances that can be given from script comparison_ppn, and if ref=-2 are plotted.
-		    log_logic = True/False to plot abundances in log scale or linear.	  
+		    log_logic = True/False to plot abundances in log scale or linear.	 
+		    decayed =True/False to plot decayed distributions (True), or life distribution
 		'''
 		elem_list = []
 		elem_index = []
 		masses = []
 		plotType=self.classTest()
 		if str(cycle.__class__)=="<type 'list'>":
-			self.iso_abundMulti(cycle, stable,amass_range,mass_range,ylim,shape,ref)
+			self.iso_abundMulti(cycle, stable,amass_range,mass_range,ylim,shape,ref,decayed)
 			return
 			
 		if str(ref.__class__)=="<type 'str'>":
@@ -1031,6 +995,9 @@ class DataPlot:
 			print 'Returning None'
 			return None
 		if plotType=='se':
+			if decayed:
+				print 'Decay option not yet implemented for mppnp - but it is easy do! Consider investing the time!'
+				return None
 			isotope_to_plot = self.se.isotopes
 			cycle=self.se.findCycle(cycle)
 			z=self.se.Z #charge
@@ -1117,18 +1084,21 @@ class DataPlot:
 			print "z_iso_to_plot      corresponding charge numbers"
 			print "el_iso_to_plot     corresponding element names"
 			print "abunds             corresponding abundances"
+			print "isom               isomers and their abundance"
 
-			isotope_to_plot = self.get('ISOTP', cycle)
-			z=self.get('Z', cycle) #charge
-			a=self.get('A', cycle) #mass
-			isomers=self.get('ISOM', cycle)
 			if ref > -2:
-				yps=self.get('ABUNDANCE_MF', cycle)
-			if ref == -2:
-				yps=given_abund_array
+				self.get(cycle,decayed=decayed)
 			if ref >-1:
-				ypsRef=self.get('ABUNDANCE_MF', ref)
+				abunds=self.abunds
+				self.get(ref,decayed=decayed)
+				self.abunds=abunds/(self.abunds+1.e-99)
+			if ref == -2:
+				print "Presently option not active."
+				return None
+				yps=given_abund_array
 			if stringRef:
+				print "Presently option not active."
+				return None
                                 ypsRef=self.read(fileName )
 				tmpypsRef=zeros(len(yps))
 				for i in xrange(len(z)):
@@ -1142,72 +1112,37 @@ class DataPlot:
 							print 'Returning None'
 							return None
 							'''
-							
-							
 				ypsRef=tmpypsRef
-				
-				
+				'''
 			if ref >-1 and len(yps)!=len(ypsRef):
                                 print 'Refrence Cycle mismatch, Aborting plot'
 				return None
-			
 				
 			if ref >-1 or stringRef:
 				for i in xrange(len(yps)):
 					if ypsRef[i]!=0:
 						yps[i]=yps[i]/ypsRef[i]
 					else:
-						
 						yps[i]=yps[i]/1e-99
-			tmp=[]
-			isom=[]
-
-			# Below there is a treatment of isomers, which
-			# is not correct. If you are interested in the
-			# correct plotting and treatement of isomers
-			# some decisions about nameing standards, and
-			# probably modifications to the decay routine
-			# need to be made. Presently isomers are
-			# ignored here.
-			for i in range (len(isotope_to_plot)):
-				if z[i]!=0 and isomers[i]==1: #if its not 'NEUt and not an isomer'
-					tmp.append([self.elements_names[int(z[i])]+'-'+str(int(a[i])),yps[i],z[i],a[i]])
-				elif isomers[i]!=1: #if it is an isomer
-					
-					if yps[i]==0:
-						
-						isom.append([self.elements_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)),1e-99])
-					else:
-						isom.append([self.elements_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)),yps[i]])	
-					
-			tmp.sort(self.compar)
-			tmp.sort(self.comparator)
-			
-			abunds=[]
-			isotope_to_plot=[]
-			z_iso_to_plot=[]
-			a_iso_to_plot=[]
-			el_iso_to_plot=[]
-			for i in xrange(len(tmp)):
-				isotope_to_plot.append(tmp[i][0])
-				abunds.append(tmp[i][1])
-				z_iso_to_plot.append(int(tmp[i][2]))
-				a_iso_to_plot.append(int(tmp[i][3]))
-				el_iso_to_plot.append(self.elements_names[int(tmp[i][2])])
-
+				'''
 			if amass_range != None:
-				aa=ma.masked_outside(a_iso_to_plot,amass_range[0],amass_range[1])
-				isotope_to_plot=ma.array(isotope_to_plot,mask=aa.mask).compressed()
-				z_iso_to_plot=ma.array(z_iso_to_plot,mask=aa.mask).compressed()
-				el_iso_to_plot=ma.array(el_iso_to_plot,mask=aa.mask).compressed()
-				abunds=ma.array(abunds,mask=aa.mask).compressed()
+				aa=ma.masked_outside(self.a_iso_to_plot,amass_range[0],amass_range[1])
+				isotope_to_plot=ma.array(self.isotope_to_plot,mask=aa.mask).compressed()
+				z_iso_to_plot=ma.array(self.z_iso_to_plot,mask=aa.mask).compressed()
+				el_iso_to_plot=ma.array(self.el_iso_to_plot,mask=aa.mask).compressed()
+				abunds=ma.array(self.abunds,mask=aa.mask).compressed()
 				a_iso_to_plot=aa.compressed()
+				isom=[]
+				for i in xrange(len(self.isom)):
+					if int(self.isom[i][0].split('-')[1])>100:
+						isom.append(self.isom[i])
 
 			self.a_iso_to_plot=a_iso_to_plot
 			self.isotope_to_plot=isotope_to_plot
 			self.z_iso_to_plot=z_iso_to_plot
 			self.el_iso_to_plot=el_iso_to_plot
 			self.abunds=abunds
+			self.isom=isom
 
 		else:
 			print 'This method, iso_abund, is not supported by this class'
@@ -1227,13 +1162,14 @@ class DataPlot:
 		#    if not self.se.cycles.count(str(cycle)):
 		#        print 'I was unable to correct your cycle.  Please check that it exists in your dataset.'
 		
-		print 'Using The following conditions:'
+		print 'Using the following conditions:'
 		if mass_range != None:
 			print '\tmass_range:', mass_range[0], mass_range[1]
 		if amass_range != None:
 			print '\tAtomic mass_range:', amass_range[0], amass_range[1]
-		print '\tcycle:', cycle
+		print '\tcycle:           ',cycle
 		print '\tplot only stable:',stable
+		print '\tplot decayed:    ',decayed
 		
 		
 		elem_list = ['' for x in xrange(len(self.elements_names)) ]
@@ -1473,9 +1409,10 @@ class DataPlot:
 		#del temp2             
 		
 		#23
-		plot_type = ['-','--','-.']
+		plot_type = ['-','--','-.',':']
 		pl_index = 0
 		#6
+		#points = ['o','^','p','h','*']
 		#colors = ['g','r','c','m','k']
 		colors = ['k','k','k','k','k']
 		cl_index = 0
@@ -1486,8 +1423,8 @@ class DataPlot:
 		    #    Process the line
 		    #print 'processing line'
 		    for l in xrange(len(abund_plot[j])):
-                        #print mass_num[j][l] 	
-                        print abund_plot[j][l] 	 		
+                        # print mass_num[j][l] 	
+                        # print abund_plot[j][l] 	 		
 			if abund_plot[j][l] == 0:
 			    abund_plot[j][l] = 1e-99
 			    
@@ -1500,7 +1437,7 @@ class DataPlot:
 	                        l1.append(pl.plot(mass_num[j],abund_plot[j],str(colors[cl_index]+plot_type[pl_index]))) 			
 			cl_index+=1
 			pl_index+=1
-			if pl_index > 2:
+			if pl_index > 3:
 			    pl_index = 0
 			if cl_index > 4:
 			    cl_index = 0
@@ -1562,7 +1499,7 @@ class DataPlot:
 			#pl.semilogy(isom[j][0].split('-')[1],isom[j][1],'r'+shape)#,str(colors[cl_index]+plot_type[pl_index])))
 			cl_index+=1
 			pl_index+=1
-			if pl_index > 2:
+			if pl_index > 3:
 			    pl_index = 0
 			if cl_index > 4:
 			    cl_index = 0
@@ -1594,7 +1531,7 @@ class DataPlot:
 			pl.ylabel('Relative Abundance / Refrence Abundance of '+str(fileName))
 		else:
 			pl.ylabel('Relative Abundance')
-		pl.grid()
+		#pl.grid()
 		if show:
 			pl.show()
 		return

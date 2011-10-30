@@ -259,6 +259,8 @@ class abu_vector(DataPlot,Utils):
 			A PPn instance
 		
 		'''
+                self.debug=False
+                self._stable_names() # provides in addition to stable_el from utils also just the stable element names
 		self.sldir = sldir
 		self.cattrs=[]
 		self.dcols=[]
@@ -466,15 +468,18 @@ class abu_vector(DataPlot,Utils):
 		data.append(abd[index])
 		
 		return array(data)
-			
-	def get(self,attri,fname=None,numtype='cycNum'):
+
+
+
+        def get(self,attri,fname=None,numtype='cycNum',decayed=False):
 		'''
-		In this method a column of data for the associated attribute is
-		returned. If fname is a list or None a list of each cycles in 
-		fname or all cycles is returned
-		Input: 
-		attri: The name of the attribute we are looking for.
-		Fname: The name of the file we are getting the data from or
+		In this method all data for an entire cycle (basically
+		the content of an iso_massfnnnn.DAT file) or a column
+		of data for the associated attribute is returned. 
+
+		1: Input attr is string attribute: 
+		attri: The name of the attribute we are looking for or the cycle. 
+		fname: The name of the file we are getting the data from or
 			the cycle number found in the filename. Or a List of 
 			cycles or filenames.  If this is None, the data from all
 			cycles is returned.
@@ -483,47 +488,116 @@ class abu_vector(DataPlot,Utils):
 			 it as a file
 			 if it is 'cycNum' it will then  interpret it as a cycle 
 			 number
+                decayed  not supported in attri mode
 		Output: Data in the form of a numpy array
 		
+		2: Input attr is just one integer cycle number (cycle arrays are not supported):
+                decayed   boolean: instantaneously decay abundance distribution
+                Output: the following varibales will be added to the instance
+                a_iso_to_plot      mass number of plotted range of species"
+                isotope_to_plot    corresponding list of isotopes"
+                z_iso_to_plot      corresponding charge numbers"
+                el_iso_to_plot     corresponding element names"
+                abunds             corresponding abundances"
+                isom               list of isomers with their abundances
 		'''
-		if str(fname.__class__)=="<type 'list'>":
-			isList=True
-		else:
-			isList=False
+                if isinstance(attri,int):
+                    print "Calling get method in cycle mode, adding a_iso_to_plot, z.. el.. isotope.. isotope... to instance"
+                    self._getcycle(attri,decayed)
+                elif isinstance(attri,str):
+                    data=self._getattr(attri,fname,numtype)
+                    return data
+
+	def _getcycle(self,cycle,decayed=False):
+            ''' Private method for getting a cycle, called from get.
+            '''
+            yps=self.get('ABUNDANCE_MF', cycle)
+            z=self.get('Z', cycle) #charge
+            a=self.get('A', cycle) #mass
+            isomers=self.get('ISOM', cycle)
+            
+            a_iso_to_plot,z_iso_to_plot,abunds,isotope_to_plot,el_iso_to_plot,isom=\
+                self._process_abundance_vector(a,z,isomers,yps)
+
+            self.a_iso_to_plot=a_iso_to_plot
+            self.isotope_to_plot=isotope_to_plot
+            self.z_iso_to_plot=z_iso_to_plot
+            self.el_iso_to_plot=el_iso_to_plot
+            self.abunds=np.array(abunds)
+            self.isom=isom
+
+            if decayed:
+                try:
+                    self.decay_idp
+                except AttributeError:
+                    print "WARNING: decayed in _getcycle ignores isomers " \
+                        "and will decay alpha-unstable p-rich nuclei as if they were beta+ stable."
+                    print "Initialising decay index pointers ...."
+                    self.decay_indexpointer() # provides self.decay_idp and
+                ind_tmp=self.idp_to_stables_in_isostoplot                 
+
+                isotope_decay=array(isotope_to_plot)[ind_tmp]
+                z_iso_decay=array(z_iso_to_plot)[ind_tmp]
+                a_iso_decay=array(a_iso_to_plot)[ind_tmp]
+                el_iso_decay=array(el_iso_to_plot)[ind_tmp]
+                abunds_decay=zeros(len(ind_tmp), dtype='float64')
+                for i in xrange(len(isotope_to_plot)):
+                    idp=where(isotope_decay==isotope_to_plot[self.decay_idp[i]])[0] # points from
+                    # i on isotope_to_plot scale to decay target_on_decayed array scale
+                    abunds_decay[idp] += abunds[i]
+
+                if self.debug:
+                    print "Decayed array:"
+                    for i in xrange(len(ind_tmp)):
+                        print isotope_decay[i], z_iso_decay[i], a_iso_decay[i], el_iso_decay[i], abunds_decay[i]
+
+                self.a_iso_to_plot=a_iso_decay
+                self.isotope_to_plot=isotope_decay
+                self.z_iso_to_plot=z_iso_decay
+                self.el_iso_to_plot=el_iso_decay
+                self.abunds=abunds_decay
+
+
+	def _getattr(self,attri,fname=None,numtype='cycNum'):
+            ''' Private method for getting an attribute, called from get.
+            '''
+            if str(fname.__class__)=="<type 'list'>":
+                isList=True
+            else:
+                isList=False
 		
-		data=[]
+            data=[]
+            
+            if fname==None:
+                fname=self.files
+                numtype='file'
+                isList=True
+            if isList:
+                for i in xrange(len(fname)):
+                    if attri in self.cattrs:
+                        data.append(self.getCycleData(attri,fname[i],numtype))
+                    elif attri in self.dcols:
+                        data.append(self.getColData(attri,fname[i],numtype))
+                    elif attri in self.get('ISOTP',fname,numtype):
+                        data.append(self.getElement(attri,fname[i],numtype))
+                    else:
+                        print 'Attribute '+attri+ ' does not exist'
+                        print 'Returning none'
+                        return None
+                    
+            else:
+                if attri in self.cattrs:
+                    return self.getCycleData(attri,fname,numtype)
+                elif attri in self.dcols:
+                    return self.getColData(attri,fname,numtype)
+                elif attri in self.get('ISOTP',fname,numtype):
+                    return self.getElement(attri,fname,numtype)
+                else:
+                    print 'Attribute '+attri+ ' does not exist'
+                    print 'Returning none'
+                    return None
 		
-		if fname==None:
-			fname=self.files
-			numtype='file'
-			isList=True
-		if isList:
-			
-			for i in xrange(len(fname)):
-				if attri in self.cattrs:
-					data.append(self.getCycleData(attri,fname[i],numtype))
-				elif attri in self.dcols:
-					data.append(self.getColData(attri,fname[i],numtype))
-				elif attri in self.get('ISOTP',fname,numtype):
-					data.append(self.getElement(attri,fname[i],numtype))
-				else:
-					print 'Attribute '+attri+ ' does not exist'
-					print 'Returning none'
-					return None
-		
-		else:
-			if attri in self.cattrs:
-				return self.getCycleData(attri,fname,numtype)
-			elif attri in self.dcols:
-				return self.getColData(attri,fname,numtype)
-			elif attri in self.get('ISOTP',fname,numtype):
-				return self.getElement(attri,fname,numtype)
-			else:
-				print 'Attribute '+attri+ ' does not exist'
-				print 'Returning none'
-				return None
-		
-		return data
+            return data
 			
 	def _readFile(self,fname,sldir):
 		'''
@@ -592,7 +666,7 @@ class abu_vector(DataPlot,Utils):
 		if numType=='FILE':
 			
 			#do nothing
-			return self.sldir+fname
+			return fname
 		
 		elif numType=='CYCNUM':
 			try:
