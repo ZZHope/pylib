@@ -621,6 +621,202 @@ class star_log(DataPlot):
 		elif xax == 'model':
 		    pyl.xlabel('model number')
 
+    def kip_vline(self,modstart,modstop,sparse,outfile,xlims=[0.,0.],ylims=[0.,0.],ixaxis='log_time_left',mix_zones=5,burn_zones=50):
+        '''This function creates a Kippenhahn plot with energy flux using
+        vertical lines, better thermal pulse resolution.
+        For a more comprehensive plot, your star.log file should contain columns
+        called "mix_type_n","mix_qtop_n","burn_type_n" and "burn_qtop_n".
+        The number of columns (i.e. the bbiggest value of n) is what goes in the
+        arguments as mix_zones and burn_zones.
+        DO NOT WORRY! if you do not have these columns, just leave the default
+        values alone and the script should recognise that you do not have these
+        columns and make the most detailed plot that is available to you.
+
+        modstart:        model from which you want to plot (be careful if your star.log
+                         output is sparse...)
+        modstop:         model to which you wish to plot
+        xlims,ylims:     plot limits, however these are somewhat obsolete now that we
+                         have modstart and modstop. Leaving them as 0. is probably
+                         no slower, and you can always zoom in afterwards in mpl
+        outfile:         'filename + extension' where you want to save the figure
+        ixaxis:          either 'log_time_left', 'age', or 'model_number'
+        sparse:          x-axis sparsity
+        mix_zones,
+        burn_zones:      As described above, if you have more detailed output about
+                         your convection and energy generation boundaries in columns
+                         mix_type_n, mix_qtop_n, burn_type_n and burn_qtop_n, you need
+                         to specify the total number of columns for mixing zones and
+                         burning zones that you have. Can't work this out from your
+                         star.log file? Check the log_columns.list that you used, it'll
+                         be the number after "mixing regions" and "burning regions".
+                         Can't see these columns? leave it and 2 conv zones and 2 burn
+                         zones will be drawn using other data that you certainly should
+                         have in your star.log file.'''
+
+
+        xxyy=[self.get('star_age')[modstart:modstop],self.get('star_age')[modstart:modstop]]
+        mup = max(float(self.get('star_mass')[0])*1.02,1.0)
+        nmodels=len(self.get('model_number')[modstart:modstop])
+
+        Msol=1.98892E+33
+
+        engenstyle = 'full'
+
+        dx = sparse
+        x = np.arange(0, nmodels, dx)
+
+        btypemax = 20
+        btypemin = -20
+        btypealpha=0.
+
+	########################################################################
+	#----------------------------------plot--------------------------------#
+	fig = pl.figure()
+#	fig.set_size_inches(16,9)
+	fsize=15
+        ax=pl.axes()
+
+	if ixaxis == 'log_time_left':
+	# log of time left until core collapse
+	    gage= self.get('star_age')
+	    lage=np.zeros(len(gage))
+	    agemin = max(abs(gage[-1]-gage[-2])/5.,1.e-10)
+	    for i in np.arange(len(gage)):
+	        if gage[-1]-gage[i]>agemin:
+	            lage[i]=np.log10(gage[-1]-gage[i]+agemin)
+	        else :
+	            lage[i]=np.log10(agemin)
+	    xxx = lage[modstart:modstop]
+	    print 'plot versus time left'
+	    ax.set_xlabel('$\mathrm{log}_{10}(t^*) \, \mathrm{(yr)}$',fontsize=fsize)
+	elif ixaxis =='model_number':
+	    xxx= self.get('model_number')[modstart:modstop]
+	    print 'plot versus model number'
+	    ax.set_xlabel('Model number',fontsize=fsize)
+	elif ixaxis =='age':
+	    xxx= self.get('star_age')[modstart:modstop]/1.e6
+	    print 'plot versus age'
+	    ax.set_xlabel('Age [Myr]',fontsize=fsize)
+        else:
+            print 'ixaxis must be one of: log_time_left, age or model_number'
+            sys.exit()
+
+        if xlims == [0.,0.]:
+            xlims[0] = xxx[0]
+            xlims[1] = xxx[-1]
+        if ylims == [0.,0.]:
+            ylims[0] = 0.
+            ylims[1] = mup
+
+
+	print 'plotting patches'
+	ax.plot(xxx[::dx],self.get('star_mass')[modstart:modstop][::dx],'k-')
+
+	print 'plotting abund boundaries'
+	ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary')
+	ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary')
+#	ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary')
+
+        ax.axis([xlims[0],xlims[1],ylims[0],ylims[1]])
+
+        ax.set_ylabel('Mass [M$_\odot$]')
+
+        ########################################################################
+
+        try:
+            self.get('burn_qtop_1')
+        except:
+            engenstyle = 'twozone'
+        if engenstyle == 'full':
+            for i in range(len(x)):
+                # writing reading status 
+	        percent = int(i*100/len(x))
+	        sys.stdout.flush()
+	        sys.stdout.write("\rcreating color map1 " + "...%d%%" % percent)
+	        for j in range(1,burn_zones+1):
+	            ulimit=self.get('burn_qtop_'+str(j))[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
+	            if j==1:
+	                llimit=0.0
+	            else:
+	                llimit=self.get('burn_qtop_'+str(j-1))[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
+	            btype=float(self.get('burn_type_'+str(j))[modstart:modstop][i*dx])
+	            if llimit!=ulimit:
+                        if btype>0.:
+	                    #btypealpha = btype/btypemax
+                            #ax.axvline(xxx[i*dx],ymin=(llimit-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimit-ylims[0])/(ylims[1]-ylims[0]),color='b',alpha=btypealpha)
+                            pass
+		        if btype<0.:
+                            #btypealpha = (btype/btypemin)/5
+		            #ax.axvline(xxx[i*dx],ymin=(llimit-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimit-ylims[0])/(ylims[1]-ylims[0]),color='r',alpha=btypealpha)
+                            pass
+
+        if engenstyle == 'twozone':
+            for i in range(len(x)):
+            # writing reading status 
+                  percent = int(i*100/len(x))
+                  sys.stdout.flush()
+                  sys.stdout.write("\rcreating color map1 " + "...%d%%" % percent)
+                  llimitl1=self.get('epsnuc_M_1')[modstart:modstop][i*dx]/Msol
+                  ulimitl1=self.get('epsnuc_M_4')[modstart:modstop][i*dx]/Msol
+                  llimitl2=self.get('epsnuc_M_5')[modstart:modstop][i*dx]/Msol
+                  ulimitl2=self.get('epsnuc_M_8')[modstart:modstop][i*dx]/Msol
+                  llimith1=self.get('epsnuc_M_2')[modstart:modstop][i*dx]/Msol
+                  ulimith1=self.get('epsnuc_M_3')[modstart:modstop][i*dx]/Msol
+                  llimith2=self.get('epsnuc_M_6')[modstart:modstop][i*dx]/Msol
+                  ulimith2=self.get('epsnuc_M_7')[modstart:modstop][i*dx]/Msol
+                  # lower thresh first, then upper thresh:
+                  #if llimitl1!=ulimitl1:
+                      #ax.axvline(xxx[i*dx],ymin=(llimitl1-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimitl1-ylims[0])/(ylims[1]-ylims[0]),color='b',alpha=1.)
+                  #if llimitl2!=ulimitl2:
+                      #ax.axvline(xxx[i*dx],ymin=(llimitl2-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimitl2-ylims[0])/(ylims[1]-ylims[0]),color='b',alpha=1.)
+                  #if llimith1!=ulimith1:
+                      #ax.axvline(xxx[i*dx],ymin=(llimith1-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimith1-ylims[0])/(ylims[1]-ylims[0]),color='b',alpha=4.)
+                  #if llimith2!=ulimith2:
+                      #ax.axvline(xxx[i*dx],ymin=(llimith2-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimith2-ylims[0])/(ylims[1]-ylims[0]),color='b',alpha=4.)
+
+        mixstyle = 'full'
+        try:
+            self.get('mix_qtop_1')
+        except:
+            mixstyle = 'twozone'
+        if mixstyle == 'full':
+	        for i in range(len(x)):
+	        # writing reading status 
+	          percent = int(i*100/len(x))
+	          sys.stdout.flush()
+	          sys.stdout.write("\rcreating color map2 " + "...%d%%" % percent)
+	          for j in range(1,mix_zones+1):
+	            ulimit=self.get('mix_qtop_'+str(j))[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
+	            if j==1:
+	              llimit=0.0
+	            else:
+	              llimit=self.get('mix_qtop_'+str(j-1))[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
+	            mtype=self.get('mix_type_'+str(j))[modstart:modstop][i*dx]
+	            if llimit!=ulimit:
+		        if mtype == 1:
+                            ax.axvline(xxx[i*dx],ymin=(llimit-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimit-ylims[0])/(ylims[1]-ylims[0]),color='k',alpha=3., linewidth=.5)
+        if mixstyle == 'twozone':
+	        for i in range(len(x)):
+	        # writing reading status 
+	          percent = int(i*100/len(x))
+	          sys.stdout.flush()
+	          sys.stdout.write("\rcreating color map2 " + "...%d%%" % percent)
+                  ulimit=self.get('conv_mx1_top')[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
+	          llimit=self.get('conv_mx1_bot')[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
+	          if llimit!=ulimit:
+                      ax.axvline(xxx[i*dx],ymin=(llimit-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimit-ylims[0])/(ylims[1]-ylims[0]),color='k',alpha=5.,linewidth=.5)
+                  ulimit=self.get('conv_mx2_top')[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
+	          llimit=self.get('conv_mx2_bot')[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
+	          if llimit!=ulimit:
+	              ax.axvline(xxx[i*dx],ymin=(llimit-ylims[0])/(ylims[1]-ylims[0]),ymax=(ulimit-ylims[0])/(ylims[1]-ylims[0]),color='k',alpha=3.,linewidth=.5)
+
+        print 'engenstyle was ', engenstyle
+        print 'mixstyle was ', mixstyle
+	print '\n finished preparing color map'
+
+        #fig.savefig(outfile)
+        pl.show()
+
     def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
@@ -836,8 +1032,8 @@ class star_log(DataPlot):
                 print B2
         	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5, locator=matplotlib.ticker.LogLocator())
 #        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5)
-        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5, locator=matplotlib.ticker.LogLocator())
-#        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5)
+#        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5, locator=matplotlib.ticker.LogLocator())
+        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5)
         	CBARBURN1 = pl.colorbar(CBURN1)
         	CBARBURN2 = pl.colorbar(CBURN2)
         	CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
