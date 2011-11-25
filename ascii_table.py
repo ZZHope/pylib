@@ -6,13 +6,14 @@ Fall 2010
 If the user find any bugs or errors, please email fherwig@uvic.ca.
 
 Assumptions for ascii Files: Headers are always at the beginning of
-    the file and start with a capital H The next line after the header
-    lines, is a line of column attribute names.  The column attribute
-    names are separated by ' ' by default or whatever the user
-    dictates to the class. Data columns are seperated by spaces and
-    each data attribute contains no spaces. All the data columns are
-    of equal length.  Any file name that has 'trajectory' or
-    'Trajectory' in it, is assumed to be a trajectory type file
+    the file and start with a capital H (default, can be reset). The
+    next line after the header lines, is a line of column attribute
+    names.  The column attribute names are separated by ' ' by default
+    or whatever the user dictates to the class. Data columns are
+    seperated by spaces and each data attribute contains no
+    spaces. All the data columns are of equal length.  Any file name
+    that has 'trajectory' or 'Trajectory' in it, is assumed to be a
+    trajectory type file
 
 Assumptions for Trajectory Files: The first three lines start with a
     '#'. The first of these contains 'time', 'T' and 'rho', each
@@ -60,7 +61,7 @@ class ascii_table(DataPlot):
 	please look at the docstring associated with write()
 	'''
 	
-	def __init__(self,filename,sldir='.',sep='  ', datatype='normal',headers=[],dcols=[],data=[],read=True,headerlines=[]):
+	def __init__(self,filename,sldir='.',sep='  ', datatype='normal',headers=[],dcols=[],data=[],header_char='H',read=True,headerlines=[]):
 		'''
 		Init method that reads in ascii type files and trajectory type files.
 		By default this method reads ascii type files.  If the user wants
@@ -76,11 +77,12 @@ class ascii_table(DataPlot):
 		     Defaults to '  '
 		datatype: What type of ascii table  you are reading and or writeing
 			  The only two options currently are 'normal' and 'trajectory'
-		Headers: A list of Header strings or if the file being writtin 
+		Headers: A list of Header strings or if the file being writen
 			 is  of type trajectory, this is a dictionary of header 
 			 attributes and their associated values
 		dcols: A list of data attributes
 		data:  A list of lists (or of numpy arrays) of columns of data
+		header_char  the character that indicates a header lines
 		headerlines: Additional list of strings of header data, only used
 			     in trajectory data Types.
 		'''
@@ -161,8 +163,8 @@ class ascii_table(DataPlot):
 		if self.datatype != 'trajectory':
 			
 			while i<len(fileLines):
-				if fileLines[i].startswith('H'):
-					tmp=fileLines[i].lstrip('H')
+				if fileLines[i].startswith(header_char):
+					tmp=fileLines[i].lstrip(header_char)
 					header.append(tmp.strip())
 				else:
 					break
@@ -264,7 +266,7 @@ def writeTraj(filename='trajectory.input',data=[], ageunit=0,tunit=0,rhounit=0, 
 		
 		write(filename,headers,['time','T','rho'],data,['YRS/SEC; T8K/T9K; CGS/LOG',"FORMAT: '(10x,A3)'"],trajectory=True)
 		
-def write(filename,headers,dcols,data,headerlines=[],sldir='.',sep='  ',trajectory=False):
+def write(filename,headers,dcols,data,headerlines=[],header_char='H',sldir='.',sep='  ',trajectory=False):
 		'''
 		Method for writeing Ascii files.
 		Note the attribute name at position i in dcols will be associated
@@ -282,6 +284,7 @@ def write(filename,headers,dcols,data,headerlines=[],sldir='.',sep='  ',trajecto
 		data:  A list of lists (or of numpy arrays).
 		headerlines: Additional list of strings of header data, only used
 			     in trajectory data Types.
+		header_char  the character that indicates a header lines
 		sldir: Where this fill will be written.
 		sep: What seperatesa the data column attributes
 		trajectory: Boolean of if we are writeing a trajectory type file
@@ -315,7 +318,7 @@ def write(filename,headers,dcols,data,headerlines=[],sldir='.',sep='  ',trajecto
 			sep=' '
 		for i in xrange(len(headers)):
 			if not trajectory:
-				tmp.append('H '+headers[i]+'\n')
+				tmp.append(header_char+' '+headers[i]+'\n')
 			else:
 				tmp.append(headers[i]+'\n')
 		headers=tmp

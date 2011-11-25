@@ -457,6 +457,7 @@ class star_log(DataPlot):
 	    
 		h1_boundary_mass  = self.get('h1_boundary_mass')
 		he4_boundary_mass = self.get('he4_boundary_mass')
+		c12_boundary_mass = self.get('c12_boundary_mass')
 		star_mass         = self.get('star_mass')
 		mx1_bot           = self.get('mx1_bot')*star_mass
 		mx1_top           = self.get('mx1_top')*star_mass
@@ -480,6 +481,7 @@ class star_log(DataPlot):
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_top[t0_model:],linestyle='None',color='blue',alpha=0.3,marker='o',markersize=symbol_size)
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,h1_boundary_mass[t0_model:],color='red',linewidth=2,label='H-free core')
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,he4_boundary_mass[t0_model:],color='green',linewidth=2,linestyle='dashed',label='He-free core')
+		pyl.plot(xaxisarray[t0_model:]-t0_mod,c12_boundary_mass[t0_model:],color='purple',linewidth=2,linestyle='dotted',label='C-free core')
                 if plot_star_mass is True:
                     pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='$M_\star$')
 		pyl.ylabel('$m_\mathrm{r}/\mathrm{M}_\odot$')

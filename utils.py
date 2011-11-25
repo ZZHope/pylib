@@ -262,7 +262,7 @@ class Utils():
 		self.decay_idp=decay_index_pointer
 		self.idp_to_stables_in_isostoplot=ind_tmp
 
-class iniabu():
+class iniabu(Utils):
 	'''
 	This class in the utils package reads an abundance
 	distribution file of the type iniab.dat. It then provides you
@@ -284,12 +284,14 @@ class iniabu():
 		a      mass number
 		abu    abundance
 		names  name of species
-		habu   a hash array opf abundances, referenced by species name
+		habu   a hash array of abundances, referenced by species name
+		hindex hash index returning index of species from name
 
-		E.g. if x is an instance then x.names[4] gives you the name of
-		species 4, and x.habu['c  12'] gives you the abundance of C12. Note,
-		that you have to use the species names as they are provided in the
-		iniabu.dat file.
+		E.g. if x is an instance then x.names[4] gives you the
+		name of species 4, and x.habu['c 12'] gives you the
+		abundance of C12, and x.hindex['c 12'] returns
+		4. Note, that you have to use the species names as
+		they are provided in the iniabu.dat file.
 		'''
 		f0=open(filename)
 		sol=f0.readlines()
@@ -333,7 +335,7 @@ class iniabu():
 
 	def write(self,outfile='initial_abundance.dat',header_string='initial abundances for a PPN run'):
 		'''
-		Write initial abundance file
+		Write initial abundance file (intended for use with ppn)
 
                 outfile          name of output file
 		header_string    srting with header line
@@ -343,6 +345,48 @@ class iniabu():
 		hd=[header_string]
 		att.write(outfile,hd,dcols,data)
 
+	def write_mesa(self,mesa_isos_file='isos.txt',add_excess_iso='fe56',outfile='xa_iniabu.dat',header_string='initial abundances for a MESA run',header_char='!'):
+		'''
+		Write initial abundance file
+
+		mesa_isos_file   list with isos copied from mesa network 
+                                 definition file in mesa/data/net_data/nets
+	        add_excess_iso   add 1.-sum(isos in mesa net) to this isotope
+                outfile          name of output file
+		header_string    srting with header line
+		'''
+
+
+		f=open('isos.txt')
+		a=f.readlines()
+		isos=[]
+		for i in range(len(a)):
+			isos.append(a[i].strip().rstrip(','))
+
+		mesa_names=[]
+		abus=[]
+		for i in range(len(self.z)):
+			b=self.names[i].split()
+			a=''
+			a=a.join(b)
+			if a in isos:
+				mesa_names.append(a)
+				abus.append(self.abu[i])
+			# mesa_names.append(elements_names[int(x.z[i])].lower()+str(int(x.a[i])))
+				
+		for i in range(len(isos)):
+			if isos[i] not in mesa_names:
+				mesa_names.append(isos[i])
+				abus.append(0.0)
+
+		excess=1.-np.sum(np.array(abus))
+		abus=np.array(abus)
+		abus[mesa_names.index(add_excess_iso)] += excess
+
+		dcols=['','']
+		data=[mesa_names,abus]
+		hd=[header_string]
+		att.write(outfile,hd,dcols,data,header_char=header_char)
 
 	def set_and_normalize(self,species_hash):
 		'''
