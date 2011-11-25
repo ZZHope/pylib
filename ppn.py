@@ -663,17 +663,26 @@ class abu_vector(DataPlot,Utils):
 		Fname the name of the file we are looking or
 		"""
 		numType=numType.upper()
-		if numType=='FILE':
-			
-			#do nothing
-			return fname
-		
-		elif numType=='CYCNUM':
-			try:
-				fname=int(fname)
-			except ValueError:
-				print 'Improper choice:'+ str(fname)
-				print 'Reselecting as 0'
-				fname=0
-			#print 'Using '+self.files[fname]
-			return self.files[fname]
+		if numType == 'FILE':
+                    #do nothing
+                    return fname
+		elif numType == 'CYCNUM':
+                    try:
+                        fname = int(fname)
+                    except ValueError:
+                        print 'Improper choice:'+ str(fname)
+                        print 'Reselecting as 0'
+                        fname = 0
+                        print 'Using '+self.files[fname]
+                try:
+                    return self.files[fname]
+                except IndexError:
+                    mods = array(self.get('mod'), dtype=int)
+                    if fname not in mods:
+                        print 'You seem to try to plot a cycle that is not present: '+str(fname)
+                        fname = mods[-1]
+                        print 'I will assume you want to plot the last cycle in the run: '+str(fname)
+                        print '[I am not 100% sure this escape is debugged. You better do this again with'
+                        print 'the correct input.]'
+                        return self.files[fname]
+

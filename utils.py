@@ -354,6 +354,16 @@ class iniabu(Utils):
 	        add_excess_iso   add 1.-sum(isos in mesa net) to this isotope
                 outfile          name of output file
 		header_string    srting with header line
+
+		Useage example:
+		import utils
+		!ls ~/PPN/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/   # find ppn initial abundance file
+		!cat ~/mesa/data/net_data/nets/agb.net                   # find isos needed in mesa net
+		!cat > isos.txt                                          # paste needed isos into file             
+		help(utils.iniabu)                                       # check documentation of method
+		x=utils.iniabu('path_to_here/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn')
+		x.write_mesa?
+		x.write_mesa(add_excess_iso='ne22',header_string='mppnp/USEEPP/iniab2.0E-02GN93.ppn for mesa/agb.net',outfile='xa_2.0E-02GN93.mesa')
 		'''
 
 
