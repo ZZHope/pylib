@@ -88,6 +88,7 @@ class ascii_table(DataPlot):
 		'''
 		self.sldir=sldir
 		self.files = []
+		self.header_char=header_char
 		self.hattrs=[]
 		self.dcols=[]
 		self.data ={}
@@ -163,8 +164,8 @@ class ascii_table(DataPlot):
 		if self.datatype != 'trajectory':
 			
 			while i<len(fileLines):
-				if fileLines[i].startswith(header_char):
-					tmp=fileLines[i].lstrip(header_char)
+				if fileLines[i].startswith(self.header_char):
+					tmp=fileLines[i].lstrip(self.header_char)
 					header.append(tmp.strip())
 				else:
 					break
