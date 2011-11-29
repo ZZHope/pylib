@@ -414,7 +414,8 @@ class star_log(DataPlot):
                     pyl.ylim(h1_min,h1_max)
 
     def kippenhahn(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
-                       tp_agb=0.,t_eps=5.e2,plot_star_mass=True,symbol_size=8):
+                       tp_agb=0.,t_eps=5.e2,plot_star_mass=True,symbol_size=8,\
+                       c12_bm=False):
 		''' Kippenhahn plot as a function of time or model
 		
 		num_frame    number of frame to plot this plot into 
@@ -433,6 +434,7 @@ class star_log(DataPlot):
                              core mass coordinate
                 plot_star_mass    True - then plot the stellar mass as a line as well
                 symbol_size  size of convection boundary marker
+                c12_bm       boolean if we plot c12_boundary_mass or not
                 '''
 	
 		pyl.figure(num_frame)
@@ -457,7 +459,8 @@ class star_log(DataPlot):
 	    
 		h1_boundary_mass  = self.get('h1_boundary_mass')
 		he4_boundary_mass = self.get('he4_boundary_mass')
-		c12_boundary_mass = self.get('c12_boundary_mass')
+                if c12_bm:
+                    c12_boundary_mass = self.get('c12_boundary_mass')
 		star_mass         = self.get('star_mass')
 		mx1_bot           = self.get('mx1_bot')*star_mass
 		mx1_top           = self.get('mx1_top')*star_mass
@@ -481,7 +484,8 @@ class star_log(DataPlot):
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,mx2_top[t0_model:],linestyle='None',color='blue',alpha=0.3,marker='o',markersize=symbol_size)
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,h1_boundary_mass[t0_model:],color='red',linewidth=2,label='H-free core')
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,he4_boundary_mass[t0_model:],color='green',linewidth=2,linestyle='dashed',label='He-free core')
-		pyl.plot(xaxisarray[t0_model:]-t0_mod,c12_boundary_mass[t0_model:],color='purple',linewidth=2,linestyle='dotted',label='C-free core')
+                if c12_bm:
+                    pyl.plot(xaxisarray[t0_model:]-t0_mod,c12_boundary_mass[t0_model:],color='purple',linewidth=2,linestyle='dotted',label='C-free core')
                 if plot_star_mass is True:
                     pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='$M_\star$')
 		pyl.ylabel('$m_\mathrm{r}/\mathrm{M}_\odot$')
