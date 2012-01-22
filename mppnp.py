@@ -101,6 +101,7 @@ import matplotlib.pylab as pyl
 from matplotlib.ticker import MultipleLocator
 import os  
 import re
+import sys
 import time
 import glob
 from utils import *
@@ -243,38 +244,59 @@ class se(DataPlot,Utils):
         end       - final model 
         delta     - sparsity factor of the frames
         mass_coo  - mass coordinate for the traj
+
+        Output:
+        returns radius_at_mass_coo, density_at_mass_coo, temperature_at_mass_coo, age_all
         
+        plus writes a file with the trajectory information to be used with ppn
         warning: remove the old trajectory, if you have any for the same mass coordinate.
-        you are appending data, not overwriting.'''
+        you are appending data, not overwriting.
+
+        Update: this method works for output types with indexes going
+        from the outside in (MESA) or the other way around. Also the
+        requested quantities are linearly interpolated in the mass
+        shell.
+
+        '''
         
         f = open('traj_'+str(mass_coo)+'.dat','a')
+        radius_at_mass_coo=[]
+        density_at_mass_coo=[]
+        temperature_at_mass_coo=[]
+        age_all=[]
         for step in range(ini,end+1,delta):
                 age=self.se.get(step,'age')
                 mass=self.se.get(step,'mass')  
                 temperature=self.se.get(step,'temperature')
                 rho=self.se.get(step,'rho')
+                radius=self.se.get(step,'radius')
+                my_things=[temperature,rho,radius]
 
-                for i in range(len(mass)):
+                if mass[0]>mass[len(mass)-1]:
+                    zone_above=where(mass>mass_coo)[0][-1]
+                    zone_below=zone_above+1
+                else:
+                    zone_above=where(mass>mass_coo)[0][0]
+                    zone_below=zone_above-1
+                   
+                if mass[zone_below]>mass[zone_above]:
+                    sys.exit("ERROR: finding of zone index confused")
+                all_things_interplt=[]
+                for thing in my_things:
+                    thing_interplt=thing[zone_below]+(mass_coo-mass[zone_below])* \
+                        (thing[zone_above]-thing[zone_below])/(mass[zone_above]-mass[zone_below])
+                    all_things_interplt.append(thing_interplt)
+                this_temperature,this_rho,this_radius=all_things_interplt
 
-                        if mass_coo == mass[i]:
-                                mass_coo_new = mass[i]
-                                zone = int(i) 
-                        elif mass_coo > mass[i]:
-
-                                try:
-                                        dum = mass[i+1]   
-                                        if mass_coo <= mass[i+1]:
-                                                mass_coo_new = mass[i+1]
-                                                zone = int(i+1) 
-                                except IndexError:
-                                        mass_coo_new = mass[i]
-                                        zone = int(i)
-                                        
-
-                string = str(step)+'  '+str(age)+'  '+str(temperature[zone])+'  '+str(rho[zone]) 
+                string = str(step)+'  '+str(age)+'  '+str(this_temperature)+'  '+str(this_rho) 
                 f.write(string+"\n")
-
+                radius_at_mass_coo.append(this_radius)
+                density_at_mass_coo.append(this_rho)
+                temperature_at_mass_coo.append(this_temperature)
+                age_all.append(age)
         f.close()
+        return radius_at_mass_coo, density_at_mass_coo, temperature_at_mass_coo, age_all
+
 
     def abund_at_masscoorinate(self,ini,mass_coo):
 
