@@ -236,7 +236,7 @@ class se(DataPlot,Utils):
         pyl.ylim(ylim1,ylim2)
         pyl.legend()
 
-    def trajectory(self,ini,end,delta,mass_coo):
+    def trajectory(self,ini,end,delta,mass_coo,age_in_sec=False):
         
         ''' create a trajectory out of a stellar model 
         
@@ -244,6 +244,7 @@ class se(DataPlot,Utils):
         end       - final model 
         delta     - sparsity factor of the frames
         mass_coo  - mass coordinate for the traj
+        age_in_sec (default False) set to True if age in se file is in seconds (like in MESA)
 
         Output:
         returns radius_at_mass_coo, density_at_mass_coo, temperature_at_mass_coo, age_all
@@ -266,6 +267,8 @@ class se(DataPlot,Utils):
         age_all=[]
         for step in range(ini,end+1,delta):
                 age=self.se.get(step,'age')
+                if age_in_sec:
+                    age /= constants.one_year
                 mass=self.se.get(step,'mass')  
                 temperature=self.se.get(step,'temperature')
                 rho=self.se.get(step,'rho')
@@ -301,14 +304,14 @@ class se(DataPlot,Utils):
     def abund_at_masscoorinate(self,ini,mass_coo):
 
         ''' create a file with distribution at a given mass coord, and at a given time step. 
-        This for istance may be used as intial distribution for function trajectory, to
+        This for instance may be used as intial distribution for function trajectory, to
         reproduce local conditions in ppn.   
 
         ini       - model number
         mass_coo  - mass coordinate for the traj
   
         warning: remove the old abundance file, if you have any for the same mass coordinate.
-        you are appendind data, not overwriting.
+        you are appending data, not overwriting.
         '''
         
         f = open('massf_'+str(mass_coo)+'.dat','a')
