@@ -452,7 +452,7 @@ def species_list(what_list):
 def symbol_list(what_list):
 	''' provide default symbol lists
 	what_list   string name of symbol lists provided
-	list1, list2
+	list1, list2, lines1
 	'''
 	if what_list is "list1":
 		symbol=['ro','bo','ko','go','mo'\
