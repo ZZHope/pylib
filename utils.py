@@ -292,6 +292,18 @@ class iniabu(Utils):
 		abundance of C12, and x.hindex['c 12'] returns
 		4. Note, that you have to use the species names as
 		they are provided in the iniabu.dat file.
+
+		Example - generate modified input file ppn calculations: 
+
+		import utils
+		p=utils.iniabu('iniab1.0E-02.ppn_asplund05')
+		sp={}
+		sp['h   1']=0.2
+		sp['c  12']=0.5
+		sp['o  16']=0.2
+		p.set_and_normalize(sp)
+		p.write('p_ini.dat','header for this example')
+
 		'''
 		f0=open(filename)
 		sol=f0.readlines()
