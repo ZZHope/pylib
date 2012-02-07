@@ -464,7 +464,7 @@ def species_list(what_list):
 def symbol_list(what_list):
 	''' provide default symbol lists
 	what_list   string name of symbol lists provided
-	list1, list2, lines1
+	list1, list2, lines1, lines2
 	'''
 	if what_list is "list1":
 		symbol=['ro','bo','ko','go','mo'\
@@ -475,8 +475,9 @@ def symbol_list(what_list):
 		symbol=['r-','b--','g-.','k:','md','.','o','v','^','<','>','1','2',\
 			'3','4','s','p','*','h','H','+']
 	elif what_list is "lines1":
-		symbol=['r-','b--','g-.','k:','c-','m-','b-','g--','k-.','c:','m-','b-']
-			
+		symbol=['b--','k--','r--','c--','m--','g--','b-','k-','r-','c-','m-','g-','b.','b-.','k-.','r-.','c-.','m-.','g-.','b:','k:','r:','c:','m:','g:']
+	elif what_list is "lines2":
+		symbol=['g:','r-.','k-','b--','k--','b.','r--','b-','c--','m--','g--','r-','c-','m-','g-','k-.','c-.','m-.','g-.','k:','r:','c:','m:','b-.','b:']
 	return symbol
 		
 def make_list(default_symbol_list,len_list_to_print):

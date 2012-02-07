@@ -447,7 +447,8 @@ class star_log(DataPlot):
                     print 'zero time is '+str(t0_mod)
 		elif xax == 'model':
 		    xaxisarray = self.get('model_number')
-                    t0_mod=xaxisarray[t0_model]
+                    #t0_mod=xaxisarray[t0_model]
+                    t0_mod = 0
 		elif xax == 'logtimerev':
                     xaxi    = self.get('star_age')
                     xaxisarray = np.log10(np.max(xaxi)+t_eps-xaxi)
