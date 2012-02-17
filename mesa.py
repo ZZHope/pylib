@@ -1012,7 +1012,7 @@ class star_log(DataPlot):
 	    xxx= self.get('star_age')[modstart:modstop]/1.e6
 	    print 'plot versus age'
 	    ax.set_xlabel('Age [Myr]',fontsize=fsize)
-            xlims[] = [self.get('star_age')[modstart],self.get('star_age')[modstop]]
+            xlims = [self.get('star_age')[modstart],self.get('star_age')[modstop]]
 
 	cmapMIX = matplotlib.colors.ListedColormap(['w','k'])
 	cmapB1  = pl.cm.get_cmap('Blues')
