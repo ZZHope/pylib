@@ -1007,7 +1007,7 @@ class star_log(DataPlot):
 	    xxx= self.get('model_number')[modstart:modstop]
 	    print 'plot versus model number'
 	    ax.set_xlabel('Model number',fontsize=fsize)
-            xlims[] = [self.get('model_number')[modstart],self.get('model_number')[modstop]]
+            xlims = [self.get('model_number')[modstart],self.get('model_number')[modstop]]
 	elif ixaxis =='age':
 	    xxx= self.get('star_age')[modstart:modstop]/1.e6
 	    print 'plot versus age'
