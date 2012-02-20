@@ -867,15 +867,24 @@ class star_log(DataPlot):
         mup = max(float(self.get('star_mass')[0])*1.02,1.0)
         nmodels=len(self.get('model_number')[modstart:modstop])
 
+        if ylims == [0.,0.]:
+            mup   = max(float(self.get('star_mass')[0])*1.02,1.0)
+            mDOWN = 0.
+        else:
+            mup = ylims[1]*1.02
+            mDOWN = ylims[0]*0.98
+
         # y-axis resolution
         ny=yres
-        dy=mup/float(ny)
+        #dy=mup/float(ny)
+        dy = (mup-mDOWN)/float(ny)
 
         # x-axis resolution
         maxpoints=xres
         dx=int(max(1,nmodels/maxpoints))
 
-        y = np.arange(0., mup, dy)
+        #y = np.arange(0., mup, dy)
+        y = np.arange(mDOWN, mup, dy)
         x = np.arange(0, nmodels, dx)
         Msol=1.98892E+33
 
@@ -1003,6 +1012,7 @@ class star_log(DataPlot):
 	    xxx = lage[modstart:modstop]
 	    print 'plot versus time left'
 	    ax.set_xlabel('$\mathrm{log}_{10}(t^*) \, \mathrm{(yr)}$',fontsize=fsize)
+            xlims = [xxx[0],xxx[-1]]
 	elif ixaxis =='model_number':
 	    xxx= self.get('model_number')[modstart:modstop]
 	    print 'plot versus model number'
