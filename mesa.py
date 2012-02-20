@@ -871,8 +871,8 @@ class star_log(DataPlot):
             mup   = max(float(self.get('star_mass')[0])*1.02,1.0)
             mDOWN = 0.
         else:
-            mup = ylims[1]*1.02
-            mDOWN = ylims[0]*0.98
+            mup = ylims[1]
+            mDOWN = ylims[0]
 
         # y-axis resolution
         ny=yres
