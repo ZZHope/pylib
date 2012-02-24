@@ -169,8 +169,20 @@ Method that plots abundence chart and saves those figures to a .png file
 		(by default). Plots a figure for each cycle in the argument cycle\newline\newline
 		
 \subsection{utils.py}
-The current iteration currenly only has the class variables elements\_names and stable\_el.
-They are, respectively, a list of element names and stable elements.
+\index{utils.py}
+This superclass contains a number of utilities, concerning class
+variables elements\_names and stable\_el which are a list of element
+names and stable elements. The class \texttt{iniabu} contains methods
+to create initial abundance files for MESA runs from ppn
+\texttt{iniab} files in the \texttt{mppnp/USEPP} directory, as well as
+to create arbitariy modified and normalized initial abundance files
+\index{initial abundance file}
+for ppn runs based on \texttt{iniab} files. There are a number of
+private methods used to do deal with decaying abundance distributions,
+sorting, extracting etc. The function \texttt{symbol\_list} provides
+arrays with symbols for plotting in python. There are several other
+things that may or may not be useful. As always check the docstrings
+for the most up-to-date information.
 
 \section{Extention and Modification}
 
@@ -211,6 +223,7 @@ DAC & 101115 & generate template and input documentation\\
 DAC & 101123 & Added descriptions for the iso\_abund and sparce methods.\\
 DAC & 101123 & Also finished Modification section\\
 DAC & 101220 & Updated methods section\\
+FH & 120223 & Update on utils.py\\
 \hline
 \end{tabular*}
 \subsection{To Do}
