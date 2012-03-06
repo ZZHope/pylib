@@ -3,7 +3,7 @@ Analyze and visualize the output of single-zone ppn simulations
 
 Contains:
 class xtime - for analyzing x-time.data time evolutions
-class abu_vector - for analyzing selem0xxxx.DAT time evolutions
+class abu_vector - for analyzing iso_massfxxxx.DAT time evolutions
 
 PPN Assumptions:
 The first non white space character in a header line is a '#'.
