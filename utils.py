@@ -304,6 +304,8 @@ class iniabu(Utils):
 		p.set_and_normalize(sp)
 		p.write('p_ini.dat','header for this example')
 
+		p.write_mesa allows you to write this NuGrid initial abundance
+		file into a MESA readable initial abundance file.
 		'''
 		f0=open(filename)
 		sol=f0.readlines()
