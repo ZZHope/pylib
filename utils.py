@@ -268,7 +268,9 @@ class iniabu(Utils):
 	distribution file of the type iniab.dat. It then provides you
 	with methods to change some abundances, modify, normalise and
 	eventually write out the final distribution in a format that
-	can be used as an initial abundance file for ppn.
+	can be used as an initial abundance file for ppn. This class
+	also contains a method to write initial abundance files for a
+	MESA run, for a given MESA netowrk.
 	'''
 	# clean variables that we will use in this class
 	

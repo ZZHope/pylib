@@ -518,7 +518,7 @@ class star_log(DataPlot):
 		pyl.figure(num_frame)
 		
 		if xax == 'time':
-		    xAxisarray = self.get('star_age')[t0_model:]
+		    xaxisarray = self.get('star_age')[t0_model:]
 		elif xax == 'model':
 		    xaxisarray = self.get('model_number')[t0_model:]
 		elif xax == 'logrevtime':
