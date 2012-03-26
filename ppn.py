@@ -271,12 +271,13 @@ class abu_vector(DataPlot,Utils):
 			print 'Now returning None'
 			return None
 		f=os.listdir(sldir) # reads the directory
-		for i in range(len(f)):  
+		for file in f:  
 			# Removes any files that are not ppn files
 			filelength=len(filenames)+4
-		    	if filenames in f[i] and 'DAT' in f[i] and '~' not in f[i] and len(f[i])>filelength and 'restart' not in f[i]:
-		    		self.files.append(f[i])
-		
+		    	if filenames in file and 'DAT' in file and '~' not in file \
+                                and '#' not in file and len(file)>filelength \
+                                and 'restart' not in file:
+		    		self.files.append(file)
 		self.files.sort()
 		
 		if len(self.files)==0: 
@@ -287,11 +288,19 @@ class abu_vector(DataPlot,Utils):
 		fname=self.files[len(self.files)-1]
 		self.cattrs,self.dcols,self.index=self._readFile(fname,sldir)
 		
+                indexp_cyc2filels={}  # created index pointer from mod (cycle
+                i = 0                 # name) to index in files array
+                for file in self.files:
+                    mod=self.get('mod',fname=file,numtype='file')
+                    indexp_cyc2filels[mod] = i
+                    i += 1
+                self.indexp_cyc2filels = indexp_cyc2filels
+
 		for i in xrange(len(self.files)):
 			self.files[i]=self.sldir+self.files[i]
 		print str(len(self.files))+' cycle numbers found in '+sldir
 		print 'Rangeing from 0 to '+str(len(self.files)-1)
-		self.isotopes=self.get('ISOTP',0)
+		self.isotopes=self.get('ISOTP',self.files[0],numtype='file')
 		
 	
 	def getCycleData(self,attri,fname,numType='cycNum'):
@@ -675,7 +684,7 @@ class abu_vector(DataPlot,Utils):
                         fname = 0
                         print 'Using '+self.files[fname]
                 try:
-                    return self.files[fname]
+                    return self.files[indexp_cyc2filels[fname]]
                 except IndexError:
                     mods = array(self.get('mod'), dtype=int)
                     if fname not in mods:
