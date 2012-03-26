@@ -9,7 +9,135 @@ Utility class for holding extra methods from mesa.py, nuh5p.py
 import numpy as np
 import scipy as sc
 import ascii_table as att
+from scipy import optimize
+import matplotlib.pyplot as pl
 
+class data_fitting():
+	'''
+	Wrapper for the scipy method optimize.leastsq
+
+	Typically you have some data y(x) and you want to
+	fit some function to this data.
+
+	in order to test this create some sample data y(x)
+	x=arange(0,100)
+	y=(((random_sample(100)+0.5)*50.)-50)+x # this is the data to fit
+
+	This class provides two simple fit functions:
+	linear and power law
+	Feel free to add more, or provide your custom function
+	as an argument. For example, in order to provide an exponential
+	fit function, first define the function:
+	def ff(coef,x):
+	    return coef[0]*sc.exp(coef[1]*x)+coef[2]
+	and then call the data_fitting instance:
+	f=utils.data_fitting(ff,coef=(1,0,0))
+
+        Once you have initialized this class, the instance provides two methods:
+        fit and plot to check the fit:
+        f.fit(x,y)
+	f.plot()
+	The fit coefficients are stored in self.fcoef.
+
+	(FH)
+	'''
+
+	def __init__(self,func='linear',coef=(1,1)):
+		'''
+		func       'linear', 'powerlaw' or a custom function
+		coef       a guess for the list of coeffiecients, for
+		           'powerlaw' coef must have three enries, if
+			   you provide your own function, provide as many
+			   coef entries as your function needs
+		'''		
+		if func is 'linear':
+			print "Information: 'linear' fit needs coef list with 2 entries"
+			print " -> will use default: coef = "+str(coef)
+			if len(coef) is not 2:
+				print "Warning: you want a linear fit but you have not"
+				print "         provided a guess for coef with the"
+				print "         right length (2)."
+				print " -> I will continue and assume coef=(1,1)"
+				coef = (1,1)
+			def ff(coef,x):
+				return coef[0]*x + coef[1]
+		        self.func_name = func
+		elif func is 'powerlaw':
+			print "Information: 'powerlaw' fit needs coef list with 3 entries"
+			print " -> will use default: coef = "+str(coef)
+			if len(coef) is not 3:
+				print "Warning: you want a power law fit but you have"
+				print "         not provided a guess for coef with the"
+				print "         right length (3)."
+				print " -> I will continue and assume coef=(1,1,1)"
+				coef = (1,1,1)
+			def ff(coef,x):
+				return coef[0]*x**coef[1] + coef[2]
+		        self.func_name = func
+		else:
+			print "Information: You provide a fit function yourself. I trust"
+			print "             you have provided a matching guess for the "
+			print "             coefficient list!"
+			ff = func
+			self.func_name = func.__name__
+
+
+		# we want to determine the coefficients that
+		# fit the power law to the data
+		# this is done by finding the minimum to a
+		# residual function:
+		# func(params) = ydata - f(xdata, params)
+		# therefore we define a residual function
+		def fres(coef,y,ff,x):
+			return y-ff(coef,x)
+
+		self.residual = fres
+		self.coef     = coef
+		self.func     = ff
+
+	def fit(self,x,y,dcoef='none'):
+		'''
+		performs the fit
+
+		x,y     matching data arrays that define a numerical function
+		        y(x), this is the data to be fitted
+		dcoef   optionally you can provide a different guess for the
+		        coefficients
+			
+		output:
+		self.fcoef   contains the fitted coefficients
+
+		returns:
+		ierr         values between 1 and 4 signal success
+		'''
+                self.x = x
+                self.y = y
+
+		if dcoef is not 'none':
+			coef = dcoef
+		else:
+			coef = self.coef
+			
+		fcoef=optimize.leastsq(self.residual,coef,args=(y,self.func,x))
+		self.fcoef = fcoef[0].tolist()
+		return fcoef[1]
+
+	def plot(self,ifig=1):
+		'''
+		plot the data and the fitted function
+
+		ifig  figure window number
+		'''
+
+		if len(self.coef) is not len(self.fcoef):
+			print "Warning: the fitted coefficient list is not same"
+			print "         length as guessed list - still I will try ..."
+
+		pl.figure(ifig)
+		pl.plot(self.x,self.y, label='data')
+		pl.plot(self.x,self.func(self.fcoef,self.x),label=self.func_name)
+		pl.legend()
+		
 class constants():
 	mass_sun=1.9891e+33
 	mass_sun_unit='g'
