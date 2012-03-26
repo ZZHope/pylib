@@ -684,7 +684,7 @@ class abu_vector(DataPlot,Utils):
                         fname = 0
                         print 'Using '+self.files[fname]
                 try:
-                    return self.files[indexp_cyc2filels[fname]]
+                    return self.files[self.indexp_cyc2filels[fname]]
                 except IndexError:
                     mods = array(self.get('mod'), dtype=int)
                     if fname not in mods:
