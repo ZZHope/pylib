@@ -415,7 +415,7 @@ class star_log(DataPlot):
 
     def kippenhahn(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
                        tp_agb=0.,t_eps=5.e2,plot_star_mass=True,symbol_size=8,\
-                       c12_bm=False):
+                       c12_bm=False,print_legend=True):
 		''' Kippenhahn plot as a function of time or model
 		
 		num_frame    number of frame to plot this plot into 
@@ -435,6 +435,7 @@ class star_log(DataPlot):
                 plot_star_mass    True - then plot the stellar mass as a line as well
                 symbol_size  size of convection boundary marker
                 c12_bm       boolean if we plot c12_boundary_mass or not
+                print_legend       boolean, show or do not show legend
                 '''
 	
 		pyl.figure(num_frame)
@@ -490,7 +491,8 @@ class star_log(DataPlot):
                 if plot_star_mass is True:
                     pyl.plot(xaxisarray[t0_model:]-t0_mod,star_mass[t0_model:],label='$M_\star$')
 		pyl.ylabel('$m_\mathrm{r}/\mathrm{M}_\odot$')
-		pyl.legend(loc=2)
+		if print_legend:
+                    pyl.legend(loc=2)
                 if tp_agb > 0.:
                     h1_min = min(h1_boundary_mass[t0_model:])
                     h1_max = max(h1_boundary_mass[t0_model:])
