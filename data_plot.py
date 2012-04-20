@@ -1412,9 +1412,11 @@ class DataPlot:
 		plot_type = ['-','--','-.',':']
 		pl_index = 0
 		#6
-		#points = ['o','^','p','h','*']
-		#colors = ['g','r','c','m','k']
-		colors = ['k','k','k','k','k']
+		points = ['o','^','p','h','*']
+		if color_plot:
+			colors = ['g','r','c','m','k']
+		else:
+			colors = ['k','k','k','k','k']
 		cl_index = 0
 		
 		l1 = []
@@ -1432,9 +1434,9 @@ class DataPlot:
 		    
 		    try:
 			if log_logic == True:
-				l1.append(pl.semilogy(mass_num[j],abund_plot[j],str(colors[cl_index]+plot_type[pl_index])))
+				l1.append(pl.semilogy(mass_num[j],abund_plot[j],str(colors[cl_index]+points[cl_index]+plot_type[pl_index])))
 			if log_logic == False:
-	                        l1.append(pl.plot(mass_num[j],abund_plot[j],str(colors[cl_index]+plot_type[pl_index]))) 			
+	                        l1.append(pl.plot(mass_num[j],abund_plot[j],str(colors[cl_index]+points[cl_index]+plot_type[pl_index]))) 			
 			cl_index+=1
 			pl_index+=1
 			if pl_index > 3:
@@ -1482,9 +1484,15 @@ class DataPlot:
 			    
 		    try:
 			if log_logic == False:
-	                        pl.plot(mass_num[j],abund_plot[j],'k'+shape)
+				if color_plot:
+					pl.plot(mass_num[j],abund_plot[j],'k'+shape)
+				else:
+					pl.plot(mass_num[j],abund_plot[j],shape)
 			if log_logic == True:
-				pl.semilogy(mass_num[j],abund_plot[j],'k'+shape)
+				if color_plot:
+					pl.semilogy(mass_num[j],abund_plot[j],shape)
+				else:
+					pl.semilogy(mass_num[j],abund_plot[j],'k'+shape)
 		    except OverflowError:
 			None
 			#print 'div by zero', len(mass_num[j]), len(abund_plot[j])

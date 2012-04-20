@@ -418,7 +418,7 @@ class star_log(DataPlot):
                        c12_bm=False,print_legend=True):
 		''' Kippenhahn plot as a function of time or model
 		
-		num_frame    number of frame to plot this plot into 
+		num_frame    number of frame to plot this plot into, if <0 open no new figure
                 xax          string that is either 'model', 'time' or 'logtimerev' to
                              indicate what is to be used on the x-axis
                 t_eps        final time for logtimerev             
@@ -438,7 +438,8 @@ class star_log(DataPlot):
                 print_legend       boolean, show or do not show legend
                 '''
 	
-		pyl.figure(num_frame)
+                if num_frame >= 0:
+                    pyl.figure(num_frame)
 
 		t0_mod=[]
 
@@ -504,7 +505,7 @@ class star_log(DataPlot):
     def t_surfabu(self,num_frame,xax,t0_model=0,title='surface abundance',t_eps=1.e-3,plot_CO_ratio=False):
 		''' t_surfabu plots surface abundance evolution as a function of time
 		
-		num_frame    number of frame to plot this plot into 
+		num_frame    number of frame to plot this plot into, if <0 don't open figure
                 xax          string that is either model, time or logrevtime
                              to indicate what is to be used on the x-axis
 
@@ -516,8 +517,8 @@ class star_log(DataPlot):
                 t_eps        time eps at end for logrevtime
                 plot_CO_ratio onn second axis True/False 
                 '''
-	
-		pyl.figure(num_frame)
+                if num_frame >= 0:
+                    pyl.figure(num_frame)
 		
 		if xax == 'time':
 		    xaxisarray = self.get('star_age')[t0_model:]
@@ -543,15 +544,16 @@ class star_log(DataPlot):
                 t0_mod=xaxisarray[t0_model]
                 log10_c12=np.log10(surface_c12[t0_model:])
 
+                symbs=['k:','-','--','-.','b:','-','--','k-.',':','-','--','-.']
 
 		pyl.plot(xaxisarray,log10_c12,\
-                             label='$^{12}\mathrm{C}$')
+                             symbs[0],label='$^{12}\mathrm{C}$')
 		pyl.plot(xaxisarray,np.log10(surface_c13[t0_model:]),\
-                             label='$^{13}\mathrm{C}$')
+                             symbs[1],label='$^{13}\mathrm{C}$')
 		pyl.plot(xaxisarray,np.log10(surface_n14[t0_model:]),\
-                             label='$^{14}\mathrm{N}$')
+                             symbs[2],label='$^{14}\mathrm{N}$')
 		pyl.plot(xaxisarray,np.log10(surface_o16[t0_model:]),\
-                             label='$^{16}\mathrm{O}$')
+                             symbs[3],label='$^{16}\mathrm{O}$')
 #                pyl.plot([min(xaxisarray[t0_model:]-t0_mod),max(xaxisarray[t0_model:]-t0_mod)],[target_n14,target_n14])
 
 		pyl.ylabel('mass fraction $\log X$')
