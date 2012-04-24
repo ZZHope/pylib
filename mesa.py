@@ -835,7 +835,7 @@ class star_log(DataPlot):
         #fig.savefig(outfile)
         pl.show()
 
-    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50):
+    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
         For a more comprehensive plot, your star.log file should contain columns
@@ -849,9 +849,12 @@ class star_log(DataPlot):
         modstart:        model from which you want to plot (be careful if your star.log
                          output is sparse...)
         modstop:         model to which you wish to plot
-        xlims,ylims:     plot limits, however these are somewhat obsolete now that we
-                         have modstart and modstop. Leaving them as 0. is probably
-                         no slower, and you can always zoom in afterwards in mpl
+        xlims[DEPPREC.], plot limits, however these are somewhat obsolete now that we
+        ylims            have modstart and modstop. Leaving them as 0. is probably
+                         no slower, and you can always zoom in afterwards in mpl.
+                         ylims is important for well resolved thermal pulse etc plots;
+                         it's best to get the upper and lower limits of he-intershell using
+                         s.kippenhahn_CO(1,'model') first.
         outfile:         'filename + extension' where you want to save the figure
         ixaxis:          either 'log_time_left', 'age', or 'model_number'
         xres,yres:       plot resolution. Needless to say that increasing these
@@ -870,22 +873,32 @@ class star_log(DataPlot):
                          be the number after "mixing regions" and "burning regions".
                          Can't see these columns? leave it and 2 conv zones and 2 burn
                          zones will be drawn using other data that you certainly should
-                         have in your star.log file.'''
-
+                         have in your star.log file.
+        plot_radius      Whether on a second y-axis you want to plot the radius of the surface
+                         and the he-free core.'''
 
         xxyy=[self.get('star_age')[modstart:modstop],self.get('star_age')[modstart:modstop]]
         mup = max(float(self.get('star_mass')[0])*1.02,1.0)
         nmodels=len(self.get('model_number')[modstart:modstop])
 
+        if ylims == [0.,0.]:
+            mup   = max(float(self.get('star_mass')[0])*1.02,1.0)
+            mDOWN = 0.
+        else:
+            mup = ylims[1]
+            mDOWN = ylims[0]
+
         # y-axis resolution
         ny=yres
-        dy=mup/float(ny)
+        #dy=mup/float(ny)
+        dy = (mup-mDOWN)/float(ny)
 
         # x-axis resolution
         maxpoints=xres
         dx=int(max(1,nmodels/maxpoints))
 
-        y = np.arange(0., mup, dy)
+        #y = np.arange(0., mup, dy)
+        y = np.arange(mDOWN, mup, dy)
         x = np.arange(0, nmodels, dx)
         Msol=1.98892E+33
 
@@ -898,24 +911,22 @@ class star_log(DataPlot):
         except:
             engenstyle = 'twozone'
         if engenstyle == 'full':
+            ulimit_array = np.array([self.get('burn_qtop_'+str(j))[modstart:modstop:dx]*self.get('star_mass')[modstart:modstop:dx] for j in range(1,burn_zones+1)])
+            #ulimit_array = np.around(ulimit_array,decimals=len(str(dy))-2)
+            llimit_array = np.delete(ulimit_array,-1,0)
+            llimit_array = np.insert(ulimit_array,0,0.,0)
+            #llimit_array = np.around(llimit_array,decimals=len(str(dy))-2)
+            btype_array = np.array([self.get('burn_type_'+str(j))[modstart:modstop:dx] for j in range(1,burn_zones+1)])
             for i in range(len(x)):
-                # writing reading status 
-	        percent = int(i*100/len(x))
+                percent = int(i*100/len(x))
 	        sys.stdout.flush()
-	        sys.stdout.write("\rcreating color map1 " + "...%d%%" % percent)
-	        for j in range(1,burn_zones+1):
-	            ulimit=self.get('burn_qtop_'+str(j))[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
-	            if j==1:
-	                llimit=0.0
-	            else:
-	                llimit=self.get('burn_qtop_'+str(j-1))[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
-	            btype=float(self.get('burn_type_'+str(j))[modstart:modstop][i*dx])
-	            if llimit!=ulimit:
-	                for k in range(ny):
-	                    if llimit<=y[k] and ulimit>y[k] and btype>0.:
-		                B1[k,i]=10**(abs(btype))
-		            if llimit<=y[k] and ulimit>y[k] and btype<0.:
-		                B2[k,i]=10**(abs(btype))
+	        sys.stdout.write("\rcreating color map burn " + "...%d%%" % percent)
+                for j in range(burn_zones):
+                    if btype_array[j,i] > 0. and abs(btype_array[j,i]) < 99.:
+                        B1[(np.abs(y-llimit_array[j][i])).argmin():(np.abs(y-ulimit_array[j][i])).argmin()+1,i] = 10.0**(btype_array[j,i])
+                    elif btype_array[j,i] < 0. and abs(btype_array[j,i]) < 99.:
+                        B2[(np.abs(y-llimit_array[j][i])).argmin():(np.abs(y-ulimit_array[j][i])).argmin()+1,i] = 10.0**(abs(btype_array[j,i]))
+
         if engenstyle == 'twozone':
                 V=np.zeros([len(y),len(x)],float)
                 for i in range(len(x)):
@@ -955,23 +966,19 @@ class star_log(DataPlot):
         except:
             mixstyle = 'twozone'
         if mixstyle == 'full':
-	        Z=np.zeros([len(y),len(x)],float)
-	        for i in range(len(x)):
-	        # writing reading status 
-	          percent = int(i*100/len(x))
-	          sys.stdout.flush()
-	          sys.stdout.write("\rcreating color map2 " + "...%d%%" % percent)
-	          for j in range(1,mix_zones+1):
-	            ulimit=self.get('mix_qtop_'+str(j))[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
-	            if j==1:
-	              llimit=0.0
-	            else:
-	              llimit=self.get('mix_qtop_'+str(j-1))[modstart:modstop][i*dx]*self.get('star_mass')[modstart:modstop][i*dx]
-	            mtype=self.get('mix_type_'+str(j))[modstart:modstop][i*dx]
-	            if llimit!=ulimit:
-	              for k in range(ny):
-		        if llimit<=y[k] and ulimit>y[k] and mtype == 1:
-		          Z[k,i]=1.
+	    Z=np.zeros([len(y),len(x)],float)
+            ulimit_array = np.array([self.get('mix_qtop_'+str(j))[modstart:modstop:dx]*self.get('star_mass')[modstart:modstop:dx] for j in range(1,mix_zones+1)])
+            llimit_array = np.delete(ulimit_array,-1,0)
+            llimit_array = np.insert(ulimit_array,0,0.,0)
+            mtype_array = np.array([self.get('mix_type_'+str(j))[modstart:modstop:dx] for j in range(1,mix_zones+1)])
+            for i in range(len(x)):
+                percent = int(i*100/len(x))
+	        sys.stdout.flush()
+	        sys.stdout.write("\rcreating color map mix " + "...%d%%" % percent)
+                for j in range(mix_zones):
+                    if mtype_array[j,i] == 1.:
+                        Z[(np.abs(y-llimit_array[j][i])).argmin():(np.abs(y-ulimit_array[j][i])).argmin()+1,i] = 1.
+
         if mixstyle == 'twozone':
 	        Z=np.zeros([len(y),len(x)],float)
 	        for i in range(len(x)):
@@ -998,10 +1005,13 @@ class star_log(DataPlot):
 
 	########################################################################
 	#----------------------------------plot--------------------------------#
-	fig = pl.figure(1)
-	fig.set_size_inches(16,9)
-	fsize=20
-        ax=pl.axes([0.1,0.1,0.9,0.8])
+	#fig = pl.figure(1)
+	#fig.set_size_inches(16,9)
+	fsize=15
+        #ax=pl.axes([0.1,0.1,0.9,0.8])
+
+        fig=pl.figure()
+        ax=pl.axes()
 
 	if ixaxis == 'log_time_left':
 	# log of time left until core collapse
@@ -1016,23 +1026,25 @@ class star_log(DataPlot):
 	    xxx = lage[modstart:modstop]
 	    print 'plot versus time left'
 	    ax.set_xlabel('$\mathrm{log}_{10}(t^*) \, \mathrm{(yr)}$',fontsize=fsize)
+            xlims = [xxx[0],xxx[-1]]
 	elif ixaxis =='model_number':
 	    xxx= self.get('model_number')[modstart:modstop]
 	    print 'plot versus model number'
 	    ax.set_xlabel('Model number',fontsize=fsize)
+            xlims = [self.get('model_number')[modstart],self.get('model_number')[modstop]]
 	elif ixaxis =='age':
 	    xxx= self.get('star_age')[modstart:modstop]/1.e6
 	    print 'plot versus age'
 	    ax.set_xlabel('Age [Myr]',fontsize=fsize)
+            xlims = [self.get('star_age')[modstart]/1.e6,self.get('star_age')[modstop]/1.e6]
+
+        ax.set_ylabel('Mass [M$_\odot$]')
 
 	cmapMIX = matplotlib.colors.ListedColormap(['w','k'])
 	cmapB1  = pl.cm.get_cmap('Blues')
 	cmapB2  = pl.cm.get_cmap('Reds')
 	#cmapB1  = matplotlib.colors.ListedColormap(['w','b'])
 	#cmapB2  = matplotlib.colors.ListedColormap(['r','w'])
-        if xlims == [0.,0.]:
-            xlims[0] = xxx[0]
-            xlims[1] = xxx[-1]
         if ylims == [0.,0.]:
             ylims[0] = 0.
             ylims[1] = mup
@@ -1044,14 +1056,17 @@ class star_log(DataPlot):
         print Z
 
 	print 'plotting contours'
-	CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.5,levels=[0.5,1.5])
+	CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.3,levels=[0.5,1.5])
+        CMIX_outlines    = ax.contour(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.9,levels=[0.5,1.5])
         if engenstyle == 'full':
                 print B1
                 print B2
-        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5, locator=matplotlib.ticker.LogLocator())
+        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.3, locator=matplotlib.ticker.LogLocator())
+                CB1_outlines  = ax.contour(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.3, locator=matplotlib.ticker.LogLocator())
 #        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5)
-#        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5, locator=matplotlib.ticker.LogLocator())
-        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5)
+        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.3, locator=matplotlib.ticker.LogLocator())
+         #       CBURN2_outlines  = ax.contour(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.3, locator=matplotlib.ticker.LogLocator())
+#        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5)
         	CBARBURN1 = pl.colorbar(CBURN1)
         	CBARBURN2 = pl.colorbar(CBURN2)
         	CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
@@ -1069,8 +1084,15 @@ class star_log(DataPlot):
 
         ax.axis([xlims[0],xlims[1],ylims[0],ylims[1]])
 
+        if plot_radius == True:
+            ax2=pyl.twinx()
+            ax2.plot(xxx,np.log10(self.get('he4_boundary_radius')[modstart:modstop]),label='He boundary radius',color='k',linewidth=1.,linestyle='-.')
+            ax2.plot(xxx,self.get('log_R')[modstart:modstop],label='radius',color='k',linewidth=1.,linestyle='-.')
+            ax2.set_ylabel('log(radius)')
+
         fig.savefig(outfile)
         pl.show()
+
 # below are some utilities that the user typically never calls directly
 
 def read_mesafile(filename,data_rows=0,only='all'):
