@@ -835,7 +835,7 @@ class star_log(DataPlot):
         #fig.savefig(outfile)
         pl.show()
 
-    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False):
+    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False,engen=True):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
         For a more comprehensive plot, your star.log file should contain columns
@@ -875,7 +875,8 @@ class star_log(DataPlot):
                          zones will be drawn using other data that you certainly should
                          have in your star.log file.
         plot_radius      Whether on a second y-axis you want to plot the radius of the surface
-                         and the he-free core.'''
+                         and the he-free core.
+        engen            Boolean whether or not to plot energy generation contours.'''
 
         xxyy=[self.get('star_age')[modstart:modstop],self.get('star_age')[modstart:modstop]]
         mup = max(float(self.get('star_mass')[0])*1.02,1.0)
@@ -910,7 +911,7 @@ class star_log(DataPlot):
             self.get('burn_qtop_1')
         except:
             engenstyle = 'twozone'
-        if engenstyle == 'full':
+        if engenstyle == 'full' and engen == True:
             ulimit_array = np.array([self.get('burn_qtop_'+str(j))[modstart:modstop:dx]*self.get('star_mass')[modstart:modstop:dx] for j in range(1,burn_zones+1)])
             #ulimit_array = np.around(ulimit_array,decimals=len(str(dy))-2)
             llimit_array = np.delete(ulimit_array,-1,0)
@@ -927,7 +928,7 @@ class star_log(DataPlot):
                     elif btype_array[j,i] < 0. and abs(btype_array[j,i]) < 99.:
                         B2[(np.abs(y-llimit_array[j][i])).argmin():(np.abs(y-ulimit_array[j][i])).argmin()+1,i] = 10.0**(abs(btype_array[j,i]))
 
-        if engenstyle == 'twozone':
+        if engenstyle == 'twozone' and engen == True:
                 V=np.zeros([len(y),len(x)],float)
                 for i in range(len(x)):
                 # writing reading status 
@@ -1041,8 +1042,9 @@ class star_log(DataPlot):
         ax.set_ylabel('Mass [M$_\odot$]')
 
 	cmapMIX = matplotlib.colors.ListedColormap(['w','k'])
-	cmapB1  = pl.cm.get_cmap('Blues')
-	cmapB2  = pl.cm.get_cmap('Reds')
+        if engen == True:
+		cmapB1  = pl.cm.get_cmap('Blues')
+		cmapB2  = pl.cm.get_cmap('Reds')
 	#cmapB1  = matplotlib.colors.ListedColormap(['w','b'])
 	#cmapB2  = matplotlib.colors.ListedColormap(['r','w'])
         if ylims == [0.,0.]:
@@ -1058,7 +1060,7 @@ class star_log(DataPlot):
 	print 'plotting contours'
 	CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.3,levels=[0.5,1.5])
         CMIX_outlines    = ax.contour(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.9,levels=[0.5,1.5])
-        if engenstyle == 'full':
+        if engenstyle == 'full' and engen == True:
                 print B1
                 print B2
         	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.3, locator=matplotlib.ticker.LogLocator())
@@ -1070,7 +1072,7 @@ class star_log(DataPlot):
         	CBARBURN1 = pl.colorbar(CBURN1)
         	CBARBURN2 = pl.colorbar(CBURN2)
         	CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
-        if engenstyle == 'twozone':
+        if engenstyle == 'twozone' and engen == True:
                 print V
                 ax.contourf(xxx[::dx],y,V, cmap=cmapB1, alpha=0.5)
 
