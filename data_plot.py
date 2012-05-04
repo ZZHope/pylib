@@ -1629,7 +1629,7 @@ class DataPlot:
 	
 	# From mesa.star_log
 	
-def flux_chart(file_name,plotaxis,plot_type):
+def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None,prange=None):
 	'''
 	Plots a chart with fluxes
 	input:
@@ -1638,12 +1638,15 @@ def flux_chart(file_name,plotaxis,plot_type):
         plot_types: 0 for standard flux plot, 1 if fluxes focused on one specie.
         Note: the script is terribly slow, need to be improved. For now I put here in data_plot:
         [1]: import data_plot
-        [2]: data_plot.flux_chart('file_name',[xmin,xmax,ymin,ymax],int)
+        [2]: data_plot.flux_chart('file_name',[xmin,xmax,ymin,ymax],int,which_flux,I_am_the_target,prange)
 	The pdf is created, but an error bumped up and the gui is empty. To avoid this, I had to set 'text.usetex': False. See below.
         Also, for the same reason no label in x axys is written using 'text.usetex': True.  
         Note also that the GUI works really slow with this plot. so, we need to optimize from the graphic point of view.
         This need to be included in ppn.py I think, and set in multi option too, in case we want to read more flux files at the same time. 
         Finally, you need to have stable.dat to read in to make it work....
+	which_flux = 0 is for nucleosynthesis flux plot, which_flux = 1 is for energy flux plot, None is default, that is option 0.
+	I_am_the_target is a 2Xarray used only if plot_type=1, and is given by [neutron number,proton number].
+	prange is the range of fluxes to be considered. 
         '''
 
 	import numpy as np
@@ -1672,6 +1675,15 @@ def flux_chart(file_name,plotaxis,plot_type):
         flux_read = []
         flux_log10 = []
  
+	if which_flux == None or which_flux == 0:
+		print 'chart for nucleosynthesis fluxes [dYi/dt]'
+		line_to_read = 9
+	elif which_flux == 1:
+		print 'chart for energy fluxes'
+		line_to_read = 10
+	elif which_flux > 1:
+		print "you have only option 0 or 1, not larger than 1"
+
         single_line = [] 
         for i in range(len(lines)):
                 single_line.append(lines[i].split())
@@ -1681,18 +1693,14 @@ def flux_chart(file_name,plotaxis,plot_type):
                 coord_x_2.append(float(single_line[i][6])-coord_y_2[i])
  		coord_y_3.append(float(single_line[i][7]))
                 coord_x_3.append(float(single_line[i][8])-coord_y_3[i])
-                flux_read.append(float(single_line[i][9]))
+                flux_read.append(float(single_line[i][line_to_read]))
                 flux_log10.append(np.log10(flux_read[i]+1.0e-99))    
     
-        #print coord_x_1[72],coord_y_1[72] 
     	print 'file read!'
 
         if plot_type == 1:
-		I_am_the_target = [1.-1.,1.]
+		print 'I_am_the_target=',I_am_the_target
 		#I_am_the_target = [56.-26.,26.]
-                #I_am_the_target = [13.-7.,7.]
-		#I_am_the_target = [22.-10.,10.]
-                # = [79.-34.,34.]
         # here below need for plotting 
 	# plotaxis = [xmin,xmax,ymin,ymax] 
 	#plotaxis=[1,20,1,20]
@@ -1708,7 +1716,9 @@ def flux_chart(file_name,plotaxis,plot_type):
 	imagic = 0
 
 	# flow is plotted over "prange" dex. If flow < maxflow-prange it is not plotted
-	prange = 4 #8.
+	if prange == None:
+		print 'plot range given by default'
+		prange = 8.
 
         ############################################# 
 
