@@ -1693,11 +1693,46 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
                 coord_x_2.append(float(single_line[i][6])-coord_y_2[i])
  		coord_y_3.append(float(single_line[i][7]))
                 coord_x_3.append(float(single_line[i][8])-coord_y_3[i])
-                flux_read.append(float(single_line[i][line_to_read]))
+		try:
+                	flux_read.append(float(single_line[i][line_to_read]))
+		except ValueError: # this is done to avoid format issues like 3.13725-181...
+			flux_read.append(1.0E-99)
                 flux_log10.append(np.log10(flux_read[i]+1.0e-99))    
     
     	print 'file read!'
 
+	# I need to select smaller sample, with only fluxes inside plotaxis.
+	coord_y_1_small=[]
+	coord_x_1_small=[]
+	coord_y_2_small=[]
+	coord_x_2_small=[]
+	coord_y_3_small=[]
+	coord_x_3_small=[]
+	flux_log10_small = []
+	for i in range(len(flux_log10)):
+		I_am_in = 0
+		if coord_y_1[i] > plotaxis[2] and coord_y_1[i] < plotaxis[3] and coord_x_1[i] > plotaxis[0] and coord_x_1[i] < plotaxis[1]:
+			I_am_in = 1
+			coord_y_1_small.append(coord_y_1[i])
+			coord_x_1_small.append(coord_x_1[i])
+			coord_y_2_small.append(coord_y_2[i])
+			coord_x_2_small.append(coord_x_2[i])
+			coord_y_3_small.append(coord_y_3[i])
+			coord_x_3_small.append(coord_x_3[i])
+			flux_log10_small.append(flux_log10[i])
+		if coord_y_3[i] > plotaxis[2] and coord_y_3[i] < plotaxis[3] and coord_x_3[i] > plotaxis[0] and coord_x_3[i] < plotaxis[1] and I_am_in == 0:
+			I_am_in = 1
+			coord_y_1_small.append(coord_y_1[i])
+			coord_x_1_small.append(coord_x_1[i])
+			coord_y_2_small.append(coord_y_2[i])
+			coord_x_2_small.append(coord_x_2[i])
+			coord_y_3_small.append(coord_y_3[i])
+			coord_x_3_small.append(coord_x_3[i])
+			flux_log10_small.append(flux_log10[i])
+					
+	print len(flux_log10),len(flux_log10_small)
+	
+	
         if plot_type == 1:
 		print 'I_am_the_target=',I_am_the_target
 		#I_am_the_target = [56.-26.,26.]
@@ -1722,29 +1757,52 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 
         ############################################# 
 
+	# we should scale prange on plot_axis range, not on max_flux!
         max_flux = max(flux_log10)
+	max_flux_small = max(flux_log10_small)
         
-  	nzmax = int(max(max(coord_y_1),max(coord_y_2),max(coord_y_3)))+1
-  	nnmax = int(max(max(coord_x_1),max(coord_x_2),max(coord_x_3)))+1
+  	#nzmax = int(max(max(coord_y_1),max(coord_y_2),max(coord_y_3)))+1
+  	#nnmax = int(max(max(coord_x_1),max(coord_x_2),max(coord_x_3)))+1
+	nzmax = int(max(max(coord_y_1_small),max(coord_y_2_small),max(coord_y_3_small)))+1
+  	nnmax = int(max(max(coord_x_1_small),max(coord_x_2_small),max(coord_x_3_small)))+1
+
 
         nzycheck = np.zeros([nnmax,nzmax,3])   
-        coord_x_out = np.zeros(len(coord_x_2))
-        coord_y_out = np.zeros(len(coord_y_2))
-        for i in range(len(flux_log10)):
-  		nzycheck[coord_x_1[i],coord_y_1[i],0] = 1
-  		nzycheck[coord_x_1[i],coord_y_1[i],1] = flux_log10[i]
-  		if coord_x_2[i] >= coord_x_3[i]:
-                        coord_x_out[i] = coord_x_2[i] 
-                        coord_y_out[i] = coord_y_2[i] 
+        #coord_x_out = np.zeros(len(coord_x_2))
+        #coord_y_out = np.zeros(len(coord_y_2))
+        #for i in range(len(flux_log10)):
+  	#	nzycheck[coord_x_1[i],coord_y_1[i],0] = 1
+  	#	nzycheck[coord_x_1[i],coord_y_1[i],1] = flux_log10[i]
+  	#	if coord_x_2[i] >= coord_x_3[i]:
+        #                coord_x_out[i] = coord_x_2[i] 
+        #                coord_y_out[i] = coord_y_2[i] 
+    	#		nzycheck[coord_x_out[i],coord_y_out[i],0] = 1
+    	#		nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10[i]
+        #        elif coord_x_2[i] < coord_x_3[i]:               
+        #                coord_x_out[i] = coord_x_3[i] 
+        #                coord_y_out[i] = coord_y_3[i] 
+    	#		nzycheck[coord_x_out[i],coord_y_out[i],0] = 1
+    	#		nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10[i]
+    	#	if flux_log10[i]>max_flux-prange:
+      	#		nzycheck[coord_x_1[i],coord_y_1[i],2] = 1
+      	#		nzycheck[coord_x_out[i],coord_y_out[i],2] = 1
+	coord_x_out = np.zeros(len(coord_x_2_small))
+        coord_y_out = np.zeros(len(coord_y_2_small))
+        for i in range(len(flux_log10_small)):
+  		nzycheck[coord_x_1_small[i],coord_y_1_small[i],0] = 1
+  		nzycheck[coord_x_1_small[i],coord_y_1_small[i],1] = flux_log10_small[i]
+  		if coord_x_2_small[i] >= coord_x_3_small[i]:
+                        coord_x_out[i] = coord_x_2_small[i] 
+                        coord_y_out[i] = coord_y_2_small[i] 
     			nzycheck[coord_x_out[i],coord_y_out[i],0] = 1
-    			nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10[i]
-                elif coord_x_2[i] < coord_x_3[i]:               
-                        coord_x_out[i] = coord_x_3[i] 
-                        coord_y_out[i] = coord_y_3[i] 
+    			nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10_small[i]
+                elif coord_x_2_small[i] < coord_x_3_small[i]:               
+                        coord_x_out[i] = coord_x_3_small[i] 
+                        coord_y_out[i] = coord_y_3_small[i] 
     			nzycheck[coord_x_out[i],coord_y_out[i],0] = 1
-    			nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10[i]
-    		if flux_log10[i]>max_flux-prange:
-      			nzycheck[coord_x_1[i],coord_y_1[i],2] = 1
+    			nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10_small[i]
+    		if flux_log10_small[i]>max_flux_small-prange:
+      			nzycheck[coord_x_1_small[i],coord_y_1_small[i],2] = 1
       			nzycheck[coord_x_out[i],coord_y_out[i],2] = 1
 
 	#######################################################################
@@ -1829,51 +1887,99 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
  	apatches = []
   	acolor = []
   	m = 0.8/prange
-  	vmax=np.ceil(max(flux_log10))
-  	vmin=max(flux_log10)-prange
+  	vmax=np.ceil(max(flux_log10_small))
+  	vmin=max(flux_log10_small)-prange
   	b=-vmin*m+0.1
   	normr = colors.Normalize(vmin=vmin,vmax=vmax)
   	ymax=0.
   	xmax=0.
 
-  	for i in range(len(flux_log10)):
-    		x = coord_x_1[i]
-    		y = coord_y_1[i]
-    		dx = coord_x_out[i]-coord_x_1[i]
-    		dy = coord_y_out[i]-coord_y_1[i]                
+	for i in range(len(flux_log10_small)):
+    		x = coord_x_1_small[i]
+    		y = coord_y_1_small[i]
+    		dx = coord_x_out[i]-coord_x_1_small[i]
+    		dy = coord_y_out[i]-coord_y_1_small[i]                
                 if plot_type == 0: 
-    			if flux_log10[i]>=vmin:
-      				arrowwidth = flux_log10[i]*m+b
+    			if flux_log10_small[i]>=vmin:
+      				arrowwidth = flux_log10_small[i]*m+b
       				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
      				if xmax<x:
         				xmax=x
       				if ymax<y:
         				ymax=y
-      				acol = flux_log10[i]
+      				acol = flux_log10_small[i]
       				apatches.append(arrow)
       				acolor.append(acol)
     		elif plot_type == 1:
-			if x==I_am_the_target[0] and y==I_am_the_target[1] and flux_log10[i]>=vmin:
-      				arrowwidth = flux_log10[i]*m+b
+			if x==I_am_the_target[0] and y==I_am_the_target[1] and flux_log10_small[i]>=vmin:
+      				arrowwidth = flux_log10_small[i]*m+b
       				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
      				if xmax<x:
         				xmax=x
       				if ymax<y:
         				ymax=y
-      				acol = flux_log10[i]
+      				acol = flux_log10_small[i]
       				apatches.append(arrow)
       				acolor.append(acol)
-			if x+dx==I_am_the_target[0] and y+dy==I_am_the_target[1] and flux_log10[i]>=vmin:
-      				arrowwidth = flux_log10[i]*m+b
+			if x+dx==I_am_the_target[0] and y+dy==I_am_the_target[1] and flux_log10_small[i]>=vmin:
+      				arrowwidth = flux_log10_small[i]*m+b
       				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
      				if xmax<x:
         				xmax=x
       				if ymax<y:
         				ymax=y
-      				acol = flux_log10[i]
+      				acol = flux_log10_small[i]
       				apatches.append(arrow)
       				acolor.append(acol)
 
+ 	#apatches = []
+  	#acolor = []
+  	#m = 0.8/prange
+  	#vmax=np.ceil(max(flux_log10))
+  	#vmin=max(flux_log10)-prange
+  	#b=-vmin*m+0.1
+  	#normr = colors.Normalize(vmin=vmin,vmax=vmax)
+  	#ymax=0.
+  	#xmax=0.
+ 
+ 	#for i in range(len(flux_log10)):
+    	#	x = coord_x_1[i]
+    	#	y = coord_y_1[i]
+    	#	dx = coord_x_out[i]-coord_x_1[i]
+    	#	dy = coord_y_out[i]-coord_y_1[i]                
+        #       if plot_type == 0: 
+    	#		if flux_log10[i]>=vmin:
+      	#			arrowwidth = flux_log10[i]*m+b
+      	#			arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     	#			if xmax<x:
+        #				xmax=x
+      	#			if ymax<y:
+        #				ymax=y
+      	#			acol = flux_log10[i]
+      	#			apatches.append(arrow)
+      	#			acolor.append(acol)
+    	#	elif plot_type == 1:
+	#		if x==I_am_the_target[0] and y==I_am_the_target[1] and flux_log10[i]>=vmin:
+      	#			arrowwidth = flux_log10[i]*m+b
+      	#			arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     	#			if xmax<x:
+        #				xmax=x
+      	#			if ymax<y:
+        #				ymax=y
+      	#			acol = flux_log10[i]
+      	#			apatches.append(arrow)
+      	#			acolor.append(acol)
+	#		if x+dx==I_am_the_target[0] and y+dy==I_am_the_target[1] and flux_log10[i]>=vmin:
+      	#			arrowwidth = flux_log10[i]*m+b
+      	#			arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     	#			if xmax<x:
+        #				xmax=x
+      	#			if ymax<y:
+        #				ymax=y
+      	#			acol = flux_log10[i]
+      	#			apatches.append(arrow)
+      	#			acolor.append(acol)
+	#
 
 
         	xy = x-0.5,y-0.5
@@ -1946,6 +2052,9 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 	# set x- and y-axis label
 	ax.set_xlabel('neutron number')
 	ax.set_ylabel('proton number')
+	max_flux_label="max_flux = "+str(max_flux)
+	ax.text(plotaxis[1]-1.5,plotaxis[2]+0.1,max_flux_label,fontsize=10.)	
+
 
 	fig.savefig(graphname)
 	print graphname,'is done'
