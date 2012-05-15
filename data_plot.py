@@ -1657,6 +1657,9 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 	from matplotlib.offsetbox import AnchoredOffsetbox, TextArea
 	import sys
 
+	print_max_flux_in_plot =  True
+
+
     	f = open(file_name)
     	lines = f.readline()
         lines = f.readlines()
@@ -1729,8 +1732,6 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 			coord_y_3_small.append(coord_y_3[i])
 			coord_x_3_small.append(coord_x_3[i])
 			flux_log10_small.append(flux_log10[i])
-					
-	print len(flux_log10),len(flux_log10_small)
 	
 	
         if plot_type == 1:
@@ -1759,6 +1760,7 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 
 	# we should scale prange on plot_axis range, not on max_flux!
         max_flux = max(flux_log10)
+	ind_max_flux = flux_log10.index(max_flux)
 	max_flux_small = max(flux_log10_small)
         
   	#nzmax = int(max(max(coord_y_1),max(coord_y_2),max(coord_y_3)))+1
@@ -2052,11 +2054,16 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 	# set x- and y-axis label
 	ax.set_xlabel('neutron number')
 	ax.set_ylabel('proton number')
-	max_flux_label="max_flux = "+str(max_flux)
-	ax.text(plotaxis[1]-1.5,plotaxis[2]+0.1,max_flux_label,fontsize=10.)	
+	if which_flux == None or which_flux == 0:
+		max_flux_label="max flux = "+str('{0:.4f}'.format(max_flux))
+	elif which_flux == 1:
+		max_flux_label="max energy flux = "+str('{0:.4f}'.format(max_flux))
+	if print_max_flux_in_plot:
+		ax.text(plotaxis[1]-1.8,plotaxis[2]+0.1,max_flux_label,fontsize=10.)	
 
 
 	fig.savefig(graphname)
 	print graphname,'is done'
+	print max_flux_label,'for reaction =',ind_max_flux+1 
 
 	plt.show()
