@@ -82,12 +82,12 @@ class DataPlot:
 		logYER=False
 		for i in range(len(tmpX)):
 				if tmpX[i]<=0. and logX:
-					print 'We can not log a number less than or equal to zero'
-					print 'Attempting to remove incompatible values from X'
+					#print 'We can not log a number less than or equal to zero'
+					#print 'Attempting to remove incompatible values from X'
 					logXER=True
 				if tmpY[i]<=0. and logY:
-					print 'We can not log a number less than or equal to zero'
-					print 'Attempting to remove incompatible values from Y'
+					#print 'We can not log a number less than or equal to zero'
+					#print 'Attempting to remove incompatible values from Y'
 					logYER=True
 		tmX=[]
 		tmY=[]
@@ -116,8 +116,8 @@ class DataPlot:
 				for i in range(len(tmpX)):
 					tmX[i]=log(tmpX[i],base)
 			except ValueError:
-				print 'We can not log a number less than or equal to zero'
-				print 'Attempting to remove incompatible values from X'
+				#print 'We can not log a number less than or equal to zero'
+				#print 'Attempting to remove incompatible values from X'
 				logXER=True
 		if logY:
 			tmY=tmpY
@@ -125,8 +125,8 @@ class DataPlot:
 				for i in range(len(tmpY)):
 					tmY[i]=log(tmpY[i],base)
 			except ValueError:
-				print 'We can not log a number less than or equal to zero'
-				print 'Attempting to remove incompatible values from Y'
+				#print 'We can not log a number less than or equal to zero'
+				#print 'Attempting to remove incompatible values from Y'
 				logYER=True
 		
 		if logX:
@@ -842,7 +842,7 @@ class DataPlot:
 		return
 		
 	def iso_abundMulti(self,cyclist, stable=False,amass_range=None,mass_range=None,
-		ylim=[1e-13,10],shape='o',ref=-1,decayed=False,title=None,pdf=False):
+		ylim=[1e-13,10],shape='o',ref=-1,decayed=False,title=None,pdf=False,color_plot=True):
 		'''
 		Method that plots figures and saves those figures to a .png file 
 		(by default). Plots a figure for each cycle in the argument cycle
@@ -863,12 +863,13 @@ class DataPlot:
 				Defaults to None	     
 		 ylim - A 1x2 array containing the lower and upper Y limits.
 		    	   Defaults to 1e-13 and 10
-		 ref  - reference cycle, If it is not -1, this method will 
-		    plot the abundences of cycle devided by the .
-		    	   The default is -1, it will do nothing
-		 shape -The Shape of the dataplots, will default to circles
-		 pdf - Boolean of if the output images will be pdf files
+		 ref   - reference cycle, If it is not -1, this method will 
+		         plot the abundences of cycle devided by the .
+		    	 The default is -1, it will do nothing
+		 shape - The Shape of the dataplots, will default to circles
+		 pdf   - Boolean of if the output images will be pdf files
 		 Title - Title of the plot and the image file
+		 color_plot - color dots and lines, True or False 
 		 
 		 NOTE, This method will achieve a 33% speed up and a 25% sppedup
 		 when calling this method from python or ipython, rather than
@@ -878,7 +879,8 @@ class DataPlot:
 			
 		
 		for i in xrange(len(cyclist)):
-			self.iso_abund(cyclist[i],stable,amass_range,mass_range,ylim,shape,ref,decayed=decayed,show=False)
+			self.iso_abund(cyclist[i],stable,amass_range,mass_range,ylim,shape,ref,decayed=decayed,\
+					       show=False,color_plot=color_plot)
 			if title !=None:
 				pl.title(title)
 			else:
@@ -932,7 +934,7 @@ class DataPlot:
 		
 	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,\
 			      ylim=[1e-13,10],shape='o',ref=-1,show=True,given_abund_array=None,\
-			      log_logic=True,decayed=False):
+			      log_logic=True,decayed=False,color_plot=True):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
@@ -971,13 +973,15 @@ class DataPlot:
 		    given_abund_array - array of abundances that can be given from script comparison_ppn, and if ref=-2 are plotted.
 		    log_logic = True/False to plot abundances in log scale or linear.	 
 		    decayed =True/False to plot decayed distributions (True), or life distribution
+		    color_plot - color dots and lines, True or False 
+
 		'''
 		elem_list = []
 		elem_index = []
 		masses = []
 		plotType=self.classTest()
 		if str(cycle.__class__)=="<type 'list'>":
-			self.iso_abundMulti(cycle, stable,amass_range,mass_range,ylim,shape,ref,decayed)
+			self.iso_abundMulti(cycle, stable,amass_range,mass_range,ylim,shape,ref,decayed,color_plot=color_plot)
 			return
 			
 		if str(ref.__class__)=="<type 'str'>":

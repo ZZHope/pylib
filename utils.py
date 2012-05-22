@@ -122,11 +122,15 @@ class data_fitting():
 		self.fcoef = fcoef[0].tolist()
 		return fcoef[1]
 
-	def plot(self,ifig=1):
+	def plot(self,ifig=1,data_label='data',fit_label='fit',data_shape='o',fit_shape='-'):
 		'''
 		plot the data and the fitted function
 
 		ifig  figure window number
+		data_label  legend for data
+		fit_label   legend for fit, if 'fit' substitute fit function type self.func_name
+		data_shape  shape for data
+		fit_shape   shape for fit
 		'''
 
 		if len(self.coef) is not len(self.fcoef):
@@ -134,8 +138,10 @@ class data_fitting():
 			print "         length as guessed list - still I will try ..."
 
 		pl.figure(ifig)
-		pl.plot(self.x,self.y, label='data')
-		pl.plot(self.x,self.func(self.fcoef,self.x),label=self.func_name)
+		pl.plot(self.x,self.y,data_shape,label=data_label)
+		if fit_label is 'fit':
+			fit_label=self.func_name
+		pl.plot(self.x,self.func(self.fcoef,self.x),fit_shape,label=fit_label)
 		pl.legend()
 		
 class constants():

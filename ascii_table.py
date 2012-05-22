@@ -237,7 +237,7 @@ def writeTraj(filename='trajectory.input',data=[], ageunit=0,tunit=0,rhounit=0, 
 		Method for writeing Trajectory type ascii files files.
 		Input:
 		filename: The file where this data will be written.
-		data: A list of lists (or of numpy arrays).
+		data: A list of 1D data vectors with time, T and rho
 		ageunit: If 1 ageunit = SEC, If 0 ageunit = YRS. Default is 0
 		tunit:   If 1 TUNIT   = T9K, if 0 TUNIT   = T8K. Default is 0
 		rhounit: If 1 RHOUNIT = LOG, if 0 RHOUNIT = CGS. Default is 0
