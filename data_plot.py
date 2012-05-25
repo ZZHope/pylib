@@ -840,6 +840,23 @@ class DataPlot:
 		if turnoff:
 			ion()
 		return
+
+	def padding_model_number(self,number,max_num):
+	    ''' this method returns a zero-front padded string                                                                                   
+
+	    It makes out of str(45) -> '0045' if 999 < max_num < 10000. This
+	    is meant to work for reasonable integers (maybe less than 10^6).
+	    number   number that the string should represent 
+	    max_num  max number of cycle list, implies how many 0s have
+		     be padded
+	    '''
+
+	    cnum = str(number)
+	    clen = len(cnum)
+
+	    cmax = int(log10(max_num)) + 1
+
+	    return (cmax - clen)*'0' + cnum
 		
 	def iso_abundMulti(self,cyclist, stable=False,amass_range=None,mass_range=None,
 		ylim=[1e-13,10],shape='o',ref=-1,decayed=False,title=None,pdf=False,color_plot=True):
@@ -875,9 +892,10 @@ class DataPlot:
 		 when calling this method from python or ipython, rather than
 		 ipython --pylab --q4thread
 		'''
-		print 'This method will achieve a 33% speedup and a 25% speedupwhen calling this method from python or ipython, rather than ipython --pylab --q4thread'
-			
-		
+		print 'This method will achieve a 33% speedup and a 25% speed-u pwhen calling'\
+		    ' this method from python or ipython, rather than ipython --pylab --q4thread'
+
+		max_num = max(cyclist)
 		for i in xrange(len(cyclist)):
 			self.iso_abund(cyclist[i],stable,amass_range,mass_range,ylim,shape,ref,decayed=decayed,\
 					       show=False,color_plot=color_plot)
@@ -885,10 +903,11 @@ class DataPlot:
 				pl.title(title)
 			else:
 				name='IsoAbund'
+				number_str=self.padding_model_number(cyclist[i],max_num)
 			if not pdf:
-				pl.savefig(name+str(cyclist[i])+'.png', dpi=200)
+				pl.savefig(name+number_str+'.png', dpi=200)
 			else:
-				pl.savefig(name+cyclist[i]+'.pdf', dpi=200)
+				pl.savefig(name+number_str+'.pdf', dpi=200)
 			pl.clf()
 		
 		return None

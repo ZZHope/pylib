@@ -238,7 +238,8 @@ def writeTraj(filename='trajectory.input',data=[], ageunit=0,tunit=0,rhounit=0, 
 		Input:
 		filename: The file where this data will be written.
 		data: A list of 1D data vectors with time, T and rho
-		ageunit: If 1 ageunit = SEC, If 0 ageunit = YRS. Default is 0
+		ageunit: If 1 ageunit = SEC, If 0 ageunit = YRS. If 2 agunit = logtimerev in yrs. Default is 0
+		logtimerev is log of time until end
 		tunit:   If 1 TUNIT   = T9K, if 0 TUNIT   = T8K. Default is 0
 		rhounit: If 1 RHOUNIT = LOG, if 0 RHOUNIT = CGS. Default is 0
 		idNum:  An optional id argument
@@ -252,6 +253,8 @@ def writeTraj(filename='trajectory.input',data=[], ageunit=0,tunit=0,rhounit=0, 
 			headers.append('AGEUNIT = SEC')
 		elif ageunit==0:
 			headers.append('AGEUNIT = YRS')
+		elif ageunit==2:
+			headers.append('AGEUNIT = logtimerev/yrs')
 		
 		if tunit ==1:
 			headers.append('TUNIT   = T9K')

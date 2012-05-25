@@ -105,30 +105,24 @@ class xtime(DataPlot):
 	
 	# read header line
 		line=f.readline()
-		cols=[]
-		cols.append(line[1:4])
-		cols.append(line[15:17])
-		cols.append(line[23:26])
-		cols.append('sum_yps')
-		cols.append('ye')
-		i=68
-		ispec=0
-		while True:
-		    if line[i:i+5] is '':
-			break
-		    else:
-                        this_header=line[i:i+5]
-                        if this_header[4] is ' ':
-                            this_header=this_header[0:4]
-			cols.append(this_header)
-			ispec+=1
-			i+=13
-		print "There are "+str(ispec)+" species found."
-		col_tot=ispec+4
-		
-		col_num={}        
-		for a,b in zip(cols,range(ispec)):
-		    col_num[a]=b
+		cols  = []
+		ispec = 0
+		for i in range(1,len(line.split('|'))):
+		    col = line.split('|')[i].strip()
+		    if '-' in col:
+			ispec += 1
+			col   = col.split('-')[1]
+		    cols.append(col)
+		    col_num={}
+		col_tot = len(cols)
+
+		print 'number of species: ', str(ispec)
+		print 'number of cols: ', str(col_tot)
+
+
+		col_num={}
+		for a,b in zip(cols,range(col_tot)):
+			col_num[a]=b
 	
 	# read remainder of the file
 		lines=f.readlines()
@@ -336,12 +330,15 @@ class abu_vector(DataPlot,Utils):
 				for j in range(len(tmp)):
 					if tmp[j]== attri:
 						try:
-							return float(tmp[j+1])
+                                                    if '.' in tmp[j+1]:
+                                                        return float(tmp[j+1])
+                                                    else:
+                                                        return int(tmp[j+1])
 						except ValueError:
 							return str(tmp[j+1])
 
 			elif lines[i].startswith('H'):
-				abc=1+1 #do nothing
+				continue
 			else:
 				print 'This cycle attribute does not exist'
 				print 'Returning None'

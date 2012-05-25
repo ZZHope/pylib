@@ -587,6 +587,11 @@ def close_wins(win_min,win_max):
 	for i in range(win_min,win_max+1):
 		close(i)
 
+def xlimrev():
+        ''' reverse xrange'''
+        xmax,xmin=pl.xlim()
+        pl.xlim(xmin,xmax)
+
 def species_list(what_list):
 	''' provide default lists of elements to plot
 	what_list   string name of species lists provided
@@ -620,7 +625,7 @@ def symbol_list(what_list):
 	elif what_list is "lines1":
 		symbol=['b--','k--','r--','c--','m--','g--','b-','k-','r-','c-','m-','g-','b.','b-.','k-.','r-.','c-.','m-.','g-.','b:','k:','r:','c:','m:','g:']
 	elif what_list is "lines2":
-		symbol=['g:','r-.','k-','b--','k--','b.','r--','b-','c--','m--','g--','r-','c-','m-','g-','k-.','c-.','m-.','g-.','k:','r:','c:','m:','b-.','b:']
+		symbol=['g:','r-.','k-','b--','k-.','b+','r:','b-','c--','m--','g--','r-','c-','m-','g-','k-.','c-.','m-.','g-.','k:','r:','c:','m:','b-.','b:']
 	return symbol
 		
 def make_list(default_symbol_list,len_list_to_print):
