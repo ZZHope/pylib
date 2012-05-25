@@ -28,7 +28,25 @@ import threading
 import time
 import sys
 
-class DataPlot:
+def padding_model_number(number,max_num):
+    ''' this method returns a zero-front padded string
+
+    It makes out of str(45) -> '0045' if 999 < max_num < 10000. This
+    is meant to work for reasonable integers (maybe less than 10^6).
+    number   number that the string should represent 
+    max_num  max number of cycle list, implies how many 0s have
+	     be padded
+    '''
+
+    cnum = str(number)
+    clen = len(cnum)
+
+    cmax = int(log10(max_num)) + 1
+
+    return (cmax - clen)*'0' + cnum
+
+
+class DataPlot():
 	
 	def classTest(self):
 		'''
@@ -157,7 +175,8 @@ class DataPlot:
 					tmpY.append(y[i])
 			return tmpX, tmpY
 			
-	def plotMulti(self,atrix,atriy, cyclist,title,legend=None,labelx=None, labely=None,logx=False, logy=False, base=10,sparse=1,pdf=False,limits=None,):
+	def plotMulti(self,atrix,atriy, cyclist,title,legend=None,labelx=None, labely=None,logx=False, logy=False, \
+			      base=10,sparse=1,pdf=False,limits=None,):
 		'''
 		Method for plotting multiple plots and saving it to multiple pngs 
 		or PDFs
@@ -179,7 +198,8 @@ class DataPlot:
 		limits: The length four list of the x and y limits. The order of
 			the list is xmin,xmax,ymin,ymax
 		'''
-		print 'This method may achieve speedup by calling this method from python or ipython, rather than ipython --pylab --q4thread'
+		print 'This method may achieve speedup by calling this method from python or ipython, rather than'\
+		    ' ipython --pylab --q4thread'
 		if str(legend.__class__)!="<type 'list'>":# Determines the legend is a list
 			legendList=False
 		else:
@@ -190,9 +210,11 @@ class DataPlot:
 			return None
 		for i in xrange(len(cyclist)):
 			if legendList:
-				self.plot(atrix,atriy,cyclist[i],'ndump',legend[i],labelx,labely,base=base,sparse=sparse, logx=logx,logy=logy,show=False,limits=limits)
+				self.plot(atrix,atriy,cyclist[i],'ndump',legend[i],labelx,labely,base=base,sparse=sparse, \
+						  logx=logx,logy=logy,show=False,limits=limits)
 			else:
-				self.plot(atrix,atriy,cyclist[i],'ndump',legend,labelx,labely,base=base,sparse=sparse, logx=logx,logy=logy,show=False,limits=limits)
+				self.plot(atrix,atriy,cyclist[i],'ndump',legend,labelx,labely,base=base,sparse=sparse, \
+						  logx=logx,logy=logy,show=False,limits=limits)
 			
 			pl.title(title)
 			if not pdf:
@@ -841,23 +863,6 @@ class DataPlot:
 			ion()
 		return
 
-	def padding_model_number(self,number,max_num):
-	    ''' this method returns a zero-front padded string                                                                                   
-
-	    It makes out of str(45) -> '0045' if 999 < max_num < 10000. This
-	    is meant to work for reasonable integers (maybe less than 10^6).
-	    number   number that the string should represent 
-	    max_num  max number of cycle list, implies how many 0s have
-		     be padded
-	    '''
-
-	    cnum = str(number)
-	    clen = len(cnum)
-
-	    cmax = int(log10(max_num)) + 1
-
-	    return (cmax - clen)*'0' + cnum
-		
 	def iso_abundMulti(self,cyclist, stable=False,amass_range=None,mass_range=None,
 		ylim=[1e-13,10],shape='o',ref=-1,decayed=False,title=None,pdf=False,color_plot=True):
 		'''
@@ -903,7 +908,7 @@ class DataPlot:
 				pl.title(title)
 			else:
 				name='IsoAbund'
-				number_str=self.padding_model_number(cyclist[i],max_num)
+				number_str=padding_model_number(cyclist[i],max_num)
 			if not pdf:
 				pl.savefig(name+number_str+'.png', dpi=200)
 			else:

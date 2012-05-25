@@ -153,7 +153,7 @@ class constants():
 
 class Utils():
 	'''This private class contains utilities that are used by methods,
-	mostly in the ppn and mppnp classes. Users what normally not use these
+	mostly in the ppn and mppnp classes. Users whould normally not use these
 	methods directly. Things go here when it can be imagined that they may
 	be used not in immediate conjunction with plotting. Otherwise they
 	would go into the superclass data_plot.'''
@@ -194,6 +194,7 @@ class Utils():
 		     ['Ir', 191, 193],['Pt', 190, 192, 194, 195, 196, 198],['Au', 197],
 		     ['Hg', 196, 198, 199, 200, 201, 202, 204],['Tl', 203, 205],['Pb', 204, 206, 207, 208],
 		     ['Bi', 209],['Th', 232],['U',235,238]] 
+
 
 	def _stable_names(self):
 		'''This private method extracts the element names from stable_el. Note
