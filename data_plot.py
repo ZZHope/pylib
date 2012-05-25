@@ -550,7 +550,7 @@ class DataPlot():
 		format: What format will this be saved in ['pdf'/'png']
 		mass_range - a 1x2 array containing the lower and upper mass range.
 		    		 If this is an instance of abu_vector this will 
-		    		 only plot isotopes that have an atominc mass 
+		    		 only plot isotopes that have an atomic mass 
 		    		 within this range. This will throw an error if
 		    		 this range does not make sence ie [45,2]
 			 	if None, it will plot over the entire range
@@ -603,8 +603,8 @@ class DataPlot():
 				masses = self.se.get(cycle,'mass')
 				masses.sort()
 				for i in xrange(len(masses)):
-					if (masses[i] >mass_range[0] and masses[i]<mass_range[1]) or (masses[i]==mass_range[0] or masses[i]==mass_range[1]):
-						
+					if (masses[i] >mass_range[0] and masses[i]<mass_range[1]) or\
+                                                (masses[i]==mass_range[0] or masses[i]==mass_range[1]):
 						tmpyps.append(yin[i])
 				yin=tmpyps
 			
@@ -620,10 +620,9 @@ class DataPlot():
 			
 		elif plotType=='PPN':
 			
-			nin=self.get('A',cycle)
-			zin=self.get('Z',cycle)
-			for i in xrange(len(nin)):
-				nin[i]=nin[i]-zin[i]
+			ain=self.get('A',cycle)
+			zin=self.get('Z',cycle)			
+                        nin=ain-zin
 			yin=self.get('ABUNDANCE_MF',cycle)
 			isom=self.get('ISOM',cycle)
 			
@@ -633,7 +632,7 @@ class DataPlot():
 				tmpIsom=[]
 				tmpyps=[]
 				for i in xrange(len(nin)):
-					if (nin[i] >mass_range[0] and nin[i]<mass_range[1]) or (nin[i]==mass_range[0] or nin[i]==mass_range[1]):
+					if (ain[i] >mass_range[0] and ain[i]<mass_range[1]) or (ain[i]==mass_range[0] or ain[i]==mass_range[1]):
 						tmpA.append(nin[i])
 						tmpZ.append(zin[i])
 						tmpIsom.append(isom[i])
