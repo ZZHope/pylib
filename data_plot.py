@@ -494,10 +494,14 @@ class DataPlot():
 		xmax,xmin=pyl.xlim()
 		pyl.xlim(xmin,xmax)
 		
-	def abu_chartMulti(self,cyclist, mass_range=None ,ilabel = True,imlabel = True,imagic =  False,boxstable=True,lbound=20,plotaxis=[0,0,0,0],pdf=False,title=None):
+	def abu_chartMulti(self,cyclist, mass_range=None ,ilabel = True,imlabel = True,\
+			   imagic =  False,boxstable=True,lbound=20,plotaxis=[0,0,0,0],\
+			   pdf=False,title=None):
 		'''
-		Method that plots abundence chart and saves those figures to a .png file 
-		(by default). Plots a figure for each cycle in the argument cycle
+		Method that plots abundence chart and saves those
+		figures to a .png file (by default). Plots a figure
+		for each cycle in the argument cycle
+
 		input:
 		cyclist: The list of cycles we are plotting
 		ilabel: elemental labels off/on [0/1]
@@ -508,23 +512,29 @@ class DataPlot():
 			  format: What format will this be saved in ['pdf'/'png']
 		title: The title of the plots and the saved images
 		'''
-		print 'This method may achieve speedup calling this method from python or ipython, rather than ipython --pylab --q4thread'
+		
+		print 'This method may achieve speedup calling this '\
+		'method from python or ipython, rather than ipython '\
+		'--pylab --q4thread'
 		
 		
 		if self.which('dvipng')==None:
 			print "This method may need the third party program dvipng to operate"
 			print 'It is located at http://sourceforge.net/projects/dvipng/'
 
+		max_num = max(cyclist)
 		for i in xrange(len(cyclist)):
-			self.abu_chart( cyclist[i], mass_range ,ilabel,imlabel,imagic,boxstable,lbound,plotaxis,False)
+			self.abu_chart( cyclist[i], mass_range ,ilabel,imlabel,imagic,\
+					boxstable,lbound,plotaxis,False)
 			if title !=None:
 				pl.title(title)
 			else:
 				name='AbuChart'
+			number_str=padding_model_number(cyclist[i],max_num)
 			if not pdf:
-				pl.savefig(name+str(cyclist[i])+'.png', dpi=200)
+				pl.savefig(name+number_str+'.png', dpi=200)
 			else:
-				pl.savefig(name+cyclist[i]+'.pdf', dpi=200)
+				pl.savefig(name+number_str+'.pdf', dpi=200)
 			pl.close()
 		
 		return None
@@ -571,7 +581,8 @@ class DataPlot():
 		#ff = fdic.ff(inpfile)
 		
 		if str(cycle.__class__)=="<type 'list'>":
-			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,boxstable,lbound,plotaxis)
+			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,boxstable,\
+					    lbound,plotaxis)
 			return
 		plotType=self.classTest()
 		
@@ -632,7 +643,8 @@ class DataPlot():
 				tmpIsom=[]
 				tmpyps=[]
 				for i in xrange(len(nin)):
-					if (ain[i] >mass_range[0] and ain[i]<mass_range[1]) or (ain[i]==mass_range[0] or ain[i]==mass_range[1]):
+					if (ain[i] >mass_range[0] and ain[i]<mass_range[1])\
+					or (ain[i]==mass_range[0] or ain[i]==mass_range[1]):
 						tmpA.append(nin[i])
 						tmpZ.append(zin[i])
 						tmpIsom.append(isom[i])
@@ -688,7 +700,7 @@ class DataPlot():
 		  
 		
 		params = {'axes.labelsize':  15,
-			  'text.fontsize':   15,
+			  'text.fontsize':   12,
 			  'legend.fontsize': 15,
 			  'xtick.labelsize': 15,
 			  'ytick.labelsize': 15,
@@ -809,7 +821,8 @@ class DataPlot():
 		  for z in range(nzmax):
 		    try:
 		      nmin = min(argwhere(nzycheck[:,z,iarr]))[0]-1
-		      ax.text(nmin,z,elname[z],horizontalalignment='center',verticalalignment='center',fontsize='medium',clip_on=True)
+		      ax.text(nmin,z,elname[z],horizontalalignment='center',verticalalignment='center',\
+			      fontsize='x-small',clip_on=True)
 		    except ValueError:
 		      continue
 		      
@@ -819,7 +832,8 @@ class DataPlot():
 		     for n in range(nnmax):
 			a = z+n
 			if nzycheck[n,z,iarr]==1:
-			  ax.text(n,z,a,horizontalalignment='center',verticalalignment='center',fontsize='small',clip_on=True)
+			  ax.text(n,z,a,horizontalalignment='center',verticalalignment='center',\
+				  fontsize='xx-small',clip_on=True)
 		
 		# plot lines at magic numbers
 		if imagic:
@@ -901,13 +915,13 @@ class DataPlot():
 
 		max_num = max(cyclist)
 		for i in xrange(len(cyclist)):
-			self.iso_abund(cyclist[i],stable,amass_range,mass_range,ylim,shape,ref,decayed=decayed,\
-					       show=False,color_plot=color_plot)
+			self.iso_abund(cyclist[i],stable,amass_range,mass_range,ylim,shape,ref,\
+				       decayed=decayed,show=False,color_plot=color_plot)
 			if title !=None:
 				pl.title(title)
 			else:
 				name='IsoAbund'
-				number_str=padding_model_number(cyclist[i],max_num)
+			number_str=padding_model_number(cyclist[i],max_num)
 			if not pdf:
 				pl.savefig(name+number_str+'.png', dpi=200)
 			else:
