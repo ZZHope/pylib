@@ -774,7 +774,7 @@ class DataPlot():
 		cb = pl.colorbar(p)
 		  
 		# colorbar label
-		cb.set_label('log$_{10}$(Y)')
+		cb.set_label('log$_{10}$(X)')
 		  
 		# plot file name
 		graphname = 'abundance-chart'+str(cycle)
