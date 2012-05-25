@@ -573,6 +573,11 @@ class iniabu(Utils):
 		for name in self.habu:
 			self.habu[name]=self.abu[self.hindex[name]]
 
+def xlimrev(self):
+	''' reverse xrange'''
+	xmax,xmin=pyl.xlim()
+	pyl.xlim(xmin,xmax)
+
 def close_wins(win_min,win_max):
 	''' close all windows in a certain window number range
 		
