@@ -1018,7 +1018,8 @@ class DataPlot():
 		masses = []
 		plotType=self.classTest()
 		if str(cycle.__class__)=="<type 'list'>":
-			self.iso_abundMulti(cycle, stable,amass_range,mass_range,ylim,shape,ref,decayed,color_plot=color_plot)
+			self.iso_abundMulti(cycle, stable,amass_range,mass_range,ylim,shape,ref,decayed,\
+                              color_plot=color_plot)
 			return
 			
 		if str(ref.__class__)=="<type 'str'>":

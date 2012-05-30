@@ -574,6 +574,51 @@ class iniabu(Utils):
 		for name in self.habu:
 			self.habu[name]=self.abu[self.hindex[name]]
 
+
+def trajectory_SgConst(Sg=0.1,delta_logt_dex=-0.01):
+	'''setup trajectories for constant radiation entropy
+
+	S_gamma/R where the radiation constant R = N_A*k
+	(Dave Arnett, Supernova book, p. 212)
+	This relates rho and T but the time scale for this
+	is independent.
+
+
+	Sg              S_gamma/R, values between 0.1 and 10. reflect conditions
+	                in massive stars
+	delta_logt_dex  sets interval between time steps in dex of logtimerev
+	'''
+
+	# reverse logarithmic time
+	logtimerev=np.arange(5.,-6.,delta_logt_dex)
+	logrho=np.linspace(0,8.5,len(logtimerev))
+	logT = (1./3.)*(logrho + 21.9161 + np.log10(Sg))
+
+	#rho_6=10**logrho/(0.1213*1.e6)
+	#T9=rho_6**(1./3.)
+	#logT_T3=np.log10(T9*1.e9)
+
+
+	pl.close(3);pl.figure(3);pl.plot(logrho,logT,label='$S/\mathrm{N_Ak}='+str(Sg)+'$')
+	pl.legend(loc=2);pl.xlabel('$\log \\rho$'); pl.ylabel('$\log T$')
+	pl.close(5);pl.figure(5);pl.plot(logtimerev, logrho)
+	pl.xlabel('$\log (t_\mathrm{final}-t)$'); pl.ylabel('$\log \\rho$')
+	pl.xlim(8,-6)
+
+	pl.close(6);pl.figure(6);pl.plot(logtimerev)
+	pl.ylabel('$\log (t_\mathrm{final}-t)$'); pl.xlabel('cycle')
+
+	# [t] logtimerev yrs
+	# [rho] cgs
+	# [T]   K
+
+	T9=10**logT/1.e9
+	data=[logtimerev,T9,logrho]
+	att.writeTraj(filename='trajectory.input', data=data, ageunit=2, tunit=1, rhounit=1, idNum=1)
+
+	# data: A list of 1D data vectors with time, T and rho                                                       # ageunit: If 1 ageunit = SEC, If 0 ageunit = YRS. If 2 agunit = logtimerev in yrs. Default is 0             # logtimerev is log of time until end
+
+
 def xlimrev(self):
 	''' reverse xrange'''
 	xmax,xmin=pyl.xlim()

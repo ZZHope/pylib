@@ -2790,8 +2790,6 @@ class se(DataPlot,Utils):
     	if i_decay == 2:
         	u.stable_specie()
         	self.decay(self.mass_frac)
-
-
     
     	# here I am calculating average mass fraction for all isotopes in given mass range, and then
     	# if needed calculating average over decayed.
