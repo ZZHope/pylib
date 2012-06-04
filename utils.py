@@ -498,7 +498,7 @@ class iniabu(Utils):
 
 	def write_mesa(self,mesa_isos_file='isos.txt',add_excess_iso='fe56',outfile='xa_iniabu.dat',header_string='initial abundances for a MESA run',header_char='!'):
 		'''
-		Write initial abundance file
+		Write initial abundance file, returns written abundances and mesa names
 
 		mesa_isos_file   list with isos copied from mesa network 
                                  definition file in mesa/data/net_data/nets
@@ -514,7 +514,9 @@ class iniabu(Utils):
 		help(utils.iniabu)                                       # check documentation of method
 		x=utils.iniabu('path_to_here/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn')
 		x.write_mesa?
-		x.write_mesa(add_excess_iso='ne22',header_string='mppnp/USEEPP/iniab2.0E-02GN93.ppn for mesa/agb.net',outfile='xa_2.0E-02GN93.mesa')
+		mnames,mabus = x.write_mesa(add_excess_iso='ne22',
+		               header_string='mppnp/USEEPP/iniab2.0E-02GN93.ppn for mesa/agb.net',
+			       outfile='xa_2.0E-02GN93.mesa')
 		'''
 
 
@@ -548,6 +550,7 @@ class iniabu(Utils):
 		data=[mesa_names,abus]
 		hd=[header_string]
 		att.write(outfile,hd,dcols,data,header_char=header_char)
+		return mesa_names,abus
 
 	def set_and_normalize(self,species_hash):
 		'''
