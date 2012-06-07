@@ -1230,6 +1230,7 @@ class DataPlot():
 								     isotope_to_plot[x].split('-')[0]
 		
 		
+# I think this is were the sorting of isotopes for an element takes place
 		for x in xrange(len(elem_index)):
 		    numbers = []
 		    for y in xrange(len(elem_index[x])):
@@ -1478,7 +1479,7 @@ class DataPlot():
 			if log_logic == True:
 				l1.append(pl.semilogy(mass_num[j],abund_plot[j],str(colors[cl_index]+points[cl_index]+plot_type[pl_index])))
 			if log_logic == False:
-	                        l1.append(pl.plot(mass_num[j],abund_plot[j],str(colors[cl_index]+points[cl_index]+plot_type[pl_index]))) 			
+	                        l1.append(pl.plot(mass_num[j],abund_plot[j],str(colors[cl_index]+points[cl_index]+plot_type[pl_index])))
 			cl_index+=1
 			pl_index+=1
 			if pl_index > 3:
