@@ -137,6 +137,8 @@ class se(DataPlot,Utils):
         self.se = []         # main data dictionary
         self.sedir=sedir
         self.sefiles=sefiles
+        self._stable_names() # provides in addition to stable_el from 
+                             # utils also just the stable element names
         
         self.se=h5T.Files(sedir,sefiles,rewrite=rewrite)
                 

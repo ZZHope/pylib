@@ -780,12 +780,6 @@ class DataPlot():
 		graphname = 'abundance-chart'+str(cycle)
 		  
 		# Add black frames for stable isotopes
-		'''
-		f = open('stable.dat')
-		
-		head = f.readline()
-		stable = []
-		'''
 		if boxstable:
 			for i in xrange(len(self.stable_el)):
 				if i == 0:
@@ -877,7 +871,8 @@ class DataPlot():
 		return
 
 	def iso_abundMulti(self,cyclist, stable=False,amass_range=None,mass_range=None,
-		ylim=[1e-13,10],shape='o',ref=-1,decayed=False,title=None,pdf=False,color_plot=True):
+		ylim=[1e-13,10],shape='o',ref=-1,decayed=False,title=None,pdf=False,
+                color_plot=True,grid=False):
 		'''
 		Method that plots figures and saves those figures to a .png file 
 		(by default). Plots a figure for each cycle in the argument cycle
@@ -905,18 +900,13 @@ class DataPlot():
 		 pdf   - Boolean of if the output images will be pdf files
 		 Title - Title of the plot and the image file
 		 color_plot - color dots and lines, True or False 
-		 
-		 NOTE, This method will achieve a 33% speed up and a 25% sppedup
-		 when calling this method from python or ipython, rather than
-		 ipython --pylab --q4thread
-		'''
-		print 'This method will achieve a 33% speedup and a 25% speed-u pwhen calling'\
-		    ' this method from python or ipython, rather than ipython --pylab --q4thread'
+                 grid       - add grid, True or default False
+                 '''
 
 		max_num = max(cyclist)
 		for i in xrange(len(cyclist)):
 			self.iso_abund(cyclist[i],stable,amass_range,mass_range,ylim,shape,ref,\
-				       decayed=decayed,show=False,color_plot=color_plot)
+				       decayed=decayed,show=False,color_plot=color_plot,grid=False)
 			if title !=None:
 				pl.title(title)
 			else:
@@ -970,64 +960,47 @@ class DataPlot():
 		return dat
 		
 	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,\
-			      ylim=[1e-13,10],shape='o',ref=-1,show=True,given_abund_array=None,\
-			      log_logic=True,decayed=False,color_plot=True):
+			      ylim=[1e-13,10],shape='o',ref=-1,show=True,\
+			      log_logic=True,decayed=False,color_plot=True,grid=False):
 		''' plot the abundance of all the chemical species
 		inputs:
 		    
-		    cycle       - a string/integer of the cycle of interest.
-		    		  It it is a list of cycles, this method will 
-		    		  then do a plot for each of theses cycles and 
-				  save them all to a file
+		    cycle      - a string/integer of the cycle of interest.
+		    	         If it is a list of cycles, this method will 
+		    	         do a plot for each cycle and save them to a file
 		    stable     - a boolean of whether to filter out the unstables.
-		    		Defaults to False
+		    	         Defaults to False
 		    amass_range -a 1x2 array containing the lower and upper Atomic
-		    		 mass range. If not None this method will only 
-		    		 plot the isomers with an atomic mass that
-		    		 appears with in this range.
+		    		 mass range. optional. if None plot entire available
+                                 atomic mass range
 		    mass_range - a 1x2 array containing the lower and upper mass range.
 		    		 If this is an instance of abu_vector this will 
 		    		 only plot isotopes that have an atominc mass 
 		    		 within this range. This will throw an error if
 		    		 this range does not make sense ie [45,2]
-			 	if None, it will plot over the entire range
-				Defaults to None	     
+			 	 if None, it will plot over the entire range
+				 Defaults to None	     
 		    ylim - A 1x2 array containing the lower and upper Y limits.
 		    	   Defaults to 1e-13 and 10
 		    ref  - reference cycle, If it is not -1, this method will 
-		    	   plot the abundances of cycle devided by the 
-		    	   abundances of the refrence
-		    	   Cycle. If any abundence in the reference cycle is zero, 
-		    	   it will then interpret that abundence of 1e-99.
-		    	   If ref is a string then this is interpreted as 
-		    	   a filename.  It will then use the abundance column as
-		    	   a reference cycle. The standards for reading this file 
-		    	   can be found in self.read()'s docstring, ie in the 
-		    	   method read() found above.
-		    	   The default is -1, it will do nothing.
-                           If ref=-2, than the array given_abund_array is plotted.
-		    Shape -The Shape of the dataplots, will default to circles 
-		    given_abund_array - array of abundances that can be given from script comparison_ppn, and if ref=-2 are plotted.
+		    	   plot the abundances of cycle devided by the
+		    	   abundances of the reference cycle. If any
+		    	   abundence in the reference cycle is zero,
+		    	   it will then interpret that abundence of
+		    	   1e-99. The default is -1, it will do nothing.  
+                    Shape  - The Shape of the dataplots, will default to circles 
 		    log_logic = True/False to plot abundances in log scale or linear.	 
-		    decayed =True/False to plot decayed distributions (True), or life distribution
+		    decayed = True/False to plot decayed distributions (True), or life distribution
 		    color_plot - color dots and lines, True or False 
-
+                    grid       - add grid, True or default False
 		'''
-		elem_list = []
-		elem_index = []
-		masses = []
+
 		plotType=self.classTest()
 		if str(cycle.__class__)=="<type 'list'>":
 			self.iso_abundMulti(cycle, stable,amass_range,mass_range,ylim,shape,ref,decayed,\
-                              color_plot=color_plot)
+                              color_plot=color_plot,grid=False)
 			return
 			
-		if str(ref.__class__)=="<type 'str'>":
-			stringRef=True
-			fileName=ref
-			ref=-1
-		else:
-			stringRef=False
 		if mass_range!=None and mass_range[0]>mass_range[1]:
 			print 'Please input a proper mass range'
 			print 'Returning None'
@@ -1040,84 +1013,90 @@ class DataPlot():
 			if decayed:
 				print 'Decay option not yet implemented for mppnp - but it is easy do! Consider investing the time!'
 				return None
-			isotope_to_plot = self.se.isotopes
+
+
+                        # get things as arrays
 			cycle=self.se.findCycle(cycle)
-			z=self.se.Z #charge
-			a=self.se.A #mass
-			isomers=self.se.isomeric_states
-			abunds = self.se.get(cycle,'iso_massf')
+                        a_iso_to_plot   = array(self.se.A)
+                        abunds          = self.get(cycle,'iso_massf')
+                        isotope_to_plot = array(self.se.isotopes)
+                        z_iso_to_plot   = array(self.se.Z)
+                        isomers_to_plot = array(self.se.isomeric_states)
 			if ref >-1:
 				ref=self.se.findCycle(ref)
 				abundsRef=self.se.get(ref,'iso_massf')
-			
-			if stringRef:
-				abundsRef=self.read(fileName)
-				tmpypsRef=zeros(len(z))
-				for i in xrange(len(z)):
-					for j in xrange(len(abundsRef['z'])):
-						if isomers[i]==1 and z[i]==int(abundsRef['z'][j]) and a[i]==int(abundsRef['name'][j].split()[1]):
-							tmpypsRef[i]=abundsRef['abu'][j] 
-							break
-						
-				abundsRef=tmpypsRef
+
+                        if amass_range == None:
+                            amass_range=[min(a_iso_to_plot),max(a_iso_to_plot)]
+                        print amass_range
+
 			masses = self.se.get(cycle,'mass')
 			if mass_range == None:
 			    print 'Using default mass range'
 			    mass_range = [min(masses),max(masses)]    
 			masses.sort()
 			mass_range.sort()
-			if amass_range != None:
-				tmpA=[]
-				tmpZ=[]
-				tmpIso=[]
-				tmpIsom=[]
-				tmpyps=[]
-				if ref >-1 or stringRef:
-					tmpRef=[]
-				
-				for i in xrange(len(abunds)):
-					tmpyps.append([])
-					if ref >-1:
-						tmpRef.append([])
-				for i in xrange(len(a)):
-					if (a[i] >=amass_range[0] and a[i]<=amass_range[1]):
-						tmpA.append(a[i])
-						tmpZ.append(z[i])
-						tmpIso.append(isotope_to_plot[i])
-						tmpIsom.append(isomers[i])
-						for j in xrange(len(abunds)):
-							tmpyps[j].append(abunds[j][i])
-						if ref >-1 :
-							for j in xrange(len(abundsRef)):
-							
-								tmpRef[j].append(abundsRef[j][i])
-						if stringRef:
-							tmpRef.append(abundsRef[i])
-						
-				isotope_to_plot=tmpIso
-				z=tmpZ
-				a=tmpA
-				isomers=tmpIsom
-				abunds=tmpyps
-				if ref >-1 or stringRef:
-					abundsRef=tmpRef
-					
-			
-			isom=[]
-			tmp=[]
-			for i in range (len(isotope_to_plot)):
-				if z[i]!=0 and isomers[i]==1: #if its not 'NEUt and not an isomer'
-					tmp.append(self.elements_names[int(z[i])]+'-'+str(int(a[i])))
-				elif isomers[i]!=1: #if it is an isomer
-					isom.append(self.elements_names[int(z[i])]+'-'+str(int(a[i]))+'-'+str(int(isomers[i]-1)))	
-			isotope_to_plot=tmp
-			#tmp.sort(self.compar)
-			#tmp.sort(self.comparator)			
-			#for i in xrange(len(tmp)):
-			#	isotope_to_plot.append(tmp[i][0])
-			
-				
-			
+
+                        # remove neutrons - this could move in the non- se/PPN specific part below
+                        if 0 in z_iso_to_plot:
+                            ind_neut        = where(z_iso_to_plot==0)[0][0]
+                            a_iso_to_plot   = delete(a_iso_to_plot,ind_neut)
+                            z_iso_to_plot   = delete(z_iso_to_plot,ind_neut)
+                            isomers_to_plot = delete(isomers_to_plot,ind_neut)
+                            isotope_to_plot = delete(isotope_to_plot,ind_neut)
+                            abunds = delete(abunds,ind_neut,1)
+                            if ref >-1:
+                                abundsRef = delete(abundsRef,ind_neut,1)
+
+                        # extract amass_range 
+                        acon=(a_iso_to_plot>=amass_range[0]) & (a_iso_to_plot<=amass_range[1])
+                        isomers_to_plot = isomers_to_plot[acon]
+                        isotope_to_plot = isotope_to_plot[acon]
+                        z_iso_to_plot   = z_iso_to_plot[acon]
+                        abunds          = abunds.T[acon].T
+                        if ref >-1:
+                            abundsRef = abundsRef.T[acon].T
+                        a_iso_to_plot   = a_iso_to_plot[acon]
+                        el_iso_to_plot  = array([x.split('-')[0] for x in isotope_to_plot.tolist()])
+                        # apply mass range
+                        if mass_range == None:
+                            print 'Using default mass range'
+                            mass_range = [min(masses),max(masses)]    
+                        mass_range.sort()
+                        aabs = []
+                        if ref >-1:
+                            cyc  = [cycle,ref]
+                            abus = [abunds,abundsRef]
+                        else:
+                            cyc  = [cycle]
+                            abus = [abunds]
+                        for cc,aa in zip(cyc,abus):
+                            masses = self.se.get(cc,'mass')
+                            masses.sort()
+                            dmass  = masses[1:] - masses[:-1]    # I should check the grid definition                            
+                            dmass  = append(dmass,0.)
+                            mcon   = (masses>=mass_range[0]) & (masses<=mass_range[1]) 
+                            dmass  = dmass[mcon]
+                            aa = aa[mcon]
+                        
+                            # average over mass range:
+                            aa = (aa.T*dmass).T.sum(0)
+                            aa = aa / (mass_range[1] - mass_range[0])
+                            # abunds has now length of isotope_to_plot
+                            aabs.append(aa)
+                        if ref >-1:
+                            abunds = aabs[0]/(aabs[1]+1.e-99)
+                        else:
+                            abunds = aabs[0]
+                            
+			self.a_iso_to_plot=a_iso_to_plot
+			self.isotope_to_plot=isotope_to_plot	
+                        self.z_iso_to_plot=z_iso_to_plot
+			self.el_iso_to_plot=el_iso_to_plot
+			self.abunds=abunds
+			self.isomers_to_plot=isomers_to_plot
+
+#                        self.isotopes = self.se.isotopes
 			
 		elif plotType=='PPN':
 			print "This method adds the following variables to the instance:"
@@ -1128,45 +1107,12 @@ class DataPlot():
 			print "abunds             corresponding abundances"
 			print "isom               isomers and their abundance"
 
-			if ref > -2:
-				self.get(cycle,decayed=decayed)
+                        self.get(cycle,decayed=decayed)
 			if ref >-1:
 				abunds=self.abunds
 				self.get(ref,decayed=decayed)
 				self.abunds=abunds/(self.abunds+1.e-99)
-			if ref == -2:
-				print "Presently option not active."
-				return None
-				yps=given_abund_array
-			if stringRef:
-				print "Presently option not active."
-				return None
-                                ypsRef=self.read(fileName )
-				tmpypsRef=zeros(len(yps))
-				for i in xrange(len(z)):
-					for j in xrange(len(ypsRef['z'])):
-						if isomers[i]==1 and z[i]==int(float((ypsRef['z'][j]))) and a[i]==int(float(ypsRef['name'][j].split()[1])):
-							tmpypsRef[i]=ypsRef['abu'][j]
-							break
-							'''
-						elif isomers[i]==1 and j ==len(ypsRef['z'])-1:
-							print 'Reference Mismatch, Isotopes in cycle differ from isotepes in '+fileName
-							print 'Returning None'
-							return None
-							'''
-				ypsRef=tmpypsRef
-				'''
-			if ref >-1 and len(yps)!=len(ypsRef):
-                                print 'Refrence Cycle mismatch, Aborting plot'
-				return None
-				
-			if ref >-1 or stringRef:
-				for i in xrange(len(yps)):
-					if ypsRef[i]!=0:
-						yps[i]=yps[i]/ypsRef[i]
-					else:
-						yps[i]=yps[i]/1e-99
-				'''
+
 			if amass_range != None:
 				aa=ma.masked_outside(self.a_iso_to_plot,amass_range[0],amass_range[1])
 				isotope_to_plot=ma.array(self.isotope_to_plot,mask=aa.mask).compressed()
@@ -1180,278 +1126,53 @@ class DataPlot():
 						isom.append(self.isom[i])
 
 			self.a_iso_to_plot=a_iso_to_plot
-			self.isotope_to_plot=isotope_to_plot
-			self.z_iso_to_plot=z_iso_to_plot
+			self.isotope_to_plot=isotope_to_plot	
+                        self.z_iso_to_plot=z_iso_to_plot
 			self.el_iso_to_plot=el_iso_to_plot
 			self.abunds=abunds
 			self.isom=isom
-
 		else:
 			print 'This method, iso_abund, is not supported by this class'
 			print 'Returning None'
 			return None
-		#    Check the inputs
-		#if not self.se.cycles.count(str(cycle)):
-		#    print 'You entered an cycle that doesn\'t exist in this dataset:', cycle
-		#    print 'I will try and correct your format.'
-		
-		#    print cyc_len, len(str(cycle))
-		#
-		#    while len(str(cycle)) < cyc_len:
-		#        cycle = '0'+str(cycle)
-		#        print cycle
-		
-		#    if not self.se.cycles.count(str(cycle)):
-		#        print 'I was unable to correct your cycle.  Please check that it exists in your dataset.'
 		
 		print 'Using the following conditions:'
-		if mass_range != None:
-			print '\tmass_range:', mass_range[0], mass_range[1]
-		if amass_range != None:
-			print '\tAtomic mass_range:', amass_range[0], amass_range[1]
+		if plotType=='se':
+                    print '\tmass_range:', mass_range[0], mass_range[1]
+                print '\tAtomic mass_range:', amass_range[0], amass_range[1]
 		print '\tcycle:           ',cycle
 		print '\tplot only stable:',stable
 		print '\tplot decayed:    ',decayed
 		
 		
-		elem_list = ['' for x in xrange(len(self.elements_names)) ]
-		elem_index = [[-1] for x in xrange(len(self.elements_names))]
-		#elem_list = self.elements_names
+                if stable: # remove unstables:                                                                                  
+                    # For the element that belongs to the isotope at index 5 in isotope_to_plot
+                    # (C-12) the following gives the mass numbers of stable elements:
+                    # self.stable_el[self.stable_names.index(el_iso_to_plot[5])][1:]       
+                    ind_delete=[]
+                    for i in range(len(isotope_to_plot)):
+                        if a_iso_to_plot[i] not in self.stable_el[self.stable_names.index(el_iso_to_plot[i])][1:]:
+                            ind_delete.append(i)
+                    a_iso_to_plot   = delete(a_iso_to_plot,  ind_delete)
+                    z_iso_to_plot   = delete(z_iso_to_plot,  ind_delete)
+                    isomers_to_plot = delete(isomers_to_plot,ind_delete)
+                    isotope_to_plot = delete(isotope_to_plot,ind_delete)
+                    el_iso_to_plot  = delete(el_iso_to_plot, ind_delete)
+                    abunds          = delete(abunds,         ind_delete)
 		
-		for elem in elem_index:
-		    elem.remove(-1)
-		for x in xrange(len(isotope_to_plot)):
-		    
-		    if self.elements_names.count(isotope_to_plot[x].split('-')[0]):
-			#print self.se.isotopes[x].split('-')[0], x
-			elem_index[self.elements_names.index(isotope_to_plot[x].split('-')[0])].append(x)
-			if elem_list.count(isotope_to_plot[x].split('-')[0]) == 0:
-				elem_list[self.elements_names.index(isotope_to_plot[x].split('-')[0])] += \
-								     isotope_to_plot[x].split('-')[0]
-		
-		
-# I think this is were the sorting of isotopes for an element takes place
-		for x in xrange(len(elem_index)):
-		    numbers = []
-		    for y in xrange(len(elem_index[x])):
-			numbers.append(isotope_to_plot[elem_index[x][y]][1])
-	
-		    list3 = zip(elem_index[x], numbers)
-		    list3.sort()
-		    list3.sort()
-		    for y in xrange(len(list3)):
-			elem_index[x][y] = list3[y][0]        
-		
-		
-		
-	       
-		
-		index = xrange(len(isotope_to_plot))
-		if stable:
-		    
-		    #    loop through the index list
-		    for t in xrange(15):
-			removed = False
-			#print 'new step'
-			for ind in index:    # and the indice of isotope
-			    try:
-				for iso in elem_index[ind]:
-				    for elem in self.stable_el:    
-					#    Loop through the list of stable isotopes
-					
-					if isotope_to_plot[iso].split('-')[0] == elem[0]:    
-					    #    Is it the same element?                                    
-					    matched = elem.count(int(isotope_to_plot[iso].split('-')[1]))    
-					    #    Does the stable el list contain he isotope
-					    #print matched, self.se.isotopes[iso].split('-')[0], elem[0]
-					    if matched == 0:
-						try:
-						    #print 'removing', self.elem_index[ind], iso
-						    #print 'removed', elem_index[ind], iso
-						    elem_index[ind].remove(iso)        
-						    removed = True
-						except:
-						    print 'failed to remove: ', isotope_to_plot[iso]
-			    except IndexError:
-				removed = True
-				#print iso, ind
-			if removed == False:
-			    #print 'done popping'
-			    break                
-	
-		
-		#print elem_list
-		#print elem_index
-	
-		abund_plot = []
-		mass_num = []
-		
-		
-		if plotType=='se':
-			
-			while len(abunds) == 1:
-				abunds = abunds[0]
-			for j in xrange(len(index)):    #    Loop through the elements
-			    temp = []
-		
-			    try:
-				x =  masses[0]
-				del x
-			    except IndexError:
-				masses = [masses]
-				
-				
-			    try:        
-				for k in xrange(len(elem_index[index[j]])):    #    Loop through the isotopes
-				    abundance = 0
-				    
-				    #print 'elemIndexKs',  self.elem_index[index[j]][k]                
-				    try:
-					for l in xrange(len(abunds)):
-					    #print mass_range[0], masses[l]  , mass_range[1], masses[l]
-					    try:
-						if mass_range[0] <=  masses[l]  and mass_range[1] >=  masses[l] :    
-						    #    Only collect data in between ranges.        
-						    #print abunds[i][l][self.elem_index[index[j]][k]]
-						    #if abunds[i][l][self.elem_index[index[j]][k]] < 1e-20:
-						    #    abundance += 1e-20
-						
-						    try:
-							abundance += (abunds[l][elem_index[index[j]][k]])*abs(masses[l+1]-masses[l])
-						    except IndexError:    #  The last step requires us to interpolate to the next highest step
-							abundance += (abunds[l][elem_index[index[j]][k]])*abs(round(masses[l])-masses[l])
-							#print abundance
-						    
-						    	    
-					    except IndexError:
-						None#print 'end of the line'
-					#print abundance/abs(ranges[1]-ranges[0])
-					if abundance ==0:
-						    abundance = 1e-99
-					temp.append(abundance/abs(mass_range[1]-mass_range[0]))
-					#print abundance,temp
-				    except AttributeError:
-					print i
-				#mass_num.append(temp)
-			    except IndexError:
-				None
-				#print j, index[j], elem_index
-			    #time_step.append(temp)
-			    #print time_step
-			    abund_plot.append(temp)
-			
-			if ref > -1:
-				abund_plotRef=[]	
-				while len(abundsRef) == 1:
-					abundsRef = abundsRef[0]
-				for j in xrange(len(index)):    #    Loop through the elements
-				    temp = []
-			
-				    try:
-					x =  masses[0]
-					del x
-				    except IndexError:
-					masses = [masses]
-					
-					
-				    try:        
-					for k in xrange(len(elem_index[index[j]])):    #    Loop through the isotopes
-					    abundance = 0
-					    
-					    #print 'elemIndexKs',  self.elem_index[index[j]][k]                
-					    try:
-						for l in xrange(len(abundsRef)):
-						    #print mass_range[0], masses[l]  , mass_range[1], masses[l]
-						    try:
-							if mass_range[0] <=  masses[l]  and mass_range[1] >=  masses[l] :    
-							    #    Only collect data in between ranges.        
-							    #print abunds[i][l][self.elem_index[index[j]][k]]
-							    #if abunds[i][l][self.elem_index[index[j]][k]] < 1e-20:
-							    #    abundance += 1e-20
-							
-							    try:
-								abundance += (abundsRef[l][elem_index[index[j]][k]])*abs(masses[l+1]-masses[l])
-							    except IndexError:    #  The last step requires us to interpolate to the next highest step
-								abundance += (abundsRef[l][elem_index[index[j]][k]])*abs(round(masses[l])-masses[l])
-								#print abundance
-						    except IndexError:
-							None#print 'end of the line'
-						#print abundance/abs(ranges[1]-ranges[0])
-						if abundance ==0:
-						    abundance = 1e-99
-						temp.append(abundance/abs(mass_range[1]-mass_range[0]))
-						#print abundance,temp
-					    except AttributeError:
-						print i
-					#mass_num.append(temp)
-				    except IndexError:
-					None
-					#print j, index[j], elem_index
-				    #time_step.append(temp)
-				    #print time_step
-				    abund_plotRef.append(temp)
-				    
-				if len(abund_plot)!=len(abund_plotRef):
-					print 'Error 1'
-				for i in xrange(len(abund_plot)):
-					if len(abund_plot[i])!=len(abund_plotRef[i]):
-						print 'Error 2'
-				    	    	print abund_plot[i],abund_plotRef[i]
-				    	    
-				    	for j in xrange(len(abund_plot[i])):
-						
-				    	    	if abund_plotRef[i][j]!=0:
-				    	    	    	abund_plot[i][j]=abund_plot[i][j]/abund_plotRef[i][j]
-				    	    	else:
-				    	    		
-				    	    	    	abund_plot[i][j]=abund_plot[i][j]/1e-99
-			elif stringRef:
-				for i in xrange(len(elem_index)):
-					for j in xrange(len(elem_index[i])):
-						if abundsRef[elem_index[i][j]]!=0:
-							abund_plot[i][j]=abund_plot[i][j]/abundsRef[elem_index[i][j]]
-						else:
-							abund_plot[i][j]=abund_plot[i][j]/1e-99
-			
-	        elif plotType=='PPN':
-	        	
-	        	for i in xrange(len(elem_list)):
-	        		tmp=[]
-	        		yps=abunds
-	        		if elem_list[i]!='':
-	        			
-	        			for j in xrange(len(elem_index[i])):
-	        				
-	        				#print self.get(isotope_to_plot[index], cycle)[3]
-	        				tmp.append(yps[elem_index[i][j]])
-	        				
-	        		abund_plot.append(tmp)
-		#print cycle
-		
-		#temp3 = []
-		mass_num = []
-		
-		
-		#for j in xrange(len(index)):
-		for j in xrange(len(elem_index)):
-		    
-		    temp = []
-		    #temp2 = []    
-		    try:
-			
-			for k in xrange(len(elem_index[j])):
-				
-				temp.append(float(isotope_to_plot[elem_index[j][k]].split('-')[1]))
-	
-			mass_num.append(temp)
-		    #temp3.append(temp2)
-		    except IndexError:
-			None
-			#print len(elem_index), index[j],j
-		#ref_mass = temp3
-		#del temp2             
-		
-		#23
+                el_list=[] # list of elements in el_iso_to_plot
+                for el in self.elements_names:
+                    if el in el_iso_to_plot:
+                        el_list.append(el)
+
+                abund_plot = []  # extract for each element an abundance and associated
+                mass_num   = []  # mass number array, sorted by mass number
+                for el in el_list:
+                    numbers = a_iso_to_plot[(el_iso_to_plot==el)]
+                    abund_plot.append(abunds[(el_iso_to_plot==el)][argsort(numbers)])
+                    mass_num.append(sort(numbers))
+
+                # now plot:
 		plot_type = ['-','--','-.',':']
 		pl_index = 0
 		#6
@@ -1472,9 +1193,6 @@ class DataPlot():
                         # print abund_plot[j][l] 	 		
 			if abund_plot[j][l] == 0:
 			    abund_plot[j][l] = 1e-99
-			    
-			    
-		    
 		    try:
 			if log_logic == True:
 				l1.append(pl.semilogy(mass_num[j],abund_plot[j],str(colors[cl_index]+points[cl_index]+plot_type[pl_index])))
@@ -1488,11 +1206,8 @@ class DataPlot():
 			    cl_index = 0
 		    except IndexError:
 			None
-			#print 'div by zero'
-		    
 			
 		    try:
-		    	
 		    	tmpList=[0,0]
 		    	for i in xrange(len(abund_plot[j])):
 		    		
@@ -1507,17 +1222,9 @@ class DataPlot():
 								
 						elif plotType=='PPN':
 							tmpList=coordinates
-							
-						elif plotType!='PPN':
-							tmpList=coordinates
-							
-				#print self.parent.elem_list[self.index[j]],coordinates[0],coordinates[1]
 			coordinates=tmpList
-			
 			if coordinates != [0,0]:
-				
-				pl.text(coordinates[0],coordinates[1], elem_list[j])
-		
+				pl.text(coordinates[0],coordinates[1], el_list[j])  # changed
 		    except ValueError:
 			None
 			#print 'Empty var:  ', abund_plot[j]
@@ -1546,43 +1253,30 @@ class DataPlot():
 		
 		cl_index = 0
 		
-		for j in xrange(len(isom)):
-			#pl.semilogy(isom[j][0].split('-')[1],isom[j][1],'r'+shape)#,str(colors[cl_index]+plot_type[pl_index])))
-			cl_index+=1
-			pl_index+=1
-			if pl_index > 3:
-			    pl_index = 0
-			if cl_index > 4:
-			    cl_index = 0
-			coordinates=[int(isom[j][0].split('-')[1]),isom[j][1]]
-			name=isom[j][0]
-
-			#pl.text(coordinates[0],coordinates[1], name.split('-')[0]+'m'+name.split('-')[2])
 		if plotType=='se':
-			title = str('Abundance of Isotopes over range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
-				str(' for cycle %d' %int(cycle))
-			if amass_range !=None:
-				pl.xlim([amass_range[0]-.5,amass_range[1]+.5])
+                    if ref == -1:
+                        title = str('Range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
+                            str(' for cycle %d' %int(cycle))
+                    else:
+                        title = str('Range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
+                        str(' for cycle %d' %int(cycle))+str(' relative to cycle %d'  %int(ref))
 		else:
-			
-			if amass_range ==None:
-				title = str('Abundance of Isotopes for Cycle '+str(cycle))
-			else:
-				#title = str('Abundance of Isotopes with A between '+str(amass_range[0])+' and '+str(amass_range[1])+' for Cycle '+str(cycle))
-				title = str('')
-				pl.xlim([amass_range[0]-.5,amass_range[1]+.5])
-			
+                    if ref == -1:
+                        title = str('Cycle %d' %int(cycle))
+                    else:
+                        title = str('Cycle %d' %int(cycle))+str(' relative to cycle %d'  %int(ref))
+                if ref != -1:
+                    ylim=(1.e-3,1.e3)
 		pl.ylim(ylim)
+                pl.xlim([amass_range[0]-.5,amass_range[1]+.5])
 		pl.title(title)
 		pl.xlabel('Mass Number')
 		if ref>-1:
-			#pl.ylabel('Relative Abundance / Refrence Abundance of Cycle '+str(int(ref)))
-		        pl.ylabel('Relative Abundance') 
-		elif stringRef:
-			pl.ylabel('Relative Abundance / Refrence Abundance of '+str(fileName))
-		else:
 			pl.ylabel('Relative Abundance')
-		#pl.grid()
+		else:
+		        pl.ylabel('Abundance') 
+		if grid:
+                    pl.grid()
 		if show:
 			pl.show()
 		return

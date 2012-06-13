@@ -254,7 +254,8 @@ class abu_vector(DataPlot,Utils):
 		
 		'''
                 self.debug=False
-                self._stable_names() # provides in addition to stable_el from utils also just the stable element names
+                self._stable_names() # provides in addition to stable_el from 
+                                     # utils also just the stable element names
 		self.sldir = sldir
 		self.cattrs=[]
 		self.dcols=[]
@@ -483,7 +484,7 @@ class abu_vector(DataPlot,Utils):
 		the content of an iso_massfnnnn.DAT file) or a column
 		of data for the associated attribute is returned. 
 
-		1: Input attr is string attribute: 
+		1: Input attri is string attribute: 
 		attri: The name of the attribute we are looking for or the cycle. 
 		fname: The name of the file we are getting the data from or
 			the cycle number found in the filename. Or a List of 
@@ -497,7 +498,7 @@ class abu_vector(DataPlot,Utils):
                 decayed  not supported in attri mode
 		Output: Data in the form of a numpy array
 		
-		2: Input attr is just one integer cycle number (cycle arrays are not supported):
+		2: Input attri is just one integer cycle number (cycle arrays are not supported):
                 decayed   boolean: instantaneously decay abundance distribution
                 Output: the following varibales will be added to the instance
                 a_iso_to_plot      mass number of plotted range of species"
