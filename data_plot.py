@@ -1026,9 +1026,6 @@ class DataPlot():
 				ref=self.se.findCycle(ref)
 				abundsRef=self.se.get(ref,'iso_massf')
 
-                        if amass_range == None:
-                            amass_range=[min(a_iso_to_plot),max(a_iso_to_plot)]
-                        print amass_range
 
 			masses = self.se.get(cycle,'mass')
 			if mass_range == None:
@@ -1036,6 +1033,9 @@ class DataPlot():
 			    mass_range = [min(masses),max(masses)]    
 			masses.sort()
 			mass_range.sort()
+
+                        if amass_range == None:
+                            amass_range=[min(a_iso_to_plot),max(a_iso_to_plot)]
 
                         # remove neutrons - this could move in the non- se/PPN specific part below
                         if 0 in z_iso_to_plot:
@@ -1113,17 +1113,19 @@ class DataPlot():
 				self.get(ref,decayed=decayed)
 				self.abunds=abunds/(self.abunds+1.e-99)
 
-			if amass_range != None:
-				aa=ma.masked_outside(self.a_iso_to_plot,amass_range[0],amass_range[1])
-				isotope_to_plot=ma.array(self.isotope_to_plot,mask=aa.mask).compressed()
-				z_iso_to_plot=ma.array(self.z_iso_to_plot,mask=aa.mask).compressed()
-				el_iso_to_plot=ma.array(self.el_iso_to_plot,mask=aa.mask).compressed()
-				abunds=ma.array(self.abunds,mask=aa.mask).compressed()
-				a_iso_to_plot=aa.compressed()
-				isom=[]
-				for i in xrange(len(self.isom)):
-					if int(self.isom[i][0].split('-')[1])>100:
-						isom.append(self.isom[i])
+                        if amass_range == None:
+                            amass_range=[min(self.a_iso_to_plot),max(self.a_iso_to_plot)]
+
+                        aa=ma.masked_outside(self.a_iso_to_plot,amass_range[0],amass_range[1])
+                        isotope_to_plot=ma.array(self.isotope_to_plot,mask=aa.mask).compressed()
+                        z_iso_to_plot=ma.array(self.z_iso_to_plot,mask=aa.mask).compressed()
+                        el_iso_to_plot=ma.array(self.el_iso_to_plot,mask=aa.mask).compressed()
+                        abunds=ma.array(self.abunds,mask=aa.mask).compressed()
+                        a_iso_to_plot=aa.compressed()
+                        isom=[]
+                        for i in xrange(len(self.isom)):
+                                if int(self.isom[i][0].split('-')[1])>100:
+                                        isom.append(self.isom[i])
 
 			self.a_iso_to_plot=a_iso_to_plot
 			self.isotope_to_plot=isotope_to_plot	
