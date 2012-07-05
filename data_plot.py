@@ -1122,17 +1122,17 @@ class DataPlot():
                         el_iso_to_plot=ma.array(self.el_iso_to_plot,mask=aa.mask).compressed()
                         abunds=ma.array(self.abunds,mask=aa.mask).compressed()
                         a_iso_to_plot=aa.compressed()
-                        isom=[]
+                        isomers_to_plot=[]
                         for i in xrange(len(self.isom)):
                                 if int(self.isom[i][0].split('-')[1])>100:
-                                        isom.append(self.isom[i])
+                                        isomers_to_plot.append(self.isom[i])
 
 			self.a_iso_to_plot=a_iso_to_plot
 			self.isotope_to_plot=isotope_to_plot	
                         self.z_iso_to_plot=z_iso_to_plot
 			self.el_iso_to_plot=el_iso_to_plot
 			self.abunds=abunds
-			self.isom=isom
+			self.isomers_to_plot=isomers_to_plot
 		else:
 			print 'This method, iso_abund, is not supported by this class'
 			print 'Returning None'
