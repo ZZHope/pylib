@@ -1267,7 +1267,7 @@ class DataPlot():
                         title = str('Cycle %d' %int(cycle))
                     else:
                         title = str('Cycle %d' %int(cycle))+str(' relative to cycle %d'  %int(ref))
-                if ref != -1:
+                if ref != -1 and ylim[0] < 1.1e-13:
                     ylim=(1.e-3,1.e3)
 		pl.ylim(ylim)
                 pl.xlim([amass_range[0]-.5,amass_range[1]+.5])
