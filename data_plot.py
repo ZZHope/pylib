@@ -198,8 +198,6 @@ class DataPlot():
 		limits: The length four list of the x and y limits. The order of
 			the list is xmin,xmax,ymin,ymax
 		'''
-		print 'This method may achieve speedup by calling this method from python or ipython, rather than'\
-		    ' ipython --pylab --q4thread'
 		if str(legend.__class__)!="<type 'list'>":# Determines the legend is a list
 			legendList=False
 		else:
@@ -512,11 +510,6 @@ class DataPlot():
 			  format: What format will this be saved in ['pdf'/'png']
 		title: The title of the plots and the saved images
 		'''
-		
-		print 'This method may achieve speedup calling this '\
-		'method from python or ipython, rather than ipython '\
-		'--pylab --q4thread'
-		
 		
 		if self.which('dvipng')==None:
 			print "This method may need the third party program dvipng to operate"
