@@ -835,7 +835,7 @@ class star_log(DataPlot):
         #fig.savefig(outfile)
         pl.show()
 
-    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False,engen=True):
+    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=True,rad_lines=False,profiles=[],showfig=True):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
         For a more comprehensive plot, your star.log file should contain columns
@@ -876,7 +876,8 @@ class star_log(DataPlot):
                          have in your star.log file.
         plot_radius      Whether on a second y-axis you want to plot the radius of the surface
                          and the he-free core.
-        engen            Boolean whether or not to plot energy generation contours.'''
+        engenPlus        Boolean whether or not to plot energy generation contours for eps_nuc>0.
+        endgenMinus      Boolean whether or not to plot energy generation contours for eos_nuc<0.'''
 
         xxyy=[self.get('star_age')[modstart:modstop],self.get('star_age')[modstart:modstop]]
         mup = max(float(self.get('star_mass')[0])*1.02,1.0)
@@ -911,7 +912,7 @@ class star_log(DataPlot):
             self.get('burn_qtop_1')
         except:
             engenstyle = 'twozone'
-        if engenstyle == 'full' and engen == True:
+        if engenstyle == 'full' and (engenPlus == True or engenMinus == True):
             ulimit_array = np.array([self.get('burn_qtop_'+str(j))[modstart:modstop:dx]*self.get('star_mass')[modstart:modstop:dx] for j in range(1,burn_zones+1)])
             #ulimit_array = np.around(ulimit_array,decimals=len(str(dy))-2)
             llimit_array = np.delete(ulimit_array,-1,0)
@@ -928,7 +929,7 @@ class star_log(DataPlot):
                     elif btype_array[j,i] < 0. and abs(btype_array[j,i]) < 99.:
                         B2[(np.abs(y-llimit_array[j][i])).argmin():(np.abs(y-ulimit_array[j][i])).argmin()+1,i] = 10.0**(abs(btype_array[j,i]))
 
-        if engenstyle == 'twozone' and engen == True:
+        if engenstyle == 'twozone' and (engenPlus == True or engenMinus == True):
                 V=np.zeros([len(y),len(x)],float)
                 for i in range(len(x)):
                 # writing reading status 
@@ -1000,18 +1001,40 @@ class star_log(DataPlot):
 		          if llimit<=y[k] and ulimit>y[k]:
 		              Z[k,i]=1.
 
+	if rad_lines == True:
+		masses = np.arange(0.1,1.5,0.1)
+		rads=[[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+		modno=[]
+		for i in range(len(profiles)):
+			p=mesa_profile('./LOGS',profiles[i])
+			modno.append(p.header_attr['model_number'])
+			for j in range(len(masses)):
+				idx=np.abs(p.get('mass')-masses[j]).argmin()
+				rads[j].append(p.get('radius')[idx])
+
         print 'engenstyle was ', engenstyle
         print 'mixstyle was ', mixstyle
 	print '\n finished preparing color map'
 
 	########################################################################
 	#----------------------------------plot--------------------------------#
-	#fig = pl.figure(1)
-	#fig.set_size_inches(16,9)
-	fsize=15
+	fig = pl.figure(1)
+        if landscape_plot == True:
+		fig.set_size_inches(9,4)
+		fsize=20
+	        pl.gcf().subplots_adjust(bottom=0.15)
+	        pl.gcf().subplots_adjust(right=0.85)
+	params = {'axes.labelsize':  fsize,
+	  'text.fontsize':   fsize,
+	  'legend.fontsize': fsize,
+	  'xtick.labelsize': fsize*0.8,
+	  'ytick.labelsize': fsize*0.8,
+	  'text.usetex': False}
+	pl.rcParams.update(params)
+
         #ax=pl.axes([0.1,0.1,0.9,0.8])
 
-        fig=pl.figure()
+        #fig=pl.figure()
         ax=pl.axes()
 
 	if ixaxis == 'log_time_left':
@@ -1027,24 +1050,28 @@ class star_log(DataPlot):
 	    xxx = lage[modstart:modstop]
 	    print 'plot versus time left'
 	    ax.set_xlabel('$\mathrm{log}_{10}(t^*) \, \mathrm{(yr)}$',fontsize=fsize)
-            xlims = [xxx[0],xxx[-1]]
+            if xlims[1] == 0.:
+                xlims = [xxx[0],xxx[-1]]
 	elif ixaxis =='model_number':
 	    xxx= self.get('model_number')[modstart:modstop]
 	    print 'plot versus model number'
 	    ax.set_xlabel('Model number',fontsize=fsize)
-            xlims = [self.get('model_number')[modstart],self.get('model_number')[modstop]]
+            if xlims[1] == 0.:
+                xlims = [self.get('model_number')[modstart],self.get('model_number')[modstop]]
 	elif ixaxis =='age':
 	    xxx= self.get('star_age')[modstart:modstop]/1.e6
 	    print 'plot versus age'
 	    ax.set_xlabel('Age [Myr]',fontsize=fsize)
-            xlims = [self.get('star_age')[modstart]/1.e6,self.get('star_age')[modstop]/1.e6]
+            if xlims[1] == 0.:
+                xlims = [self.get('star_age')[modstart]/1.e6,self.get('star_age')[modstop]/1.e6]
 
-        ax.set_ylabel('Mass [M$_\odot$]')
+        ax.set_ylabel('$\mathrm{Mass }(M_\odot)$')
 
-	cmapMIX = matplotlib.colors.ListedColormap(['w','k'])
-        if engen == True:
-		cmapB1  = pl.cm.get_cmap('Blues')
-		cmapB2  = pl.cm.get_cmap('Reds')
+#	cmapMIX = matplotlib.colors.ListedColormap(['w','k'])
+        cmapMIX = matplotlib.colors.ListedColormap(['w','#8B8386']) # rose grey
+#        cmapMIX = matplotlib.colors.ListedColormap(['w','#23238E']) # navy blue
+        cmapB1  = pl.cm.get_cmap('Blues')
+	cmapB2  = pl.cm.get_cmap('Reds')
 	#cmapB1  = matplotlib.colors.ListedColormap(['w','b'])
 	#cmapB2  = matplotlib.colors.ListedColormap(['r','w'])
         if ylims == [0.,0.]:
@@ -1058,21 +1085,27 @@ class star_log(DataPlot):
         print Z
 
 	print 'plotting contours'
-	CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.3,levels=[0.5,1.5])
-        CMIX_outlines    = ax.contour(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.9,levels=[0.5,1.5])
-        if engenstyle == 'full' and engen == True:
+	CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX,alpha=0.6,levels=[0.5,1.5])
+        #CMIX_outlines    = ax.contour(xxx[::dx],y,Z, cmap=cmapMIX, alpha=1.0,levels=[0.5,1.5])
+        #CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.5)
+        CMIX_outlines    = ax.contour(xxx[::dx],y,Z, cmap=cmapMIX)
+
+        if engenstyle == 'full' and engenPlus == True:
                 print B1
                 print B2
-        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.3, locator=matplotlib.ticker.LogLocator())
-                CB1_outlines  = ax.contour(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.3, locator=matplotlib.ticker.LogLocator())
-#        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5)
-        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.3, locator=matplotlib.ticker.LogLocator())
-         #       CBURN2_outlines  = ax.contour(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.3, locator=matplotlib.ticker.LogLocator())
+        	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5, locator=matplotlib.ticker.LogLocator())
+                CB1_outlines  = ax.contour(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.7, locator=matplotlib.ticker.LogLocator())
+        	#CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5)
+                CBARBURN1 = pl.colorbar(CBURN1)
+                CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
+        if engenstyle == 'full' and engenMinus == True:
+        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5, locator=matplotlib.ticker.LogLocator())
+                CBURN2_outlines  = ax.contour(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.7, locator=matplotlib.ticker.LogLocator())
 #        	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5)
-        	CBARBURN1 = pl.colorbar(CBURN1)
         	CBARBURN2 = pl.colorbar(CBURN2)
-        	CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
-        if engenstyle == 'twozone' and engen == True:
+                if engenPlus == False:
+        	    CBARBURN2.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
+        if engenstyle == 'twozone' and (engenPlus == True or engenMinus == True):
                 print V
                 ax.contourf(xxx[::dx],y,V, cmap=cmapB1, alpha=0.5)
 
@@ -1080,9 +1113,9 @@ class star_log(DataPlot):
 	ax.plot(xxx[::dx],self.get('star_mass')[modstart:modstop][::dx],'k-')
 
 	print 'plotting abund boundaries'
-	ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary')
-	ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary')
-#	ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary')
+	ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary',linestyle='-')
+	ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary',linestyle='--')
+#	ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
 
         ax.axis([xlims[0],xlims[1],ylims[0],ylims[1]])
 
@@ -1091,9 +1124,15 @@ class star_log(DataPlot):
             ax2.plot(xxx,np.log10(self.get('he4_boundary_radius')[modstart:modstop]),label='He boundary radius',color='k',linewidth=1.,linestyle='-.')
             ax2.plot(xxx,self.get('log_R')[modstart:modstop],label='radius',color='k',linewidth=1.,linestyle='-.')
             ax2.set_ylabel('log(radius)')
+	if rad_lines == True:
+	    ax2=pyl.twinx()
+	    for i in range(len(masses)):
+		    ax2.plot(modno,np.log10(rads[i]),color='k')
 
-        fig.savefig(outfile)
-        pl.show()
+        fig.savefig(outfile,dpi=300)
+	if showfig == True:
+	        pl.show()
+        fig.clear()
 
 # below are some utilities that the user typically never calls directly
 
