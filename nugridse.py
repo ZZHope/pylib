@@ -1,4 +1,4 @@
-'''mppnp is a collection of plots of data in se-type h5 files
+'''nugridse is a collection of plots of data in se-type h5 files
 
    sedir    - the directory on which the h5 files can be
    pattern - a string pattern that the file names have to
@@ -8,7 +8,7 @@
 
    usage:
    start by loading the module
-   1 : import mppnp as mp
+   1 : import nugridse as mp
 
    you can get help:
    2 : help mp
