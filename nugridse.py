@@ -20,7 +20,7 @@
    help(mp.se) or mp.se? do get info for more options, as for example
    how to specify a match pattern to select only certain files in the
    directory; this may be useful if there are very many files and you
-   want only every 10th; example:
+   want only every 10th; example:k
    3 : pt =mp.se('.','M1.65Z0.020.00') 
 
       note: initialising an instance with 120 files with 1000 packets
@@ -106,6 +106,7 @@ import time
 import glob
 from utils import *
 from data_plot import *
+
 class se(DataPlot,Utils):
     ''' This class provides easy access to h5 files from the NuGrid
         project, along with some standard plots
@@ -460,50 +461,57 @@ class se(DataPlot,Utils):
 
         pl.show()
 
-    def kip_cont(self,sparse=100,cycle_range=[-1,-1],mass_range=[-1,-1],y_res=2000,t_eps=1.e0,xax='time',tzero=True):
+    def kip_cont(self,modstart,modstop,dcoeff_thresh=1.e12,xres=1000,ylims=[0.,0.],xlims=[0.,0.],yres=2000,ixaxis='log_time_left',outfile='',landscape_plot=False,codev='KEP'):
         '''
         This function creates a Kippenhahn diagram as a contour plot of the
-        se output using convection_indicator
-
-        sparse         sparsity factor in cycle
-        cycle_range    all if -1,-1, otherwise range of models to take data from, assuming index 
-                       and cycle number are the same or offset only by one
-        y_res          number of equidistant mass points in y-direction onto
-                       which the data will be interpolated
-        mass_range     mass_range over which y-res points will be distributed
-        t_eps          eps to be added to final time to control detail of output at end of plotted evolution
-        xax            'time' for linear time, 'logtimerev' for log(time to end)
-        tzero          True - take age at cycle_range[0] as zero time
+        se output using a diffusion coefficient threshold.
+        ---------------------------------------------------
+        ex: pt.kip_cont(0,-1,xres=1000,yres=1000,ixaxis='log_time_left')
+        unfortunately, although the implicit do loops are faster, I cannot
+        implement a % bar, but this example call should not take more than 1 minute.
+        ---------------------------------------------------
+        modstart, modstop first and last cycle numbers to plot
+        dcoeff_thresh     diffusion coefficient threshold, above which assume
+                          convection is present
+        xres,yres         x and y resolution
+        xlims, ylims      x and y plot limits
+        ixaxis            'age', 'model_number' or 'log_time_left'
+        outfile           name of output file including extension, which will
+                          be saved in 300 dpi
+        landscape_plot    for a landscape plot
+        codev             'KEP', 'MES' or 'GNV'
         '''
 
-        original_cyclelist = self.se.cycles
-        cycle_start=cycle_range[0]
-        cycle_end=cycle_range[1]
-        if cycle_start==-1 :
-            cycle_start=0
-        if cycle_end==-1 :
-            cycle_end=len(original_cyclelist)-1
-        cyclelist = original_cyclelist[cycle_start:cycle_end:sparse]
-        xx = self.se.ages[cycle_start:cycle_end:sparse]
+        original_cyclelist = np.array([int(self.se.cycles[i]) for i in range(len(self.se.cycles))])
+        nmodels=len(self.se.cycles[modstart:modstop])
+        print 'nmodels           = ', nmodels
+        sparse = int(max(1,nmodels/xres))
+        print sparse
+        cyclelist = original_cyclelist[modstart:modstop:sparse]
+        cyclelist=cyclelist[0:-1]
+        print cyclelist
+        xx = np.array([self.se.ages[int(cyclelist[i])] for i in range(len(cyclelist))])
         age_unit=self.get('age_unit')
-        one_year=self.get('one_year')
-        if age_unit==1.0: 
-            xx = xx/one_year
+        if codev=='MES':
+            oneyear=self.get('one_year')
+        elif codev == 'KEP':
+            oneyear = 365*24*3600
 
-        m_min=mass_range[0]
-        m_max=mass_range[1]
-        if m_min==-1 :
+
+        m_min=ylims[0]
+        m_max=ylims[1]
+        if m_min==0.:
             m_min=0.
-        if m_max==-1 :
+            ylims[0] = m_min
+        if m_max==0.:
             m_max=float(self.se.get('mini'))
+            ylims[1] = m_max
 
 
-        dy = (m_max-m_min)/float(y_res)
+        dy = (m_max-m_min)/float(yres)
+        print 'dy = ', dy
         y = np.arange(m_min, m_max, dy)
-
-        fig = pl.figure(1)
-        ax = pl.subplot(1,1,1)
-        fsize = 12
+        print y
 
         Z = np.zeros([len(y),len(xx)],float)
 
@@ -546,47 +554,136 @@ class se(DataPlot,Utils):
                             plotlims.append(massco[j])
                 return plotlims
 
-        for i in range(len(cyclelist)):
-            print 'CYCLE: ', cyclelist[i]
-            conv_i_vec = self.se.get(cyclelist[i],'convection_indicator')
-            massco = self.se.get(cyclelist[i],'mass')
-            plotlims = getlims(conv_i_vec,massco)
-            percent = int(i*100/len(cyclelist))
-            sys.stdout.flush()
-            sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
-            for k in range(0,len(plotlims),2):
-                llimit = plotlims[k]
-                ulimit = plotlims[k+1]
-                for f in range(y_res):
-                    if llimit<=y[f] and ulimit>y[f]:
-	                Z[f,i]=1.
+        print 'getting convection matrix... '
+        conv_i_vec_matrix=np.array([np.interp(y,self.se.get(cyclelist[i],'mass')[::-1],self.se.get(cyclelist[i],'dcoeff')[::-1],0.,self.se.get(cyclelist[i],'mass')[::-1][-1]) for i in range(len(cyclelist))])
+        print 'getting stellar mass...'
+        mtot = np.array([self.se.get(cyclelist[i],'total_mass')/1.9891e33 for i in range(len(cyclelist))])
+        #conv_i_vec_matrix=[]
+        #for i in range(len(cyclelist)):
+        #    conv_i_vec_matrix.append(np.interp(y,self.se.get(cyclelist[i],'mass')[::-1],self.se.get(cyclelist[i],'convection_indicator'),0.,self.se.get(cyclelist[i],'mass')[::-1][-1]))
+        #    percent = int(i*100/len(cyclelist))
+        #    sys.stdout.flush()
+        #    sys.stdout.write("\rcreating convection matrix " + "...%d%%" % percent)
+        #conv_i_vec_matrix = np.array(conv_i_vec_matrix)
+        #massco_matrix=np.array([np.interp(y,self.se.get(cyclelist[i],'mass'),self.se.get(cyclelist[i],'mass'))for i in range(len(cyclelist))])
+        #for i in range(len(cyclelist)):
+        #    print 'CYCLE: ', cyclelist[i]
+        #    plotlims = getlims(conv_i_vec_matrix[i],massco_matrix[i])
+        #    percent = int(i*100/len(cyclelist))
+        #    sys.stdout.flush()
+        #    sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
+        #    for k in range(0,len(plotlims),2):
+        #        llimit = plotlims[k]
+        #        ulimit = plotlims[k+1]
+        #        for f in range(y_res):
+        #            if llimit<=y[f] and ulimit>y[f]:
+	#                Z[f,i]=1.
 
+        print np.shape(conv_i_vec_matrix)
+        print np.shape(np.transpose(conv_i_vec_matrix))
+        print np.shape(Z)
+        print np.shape(xx)
+        print np.shape(y)
 
-        print xx[0]
-        # Set up x-axis
-        if xax is 'logtimerev': 
-            xx=np.log10(np.max(xx)+t_eps-xx)                
-            ax.set_xlabel('$\log(t_{final} - t)$  $\mathrm{[yr]}$',fontsize=fsize)
-        elif xax is 'time':
-            ax.set_xlabel('$t$ $\mathrm{[yr]}$',fontsize=fsize)
-            if tzero is True:
-                print 'zero time is '+str(xx[0])
-                xx=xx-xx[0]
-                ax.set_xlabel('$t - t_0$ $\mathrm{[yr]}$',fontsize=fsize)
+        print conv_i_vec_matrix
 
-        print xx[0]
+       # print xx[0]
+       # # Set up x-axis
+       # if xax is 'logtimerev': 
+       #     xx=np.log10(np.max(xx)+t_eps-xx)                
+       #     ax.set_xlabel('$\log(t_{final} - t)$  $\mathrm{[yr]}$',fontsize=fsize)
+       # elif xax is 'time':
+       #     ax.set_xlabel('$t$ $\mathrm{[yr]}$',fontsize=fsize)
+       #     if tzero is True:
+       #         print 'zero time is '+str(xx[0])
+       #         xx=xx-xx[0]
+       #         ax.set_xlabel('$t - t_0$ $\mathrm{[yr]}$',fontsize=fsize)
 
-        #cmap=mpl.cm.get_cmap('Blues')
-        cmap = mpl.colors.ListedColormap(['w','b'])
+        #########################################################################
+        # PLOT:
+        fsize=20
+
+	params = {'axes.labelsize':  fsize,
+	  'text.fontsize':   fsize,
+	  'legend.fontsize': fsize,
+	  'xtick.labelsize': fsize*0.8,
+	  'ytick.labelsize': fsize*0.8,
+	  'text.usetex': False}
+	pl.rcParams.update(params)
+        fig = pl.figure(1)
+        ax = pl.axes()
+        if landscape_plot == True:
+		fig.set_size_inches(9,4)
+		fsize=20
+	        pl.gcf().subplots_adjust(bottom=0.15)
+	        pl.gcf().subplots_adjust(right=0.85)
+
+        ax.set_ylabel('$\mathrm{Mass }(M_\odot)$',fontsize=fsize)
+
+        xxx=[]
+        age_array = self.se.ages
+        if codev == 'KEP':
+            original_ages = np.array(self.se.ages)
+            for i in range(1,len(original_ages)):
+                if (original_ages[i]-original_ages[i-1]) < 0.:
+                    age_at_restart_idx = i-1
+                    age_at_restart = original_ages[i-1]
+                    print 'age restart found at cycle = '+str(age_at_restart_idx)+', age = '+str(age_at_restart)
+                    KEPLER = True
+                    break
+
+            for i in range(age_at_restart_idx+1,len(original_ages)):
+                original_ages[i] = original_ages[i] + age_at_restart
+            age_array = original_ages
+
+	if ixaxis == 'log_time_left':
+	# log of time left until core collapse
+	    gage= np.array(age_array)/oneyear
+	    lage=np.zeros(len(gage))
+	    agemin = max(abs(gage[-1]-gage[-2])/5.,1.e-10)
+	    for i in np.arange(len(gage)):
+	        if gage[-1]-gage[i]>agemin:
+	            lage[i]=np.log10(gage[-1]-gage[i]+agemin)
+	        else :
+	            lage[i]=np.log10(agemin)
+	    xxx = lage[modstart:modstop:sparse]
+            xxx = xxx[0:-1]
+	    print 'plot versus time left'
+	    ax.set_xlabel('$\mathrm{log}_{10}(t^*) \, \mathrm{(yr)}$',fontsize=fsize)
+            if xlims[1] == 0.:
+                xlims = [xxx[0],xxx[-1]]
+	elif ixaxis =='model_number':
+	    xxx= cyclelist
+	    print 'plot versus model number'
+	    ax.set_xlabel('Model number',fontsize=fsize)
+            if xlims[1] == 0.:
+                xlims = [cyclelist[0],cyclelist[-1]]
+	elif ixaxis =='age':
+	    xxx = age_array/oneyear/1.e6
+	    print 'plot versus age'
+	    ax.set_xlabel('Age [Myr]',fontsize=fsize)
+            if xlims[1] == 0.:
+                xlims = [xxx[0],xxx[-1]]
+
+        cmapMIX=mpl.colors.ListedColormap(['w','#8B8386']) # rose grey
+        #cmap = mpl.colors.ListedColormap(['w','b'])
 
         print 'plotting contours'
-        print len(xx),len(y)
-        ax.contourf(xx,y,Z, cmap=cmap, alpha=0.7)
-        ax.axis([xx[0],xx[-1],m_min,m_max])
+        print len(xxx),len(y)
+        ax.contourf(xxx,y,np.transpose(conv_i_vec_matrix), cmap=cmapMIX, alpha=0.6,levels=[dcoeff_thresh,1.e99])
+        ax.contour(xxx,y,np.transpose(conv_i_vec_matrix), cmap=cmapMIX,levels=[dcoeff_thresh,1.e99])
+        ax.plot(xxx,mtot,color='k')
+        #for i in range(len(xxx)):
+        #  for j in range(len(y)):
+        #    pl.plot(xxx[i],conv_i_vec_matrix[i,j],'bo',alpha=0.5)
+        ax.axis([xlims[0],xlims[-1],ylims[0],ylims[1]])
+        if outfile != '':
+            fig.savefig(outfile,dpi=300)
         pl.show()
 
-    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[1.0],yllim=0.,yulim=0.,y_res=2000,xllim=0.,xulim=0.,age='years',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6,outfile='plot.pdf',annotation=''):
+    def kip_cont2(self,sparse,cycle_start=0,cycle_end=0,plot=['dcoeff'],thresholds=[1.0E+12],xax='log_time_left',alphas=[1.0],yllim=0.,yulim=0.,y_res=2000,xllim=0.,xulim=0.,age='seconds',sparse_intrinsic=20, engen=False,netnuc_name='eps_nuc',engenalpha=0.6,outfile='plot.pdf',annotation='',KEPLER=False):
         '''
+        !! EXPERIMENTAL FEATURE !!
         This function creates a Kippenhahn diagram as a contour plot of the
         .se.h5 or .out.h5 files using any continuous variable (columns in the
         hdf5 cycle data.
@@ -651,6 +748,23 @@ class se(DataPlot,Utils):
         else:
             cycle_start = int(cycle_start)/sparse_intrinsic - 1
         cyclelist = original_cyclelist[cycle_start:cycle_end:sparse]
+        # fix for KEPLER restart counting at O burning:
+        original_ages= self.se.ages
+        age_at_restart = 0.
+        age_at_restart_idx = 0
+        if KEPLER == True:
+            for i in range(1,len(original_ages)):
+                if (original_ages[i]-original_ages[i-1]) < 0.:
+                    age_at_restart_idx = i-1
+                    age_at_restart = original_ages[i-1]
+                    print 'age restart found at cycle = '+str(age_at_restart_idx)+', age = '+str(age_at_restart)
+                    KEPLER = True
+                    break
+
+            for i in range(age_at_restart_idx+1,len(original_ages)):
+                original_ages[i] = original_ages[i] + age_at_restart
+
+
         # Figure:
         fig = pl.figure()
         ax = pl.axes()
@@ -664,12 +778,22 @@ class se(DataPlot,Utils):
 	pl.rcParams.update(params)
         # X-axis:
         if xax == 'log_time_left':
-            xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
-            if age == 'years':
-                xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
+            if KEPLER == True:
+                xxtmp = original_ages[cycle_start:cycle_end:sparse]
             else:
-                for i in range(len(cyclelist)):
-                    xxtmp[i] = self.se.ages[cycle_start:cycle_end:sparse][i]/31558149.984
+                xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
+            if age == 'years':
+                if KEPLER == True:
+                    pass
+                else:
+                    xxtmp = self.se.ages[cycle_start:cycle_end:sparse]
+            elif age == 'seconds':
+                if KEPLER == True:
+                    for i in range(len(cyclelist)):
+                        xxtmp[i] = original_ages[cycle_start:cycle_end:sparse][i]/31558149.984
+                else:
+                    for i in range(len(cyclelist)):
+                        xxtmp[i] = self.se.ages[cycle_start:cycle_end:sparse][i]/31558149.984
         if xax == 'cycles':
             xx = cyclelist
             xxtmp = cyclelist
@@ -756,9 +880,11 @@ class se(DataPlot,Utils):
         # This loop gets the mass co-ordinate array and the variable arrays,
         # calls to get the boundaries in order, and populates the contour array.
         ypscoeff = [-1,-1,-1] # this should have same length as plot - quick fix for yps.
+        total_massco = []
         for i in range(len(cyclelist)):
 #            print 'CYCLE: ', cyclelist[i]
             massco = self.se.get(cyclelist[i],'mass')
+            total_massco.append(max(massco))
             plotlimits=[]
             for j in range(len(plot)):
                 if plot[j][1] == '-' or plot[j][2] == '-':
@@ -804,6 +930,10 @@ class se(DataPlot,Utils):
                between centre and surface).'''
             idx=(np.abs(array-value)).argmin()
             lims=np.zeros([2],int)
+            if idx == len(array)-1: # SJONES post-mod
+                lims[0] = idx - 1   # SJONES post-mod
+                lims[1] = idx       # SJONES post-mod
+                return lims
             if array[idx] < value:
                 if array[idx]-array[idx+1] < 0.:
                     lims[0] = idx
@@ -827,6 +957,8 @@ class se(DataPlot,Utils):
         # contains the log of the energy generation rather than "above" or "below".
         # Because of this, contour boundaries are automatically calculated
         # according to the max energy generation in the model.
+        dummy_engen=[]
+        engen_signs = []
         if engen == True:
         # Requires eps_nuc array in the data. Produces energy generation contour
         # by linearly interpolating eps_nuc between mass co-ordinates according
@@ -838,12 +970,27 @@ class se(DataPlot,Utils):
                 massco = self.se.get(cyclelist[i],'mass')
                 if len(massco) <= 10:
                     massco=massco[0]
-                log_epsnuc = np.log10(self.se.get(cyclelist[i],netnuc_name))
-                if len(log_epsnuc) <= 2:
-                    log_epsnuc = log_epsnuc[0]
-                    print log_epsnuc
+                dummy_engen = self.se.get(cyclelist[i],netnuc_name)
+                if len(dummy_engen) <= 10:
+                    dummy_engen = dummy_engen[0]
+                for f in range(len(dummy_engen)):
+                    # make all values absolute, but note in engen_signs which were negative:
+                    if dummy_engen[f] == 0.:
+                        engen_signs.append(1.)
+                    else:
+                        engen_signs.append(dummy_engen[f]/abs(dummy_engen[f]))
+                    if abs(engen_signs[f]) != 1.:
+                        print 'engen sign not +/- 1!!'
+                        print 'engen_signs['+str(f)+'] = ',engen_signs[f]
+                        print 'dummy_engen[f] = ', dummy_engen[f]
+                        sys.exit()
+                    dummy_engen[f] = abs(dummy_engen[f])
+                log_epsnuc = np.log10(dummy_engen)
+                # now insert the correct signs again:
                 for f in range(len(log_epsnuc)):
-                    if log_epsnuc[f] < 0.: log_epsnuc[f] = 0.
+                    log_epsnuc[f] = log_epsnuc[f]*engen_signs[f]
+                #for f in range(len(log_epsnuc)):
+                    #if str(log_epsnuc[f]) == 'nan': log_epsnuc[f] = 0.
 #                print log_epsnuc
                 percent = int(i*100/len(cyclelist))
                 sys.stdout.flush()
@@ -853,6 +1000,8 @@ class se(DataPlot,Utils):
                         energy_here = 0.
                     elif j == 0:
                         energy_here = log_epsnuc[-1]
+                    elif y[j] > max(massco):
+                        energy_here = 0.
                     else:
                         lims = find_nearest(massco,y[j])
                         frac = (y[j]-massco[lims[0]])/(massco[lims[1]]-massco[lims[0]])
@@ -861,12 +1010,20 @@ class se(DataPlot,Utils):
                         max_energy_gen = energy_here
                     if energy_here < min_energy_gen:
                         min_energy_gen = energy_here
-                    if max_energy_gen >1.0E+30:
+                    if abs(max_energy_gen) > 100.:
+                        print y[j]
+                        print engen_signs[f], log_epsnuc[f], frac, lims[0], lims[1], massco[lims[0]], massco[lims[1]]
+                        print (massco[lims[1]]-massco[lims[0]]), (y[j]-massco[lims[0]])
+                        print max_energy_gen
+                        print 'exit due to energy generation > 100'
                         sys.exit()
 #                    print energy_here
 #                    print max_energy_gen
 #                    if energy_here >= 0.:
-                    Z[j,i,1] = 10**energy_here
+                    #Z[j,i,1] = 10**energy_here #SJONES comment
+                    if energy_here < 0.:
+                        energy_here = 0.
+                    Z[j,i,1] = energy_here
 #                    if energy_here < 0.:
 #                        Z[j,i,2] = 10**energy_here
 
@@ -878,6 +1035,8 @@ class se(DataPlot,Utils):
         # lines as opposed to shading (for clarity). Colourmaps of these choices
         # are written to cmap (array).
         engen_cmap=mpl.cm.get_cmap('Blues')
+        engen_cmap.set_under(color='w',alpha=engenalpha)
+
         enloss_cmap=mpl.cm.get_cmap('Reds')
         colours = ['#8B8386','m','g','b']
         iso_colours = ['b','r','y']
@@ -887,6 +1046,11 @@ class se(DataPlot,Utils):
 
         print 'plotting contours'
 
+        if xllim==0. and xulim==0.:
+            ax.axis([float(xx[0]),float(xx[-1]),yllim,yulim])
+        else:
+            ax.axis([xllim,xulim,yllim,yulim])
+
         # Plot all of the contours. Levels indicates to only plot the shaded
         # regions and not plot the white regions, so that they are essentially
         # transparent. If engen=True, then the energy generation levels
@@ -895,17 +1059,20 @@ class se(DataPlot,Utils):
         for i in range(len(plot)):
             ax.contourf(xx,y,Z[:,:,i],levels=[0.5,1.5],colors=colours[i], alpha=alphas[i])
         if engen == True:
-            ceiling = int(max_energy_gen+1)
-            floor = int(min_energy_gen+1)
-            cburn = ax.contourf(xx,y,Z[:,:,1],cmap=engen_cmap,locator=mpl.ticker.LogLocator(),alpha=engenalpha)
+            #ceiling = int(max_energy_gen+1)
+            #floor = int(min_energy_gen+1)
+            #cburn = ax.contourf(xx,y,Z[:,:,1],cmap=engen_cmap,locator=mpl.ticker.LogLocator(),alpha=engenalpha) # SJONES comment
+            cburn = ax.contourf(xx,y,Z[:,:,1],cmap=engen_cmap,alpha=engenalpha,levels=range(5,32,5))
             cbarburn = pl.colorbar(cburn)
 #            if min_energy_gen != 0:
 #                closs = ax.contourf(xx,y,Z[:,:,2],cmap=enloss_cmap,locator=mpl.ticker.LogLocator(),alpha=engenalpha)
 #                cbarloss = pl.colorbar(closs)
-        if xllim==0. and xulim==0.:
-            ax.axis([float(xx[0]),float(xx[-1]),yllim,yulim])
-        else:
-            ax.axis([xllim,xulim,yllim,yulim])
+
+#            cbarburn.set_label('$\epsilon_\mathrm{nuc}-\epsilon_{\\nu} \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$, > 0',fontsize=fsize)
+            cbarburn.set_label('$log_{10}(\epsilon_\mathrm{nuc}) \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$, > 0',fontsize=fsize)
+
+
+        pl.plot(xx,total_massco,color='k')
         pl.text(0.9,0.9,annotation,horizontalalignment='right',transform = ax.transAxes,fontsize=fsize)
         pl.ylabel('$\mathrm{Mass}\;[M_\odot]$',fontsize=fsize-1)
         pl.savefig(outfile)
