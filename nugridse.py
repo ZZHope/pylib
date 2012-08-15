@@ -515,69 +515,26 @@ class se(DataPlot,Utils):
 
         Z = np.zeros([len(y),len(xx)],float)
 
-        def getlims(conv_i_vec,massco):
-            '''This function returns the convective boundaries for a cycle,
-            given the cycle's conv_i_vec and massco columns, taking into account
-            whether surface or centre are at the top'''
-            plotlims = []
-            if massco[0] > massco[-1]:
-                for j in range(-1,-len(conv_i_vec)-1,-1):
-                    if conv_i_vec[j] >= 2:
-                        conv_i_vec[j] = 0
-                    if conv_i_vec[j+1] >= 2:
-                        conv_i_vec[j+1] = 0
-                    if j == -1:
-                        if conv_i_vec[j] == 1:
-                            plotlims.append(massco[j])
-                        else:
-                            pass
-                    elif abs(conv_i_vec[j]-conv_i_vec[j+1]) == 1:
-                            plotlims.append(massco[j])
-                    if j == -len(conv_i_vec):
-                        if conv_i_vec[j] == 1:
-                            plotlims.append(massco[j])
-                return plotlims       
-            else:
-                for j in range(len(conv_i_vec)):
-                    if conv_i_vec[j] >= 2:
-                        conv_i_vec[j] = 0
-                    if j == 0:
-                        if conv_i_vec[j] == 1:
-                            plotlims.append(massco[j])
-                        else:
-                            pass
-                    elif abs(conv_i_vec[j]-conv_i_vec[j-1]) >= 1:
+        print cyclelist
 
-                        plotlims.append(massco[j])
-                    if j == len(conv_i_vec)-1:
-                        if conv_i_vec[j] == 1:
-                            plotlims.append(massco[j])
-                return plotlims
+#        print 'getting mass_matrix...'
+#        mass_matrix=self.se.get([cyclelist[i] for i in range(len(cyclelist))],'mass')
+#        print 'getting dcoeff_matrix...'
+#        dcoeff_matrix=self.se.get(cyclelist,'dcoeff')
+#        print 'getting total_mass_vector...'
+#        total_mass_vector=self.se.get(cyclelist,'total_mass')
 
-        print 'getting convection matrix... '
+        print 'calculating convection matrix... '
         conv_i_vec_matrix=np.array([np.interp(y,self.se.get(cyclelist[i],'mass')[::-1],self.se.get(cyclelist[i],'dcoeff')[::-1],0.,self.se.get(cyclelist[i],'mass')[::-1][-1]) for i in range(len(cyclelist))])
         print 'getting stellar mass...'
-        mtot = np.array([self.se.get(cyclelist[i],'total_mass')/1.9891e33 for i in range(len(cyclelist))])
-        #conv_i_vec_matrix=[]
-        #for i in range(len(cyclelist)):
-        #    conv_i_vec_matrix.append(np.interp(y,self.se.get(cyclelist[i],'mass')[::-1],self.se.get(cyclelist[i],'convection_indicator'),0.,self.se.get(cyclelist[i],'mass')[::-1][-1]))
-        #    percent = int(i*100/len(cyclelist))
-        #    sys.stdout.flush()
-        #    sys.stdout.write("\rcreating convection matrix " + "...%d%%" % percent)
-        #conv_i_vec_matrix = np.array(conv_i_vec_matrix)
-        #massco_matrix=np.array([np.interp(y,self.se.get(cyclelist[i],'mass'),self.se.get(cyclelist[i],'mass'))for i in range(len(cyclelist))])
-        #for i in range(len(cyclelist)):
-        #    print 'CYCLE: ', cyclelist[i]
-        #    plotlims = getlims(conv_i_vec_matrix[i],massco_matrix[i])
-        #    percent = int(i*100/len(cyclelist))
-        #    sys.stdout.flush()
-        #    sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
-        #    for k in range(0,len(plotlims),2):
-        #        llimit = plotlims[k]
-        #        ulimit = plotlims[k+1]
-        #        for f in range(y_res):
-        #            if llimit<=y[f] and ulimit>y[f]:
-	#                Z[f,i]=1.
+        if codev == 'KEP':
+            mtot = np.array([self.se.get(cyclelist[i],'total_mass') for i in range(len(cyclelist))])
+        else:
+            mtot = np.array([self.se.get(cyclelist[i],'total_mass')/1.9891e33 for i in range(len(cyclelist))])
+        print mtot
+#        conv_i_vec_matrix=np.array([np.interp(y,mass_matrix[i][::-1],dcoeff_matrix[i][::-1],0.,mass_matrix[i][::-1][-1]) for i in range(len(cyclelist))])
+#        print 'getting stellar mass...'
+#        mtot = np.array([total_mass_vector[i]/1.9891e33 for i in range(len(cyclelist))])
 
         print np.shape(conv_i_vec_matrix)
         print np.shape(np.transpose(conv_i_vec_matrix))
@@ -623,7 +580,7 @@ class se(DataPlot,Utils):
         xxx=[]
         age_array = self.se.ages
         if codev == 'KEP':
-            original_ages = np.array(self.se.ages)
+            original_ages = np.array(self.se.ages[0:modstop])
             for i in range(1,len(original_ages)):
                 if (original_ages[i]-original_ages[i-1]) < 0.:
                     age_at_restart_idx = i-1
