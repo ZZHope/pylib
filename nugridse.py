@@ -492,10 +492,12 @@ class se(DataPlot,Utils):
         print cyclelist
         xx = np.array([self.se.ages[int(cyclelist[i])] for i in range(len(cyclelist))])
         age_unit=self.get('age_unit')
-        if codev=='MES':
-            oneyear=self.get('one_year')
-        elif codev == 'KEP':
+        if codev == 'KEP':
             oneyear = 365*24*3600
+        elif codev == 'MES':
+            oneyear=self.get('one_year')
+        elif codev == 'GNV':
+            oneyear=1.e0
 
 
         m_min=ylims[0]
@@ -526,11 +528,18 @@ class se(DataPlot,Utils):
 
         print 'calculating convection matrix... '
         conv_i_vec_matrix=np.array([np.interp(y,self.se.get(cyclelist[i],'mass')[::-1],self.se.get(cyclelist[i],'dcoeff')[::-1],0.,self.se.get(cyclelist[i],'mass')[::-1][-1]) for i in range(len(cyclelist))])
+#        conv_i_vec_matrix=[]
+#        for i in range(len(cyclelist)):
+#            conv_i_vec_matrix.append(np.interp(y,self.se.get(cyclelist[i],'mass')[::-1],self.se.get#(cyclelist[i],'dcoeff')[::-1],0.,self.se.get(cyclelist[i],'mass')[::-1][-1]))
+#            percent = int(i*100/len(cyclelist))
+#            sys.stdout.flush()
+#            sys.stdout.write("\rcreating color map " + "...%d%%" % percent)
+
         print 'getting stellar mass...'
-        if codev == 'KEP':
-            mtot = np.array([self.se.get(cyclelist[i],'total_mass') for i in range(len(cyclelist))])
-        else:
+        if codev == 'MES':
             mtot = np.array([self.se.get(cyclelist[i],'total_mass')/1.9891e33 for i in range(len(cyclelist))])
+        else:
+            mtot = np.array([self.se.get(cyclelist[i],'total_mass') for i in range(len(cyclelist))])
         print mtot
 #        conv_i_vec_matrix=np.array([np.interp(y,mass_matrix[i][::-1],dcoeff_matrix[i][::-1],0.,mass_matrix[i][::-1][-1]) for i in range(len(cyclelist))])
 #        print 'getting stellar mass...'
@@ -607,19 +616,19 @@ class se(DataPlot,Utils):
             xxx = xxx[0:-1]
 	    print 'plot versus time left'
 	    ax.set_xlabel('$\mathrm{log}_{10}(t^*) \, \mathrm{(yr)}$',fontsize=fsize)
-            if xlims[1] == 0.:
+            if xlims == [0.,0.]:
                 xlims = [xxx[0],xxx[-1]]
 	elif ixaxis =='model_number':
 	    xxx= cyclelist
 	    print 'plot versus model number'
 	    ax.set_xlabel('Model number',fontsize=fsize)
-            if xlims[1] == 0.:
+            if xlims == [0.,0.]:
                 xlims = [cyclelist[0],cyclelist[-1]]
 	elif ixaxis =='age':
 	    xxx = age_array/oneyear/1.e6
 	    print 'plot versus age'
 	    ax.set_xlabel('Age [Myr]',fontsize=fsize)
-            if xlims[1] == 0.:
+            if xlims == [0.,0.]:
                 xlims = [xxx[0],xxx[-1]]
 
         cmapMIX=mpl.colors.ListedColormap(['w','#8B8386']) # rose grey
@@ -627,8 +636,11 @@ class se(DataPlot,Utils):
 
         print 'plotting contours'
         print len(xxx),len(y)
-        ax.contourf(xxx,y,np.transpose(conv_i_vec_matrix), cmap=cmapMIX, alpha=0.6,levels=[dcoeff_thresh,1.e99])
-        ax.contour(xxx,y,np.transpose(conv_i_vec_matrix), cmap=cmapMIX,levels=[dcoeff_thresh,1.e99])
+        ax.autoscale(False)
+        low_level = dcoeff_thresh - dcoeff_thresh/10
+        high_level= dcoeff_thresh + dcoeff_thresh/10
+        ax.contourf(xxx,y,np.transpose(conv_i_vec_matrix), cmap=cmapMIX, alpha=0.6,levels=[low_level,1.e99])
+        ax.contour(xxx,y,np.transpose(conv_i_vec_matrix), cmap=cmapMIX,levels=[low_level,high_level])
         ax.plot(xxx,mtot,color='k')
         #for i in range(len(xxx)):
         #  for j in range(len(y)):

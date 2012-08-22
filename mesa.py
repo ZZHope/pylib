@@ -835,7 +835,7 @@ class star_log(DataPlot):
         #fig.savefig(outfile)
         pl.show()
 
-    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=True,rad_lines=False,profiles=[],showfig=True):
+    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=True,rad_lines=False,profiles=[],showfig=True,outlines=True):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
         For a more comprehensive plot, your star.log file should contain columns
@@ -1019,9 +1019,9 @@ class star_log(DataPlot):
 	########################################################################
 	#----------------------------------plot--------------------------------#
 	fig = pl.figure(1)
+	fsize=20
         if landscape_plot == True:
 		fig.set_size_inches(9,4)
-		fsize=20
 	        pl.gcf().subplots_adjust(bottom=0.15)
 	        pl.gcf().subplots_adjust(right=0.85)
 	params = {'axes.labelsize':  fsize,
@@ -1059,11 +1059,15 @@ class star_log(DataPlot):
             if xlims[1] == 0.:
                 xlims = [self.get('model_number')[modstart],self.get('model_number')[modstop]]
 	elif ixaxis =='age':
-	    xxx= self.get('star_age')[modstart:modstop]/1.e6
-	    print 'plot versus age'
-	    ax.set_xlabel('Age [Myr]',fontsize=fsize)
+            if modstart != 0:
+		    xxx= self.get('star_age')[modstart:modstop] - self.get('star_age')[modstart]
+		    print 'plot versus age'
+		    ax.set_xlabel('Age [yr] + '+str(self.get('star_age')[modstart]),fontsize=fsize)
+            else:
+                    xxx= self.get('star_age')[modstart:modstop]/1.e6
+		    ax.set_xlabel('Age [Myr]',fontsize=fsize)
             if xlims[1] == 0.:
-                xlims = [self.get('star_age')[modstart]/1.e6,self.get('star_age')[modstop]/1.e6]
+                xlims = [xxx[0],xxx[-1]]
 
         ax.set_ylabel('$\mathrm{Mass }(M_\odot)$')
 
@@ -1077,8 +1081,11 @@ class star_log(DataPlot):
         if ylims == [0.,0.]:
             ylims[0] = 0.
             ylims[1] = mup
-
-
+        if ylims[0] != 0.:
+            ax.set_ylabel('$\mathrm{Mass }(M_\odot)$ + '+str(ylims[0]))
+            y = y - ylims[0]
+            ylims[0] = y[0]
+            ylims[1] = y[-1]
 
         print xxx[::dx]
         print y
@@ -1088,7 +1095,8 @@ class star_log(DataPlot):
 	CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX,alpha=0.6,levels=[0.5,1.5])
         #CMIX_outlines    = ax.contour(xxx[::dx],y,Z, cmap=cmapMIX, alpha=1.0,levels=[0.5,1.5])
         #CMIX    = ax.contourf(xxx[::dx],y,Z, cmap=cmapMIX, alpha=0.5)
-        CMIX_outlines    = ax.contour(xxx[::dx],y,Z, cmap=cmapMIX)
+        if outlines == True:
+	        CMIX_outlines    = ax.contour(xxx[::dx],y,Z, cmap=cmapMIX)
 
         if engenstyle == 'full' and engenPlus == True:
                 print B1
@@ -1115,7 +1123,7 @@ class star_log(DataPlot):
 	print 'plotting abund boundaries'
 	ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary',linestyle='-')
 	ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary',linestyle='--')
-#	ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
+	ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
 
         ax.axis([xlims[0],xlims[1],ylims[0],ylims[1]])
 
