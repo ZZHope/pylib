@@ -1,8 +1,8 @@
 % *********** Document name and reference:
 % Title of document
-\renewcommand{\ndoctitle}{mppnp.py: The python workhorse to get, plot and analyse se files} 
+\renewcommand{\ndoctitle}{nugridse.py: The python workhorse to get, plot and analyse se files} 
 % Document category acronym 
-\renewcommand{\ndocname}{mppnp}                      
+\renewcommand{\ndocname}{nugridse}                      
 % svn dir
 \renewcommand{\svndir}{svn://forum.astro.keele.ac.uk/utils/pylib}  
 % Contributors to this document
@@ -17,20 +17,20 @@ Contributors: \ndoccontribs\\
 
 
 {  \textbf{Abstract:} \slshape
-mppnp gives access to data and methods needed to process data from se files, both the stellar evolution output files of type \texttt{.se.h5} as well as mppnp output, for example in H5\_out dir \texttt{.out.h5}, or in H5\_surf or H5\_restart. Like the other pylib modules it has access to the methods in the superclass Data\_Plot (see relevant chapter below). 
+nugridse gives access to data and methods needed to process data from se files, both the stellar evolution output files of type \texttt{.se.h5} as well as nugridse output, for example in H5\_out dir \texttt{.out.h5}, or in H5\_surf or H5\_restart. Like the other pylib modules it has access to the methods in the superclass Data\_Plot (see relevant chapter below). 
 }
 %##############################################################
 %# Section: Introduction
 %##############################################################
 
 \section{Introduction}
-\index{mppnp}
-Welcome to the mppnp.py user Guide. The purpose of mppnp.py is to provide similiar capabilities to the ppn.py code but on a massively parallel scale. Mppnp.py provides similiar file methods such as sedir and sefiles and header and column attributes. 
+\index{nugridse}
+Welcome to the nugridse.py user Guide. The purpose of nugridse.py is to provide similiar capabilities to the ppn.py code but on a massively parallel scale. nugridse.py provides similiar file methods such as sedir and sefiles and header and column attributes. 
 A major caveat applied to using this class in the dramatic increase in processing time in dealing with  the increasing amount of data.
-Please consult the docstrings in mppnp.py for more information.
+Please consult the docstrings in nugridse.py for more information.
 
 This document will provide the user with a 
-tutorial and walk through of the tools contained within mppnp.py and
+tutorial and walk through of the tools contained within nugridse.py and
 how a typical user would go about using and working with this python module.
 \subsection{Tutorial and Walkthough}
 
