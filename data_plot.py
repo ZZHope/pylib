@@ -58,12 +58,12 @@ class DataPlot():
 		'''
 		
 		c=str(self.__class__)
-		tmp=''
+		Tmp=''
 		if 'ppm.yprofile' == c:
 			tmp='YProfile'
 		elif 'ascii_table.ascii_table' == c:
 			tmp='AsciiTable'
-		elif 'mppnp.se' == c:
+		elif 'nugridse.se' == c:
 			tmp='se'
 		elif 'mesa.mesa_profile' == c:
 			tmp='mesa_profile'
