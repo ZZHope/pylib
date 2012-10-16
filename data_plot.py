@@ -27,6 +27,7 @@ import os
 import threading
 import time
 import sys
+import utils
 
 def padding_model_number(number,max_num):
     ''' this method returns a zero-front padded string
@@ -470,6 +471,199 @@ class DataPlot():
 			
 			pl.xlim(limits[0],limits[1])
 			pl.ylim(limits[2],limits[3])
+		
+	def plot_ratios(self,misosx,misosy,graintype='all',m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn'):
+		'''
+		Method for plotting ratio data from model output as well as grain data.
+		Important: You have to give some input to the routine!
+		RT, October 2012
+		graintype:	graintypes to plot, e.g., [['sic','M'],['oxides','1','2']], see utils.py -> graindata_handler routine for more information
+		misox:	model x data
+		misoy:	model y data
+		m_co:	model C/O ratio
+		deltax:	Delta values on x-axis
+		deltay:	Delta values on y-axis
+		logx:	logarithmic x-axis
+		logy:	logarithmic y-axis
+		title:	Title of plot
+		legend:	True or False. Use legend(loc=?) command to move legend around after plotting.
+		iniabufile:	initial abundance file - necessary 
+		'''
+		# prepare model data (if necessary) - here PPN / Nugridse difference if included at some point!
+		if m_co != None:
+			# find co_ratio, where it gets > 1
+			index = -1
+			for i in range(len(m_co)):
+				if m_co[i] >= 1.:
+					index = i
+					break
+			if index == -1:   # star doesn't get C rich in TPs
+				mxdata_orich = misosx
+				mydata_orich = misosy
+				mxdata_crich = []
+				mydata_crich = []
+			else:
+				mxdata_orich = misosx[0:index+1]
+				mydata_orich = misosy[0:index+1]
+				mxdata_crich = misosx[index:len(misosx)]
+				mydata_crich = misosy[index:len(misosy)]
+				
+		# plotting ifs, depending on available data
+		if graintype==None:
+			if m_co==None:
+				# plot
+				pl.plot(misosx,misosy,'o--')
+				# axis
+				if logx and logy:
+					pl.loglog()
+				elif logx:
+					pl.semilogx()
+				elif logy:
+					pl.semilogy()
+				# labels
+				if misosxname != None:
+					if deltax:
+						pl.xlabel('$\delta$($^{' + str(misosxname[1]) + '}$' + misosxname[0] + '/$^{' + str(misosxname[3]) + '}$' + misosxname[2] + ')')
+					else:
+						pl.xlabel('$^{' + str(misosxname[1]) + '}$' + misosxname[0] + '/$^{' + str(misosxname[3]) + '}$' + misosxname[2])
+				if misosyname != None:
+					if deltay:
+						pl.ylabel('$\delta$($^{' + str(misosyname[1]) + '}$' + misosyname[0] + '/$^{' + str(misosyname[3]) + '}$' + misosyname[2] + ')')
+					else:
+						pl.ylabel('$^{' + str(misosyname[1]) + '}$' + misosyname[0] + '/$^{' + str(misosyname[3]) + '}$' + misosyname[2])
+				if title != None:
+					pl.title(title)
+				return None
+			else:
+				# plot
+				pl.plot(mxdata_orich,mydata_orich,'--',c='b',label='C/O<1')
+				pl.plot(mxdata_crich,mydata_crich,'o-',c='b',label='C/O>1')
+				# axis
+				if logx and logy:
+					pl.loglog()
+				elif logx:
+					pl.semilogx()
+				elif logy:
+					pl.semilogy()
+				# labels
+				if misosxname != None:
+					if deltax:
+						pl.xlabel('$\delta$($^{' + str(misosxname[1]) + '}$' + misosxname[0] + '/$^{' + str(misosxname[3]) + '}$' + misosxname[2] + ')')
+					else:
+						pl.xlabel('$^{' + str(misosxname[1]) + '}$' + misosxname[0] + '/$^{' + str(misosxname[3]) + '}$' + misosxname[2])
+				if misosyname != None:
+					if deltay:
+						pl.ylabel('$\delta$($^{' + str(misosyname[1]) + '}$' + misosyname[0] + '/$^{' + str(misosyname[3]) + '}$' + misosyname[2] + ')')
+					else:
+						pl.ylabel('$^{' + str(misosyname[1]) + '}$' + misosyname[0] + '/$^{' + str(misosyname[3]) + '}$' + misosyname[2])
+				if title != None:
+					pl.title(title)
+				if legend:
+					pl.legend(loc=5)
+				return None
+		else:
+			# get data
+			gtypelist, gdatax, gdatay = utils.graindata_handler(misosxname,isosy=misosyname,graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
+			# plots
+			
+			# grains
+			for i in range(len(gtypelist)):
+				# determine plot symbols and color
+				if gtypelist[i][0] == 'sic':
+					msymb = 'o'
+					if gtypelist[i][1] == 'M':
+						mcol = '0.4'
+					elif gtypelist[i][1] == 'X':
+						mcol = 'b'
+					elif gtypelist[i][1] == 'Y':
+						mcol = 'g'
+					elif gtypelist[i][1] == 'Z':
+						mcol = 'r'
+					elif gtypelist[i][1] == 'AB':
+						mcol = 'c'
+					elif gtypelist[i][1] == 'N':
+						mcol = 'm'
+					else:
+						mcol = '0.7'
+				elif gtypelist[i][0] == 'oxides':
+					msymb = '^'
+					if gtypelist[i][1] == '1':
+						mcol = '0.4'
+					elif gtypelist[i][1] == '2':
+						mcol = 'b'
+					elif gtypelist[i][1] == '3':
+						mcol = 'g'
+					elif gtypelist[i][1] == '4':
+						mcol = 'r'
+					else:
+						mcol = '0.7'
+				elif gtypelist[i][0] == 'silicates':
+					msymb = 'v'
+					if gtypelist[i][1] == '1':
+						mcol = '0.4'
+					elif gtypelist[i][1] == '2':
+						mcol = 'b'
+					elif gtypelist[i][1] == '3':
+						mcol = 'g'
+					elif gtypelist[i][1] == '4':
+						mcol = 'r'
+					else:
+						mcol = '0.7'
+				elif gtypelist[i][0] == 'graphites':
+					msymb = 's'
+					if gtypelist[i][1] == 'HD':
+						mcol = '0.4'
+					elif gtypelist[i][1] == 'LD':
+						mcol = 'b'
+					else:
+						mcol = '0.7'
+				else:
+					msymb = '+'
+					mcol = '0.4'
+				# now plot the grain data!
+				pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=gtypelist[i][0] + ' ' + gtypelist[i][1])
+			
+			# plot model:
+			pl.plot(mxdata_orich,mydata_orich,'--',c='k',label='C/O<1',lw=3)
+			pl.plot(mxdata_crich,mydata_crich,'*-',c='k',label='C/O>1',lw=3,markersize=15,markeredgecolor='k',markerfacecolor='y')
+	
+			# axis
+			if logx and logy:
+				pl.loglog()
+			elif logx:
+				pl.semilogx()
+			elif logy:
+				pl.semilogy()
+			# labels
+			if misosxname != None:
+				if deltax:
+					pl.xlabel('$\delta$($^{' + str(misosxname[1]) + '}$' + misosxname[0] + '/$^{' + str(misosxname[3]) + '}$' + misosxname[2] + ')')
+				else:
+					pl.xlabel('$^{' + str(misosxname[1]) + '}$' + misosxname[0] + '/$^{' + str(misosxname[3]) + '}$' + misosxname[2])
+			if misosyname != None:
+				if deltay:
+					pl.ylabel('$\delta$($^{' + str(misosyname[1]) + '}$' + misosyname[0] + '/$^{' + str(misosyname[3]) + '}$' + misosyname[2] + ')')
+				else:
+					pl.ylabel('$^{' + str(misosyname[1]) + '}$' + misosyname[0] + '/$^{' + str(misosyname[3]) + '}$' + misosyname[2])
+			if title != None:
+				pl.title(title)
+			if legend:
+				pl.legend(loc=5)
+		# show plot
+		pl.show()
+		# plot horizontal and vertical lines
+		inut = utils.iniabu(iniabufile)
+		if deltax:
+			pl.hlines(0,pl.xlim()[0],pl.xlim()[1])
+		else:
+			pl.hlines(inut.isoratio_init(misoxname),pl.xlim()[0],pl.xlim()[1])
+		if deltay:
+			pl.vlines(0,pl.ylim()[0],pl.ylim()[1])
+		else:
+			pl.vlines(inut.isoratio_init(misoyname),pl.ylim()[0],pl.ylim()[1])
+
+		return None
+
 		
 		
 	def clear(self, title=True, xlabel=True, ylabel=True):

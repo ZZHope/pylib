@@ -207,7 +207,259 @@ class se(DataPlot,Utils):
         pyl.plot(mass,Xspecies,'-',label=str(mod)+', '+species)
         pyl.xlim(xlim1,xlim2)
         pyl.legend()
+    def write_deltatable(self,filename='default',decayed=True,dcycle=500,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn'):
+        '''
+        This subroutine is to write out tables with delta values for cosmochemists to use in comparison with their data. No options are necessarily needed to load this routine, however, it might be useful to specify a filename.
+        This file furthermore searches for thermal pulses, hence, it's only useful for non-explosive TP-AGB stars!
+        filename: choose the filename you want to set here
+        decayed:  Value if decayed massfractions of isotope should be taken or not
+        dcycle:   difference between cycles to search for thermal pulses
+        iniabufile: file with initial abundances. as a standard value, the GN93 file is used (in USEEPP folder). Important, input file has to be USEEPP conform -> see NuGrid book!
+        '''
+        # make filename
+        filename = 'delta_outfile.txt'
+        # which iso_massmf?
+        if decayed:
+            isomassmf = 'iso_massf_decay'
+        else:
+            isomassmf = 'iso_massf'
+        # read in thermal pulse position and co_ratio (from private routine)
+        tp_pos, co_return = self._tp_finder(dcycle)
+        # define isotopes to read out and calculate delta values
+        noele = 1   # there is at least one element available
+        elelist = list()
+        isolisttmp = list()
+        isolist = list()
+        isoabulist = list()
+        isoabulisttmp = list()
+        # load file w/ initial abundances
+        inut = iniabu(iniabufile)
+        # list of elements:
+        itmp = inut.names[0][0:2].replace(' ','')
+        elelist.append([itmp, inut.z[0]])
+        isolisttmp.append(inut.a[0])
+        isoabulisttmp.append(inut.abu[0])
+
+        for i in range(1,len(inut.names)):
+            if inut.names[i][0:2].replace(' ','') != itmp:
+                # add to elelist
+                itmp = inut.names[i][0:2].replace(' ','')
+                elelist.append([itmp, inut.z[i]])       
+                # append to isolist
+                isolist.append(isolisttmp)
+                isolisttmp = list()
+                isolisttmp.append(inut.a[i])
+                # append to isoabulist
+                isoabulist.append(isoabulisttmp)
+                isoabulisttmp = list()
+                isoabulisttmp.append(inut.abu[i])
+                # increase number of elements
+                noele += 1
+            else:
+                # add to isolisttmp
+                isolisttmp.append(inut.a[i])
+                isoabulisttmp.append(inut.abu[i])
+        isolist.append(isolisttmp)
+        isoabulist.append(isoabulisttmp)
+   
+        ### CHOP TEMPORARILY ###
+        elelist = elelist[5:len(elelist)-2]
+        isolist = isolist[5:len(elelist)-2]
+        isoabulist = isoabulist[5:len(elelist)-2]
+        # make an index vector for at which position for each line the most abundand isotope is
+        isoabuindex = zeros(len(isoabulist),dtype=int)   # as integer!
+        for i in range(len(isoabulist)):
+            tmp = 0
+            for j in range(len(isoabulist[i])):
+                if isoabulist[i][j] > tmp:
+                    isoabuindex[i] = j
+                    tmp = isoabulist[i][j]
+         
+        # and now - finally - make a list with all delta values that need to be calculated
+        # 0: isotope name, 1: nominator isotope, 2: denominator isotope
+        # also make solar system ratios list
+        deltalist = list()
+        solsysratio = list()
+        for i in range(len(isolist)):
+            if len(isolist[i]) > 1:
+                for j in range(len(isolist[i])):
+                    if j != isoabuindex[i]:
+                        deltalist.append([elelist[i][0], isolist[i][j], isolist[i][isoabuindex[i]]])
+                        solsysratio.append(isoabulist[i][j] / isoabulist[i][isoabuindex[i]])
+        solsysratio = array(solsysratio)
+        # Make an array to write all data into. first column, cycle number, second column, co ratio, then all delta values
+        write_out = zeros((len(tp_pos), len(deltalist) + 2))
+
+        # now add first three columns to write_out
+        for i in range(len(write_out)):
+            write_out[i][0] = tp_pos[i]
+            write_out[i][1] = co_return[i]
+   
+        # header for delta values
+        deltaheader = list()
+   
+        ### BIG DELTA LOOP ###
+        for deli in range(len(deltalist)):
+            ## read in the two isotopes of interest, iso1 and iso2 (iso1 as nominator)
+            iso1 = zeros(len(tp_pos))
+            iso2 = zeros(len(tp_pos))
+            # isotope names:
+            if len(deltalist[deli][0]) == 1:
+                iso1name = deltalist[deli][0].upper() + '-' + str(int(deltalist[deli][1]))
+                iso2name = deltalist[deli][0].upper() + '-' + str(int(deltalist[deli][2]))
+            else:
+                iso1name = deltalist[deli][0][0].upper() + deltalist[deli][0][1] + '-' + str(int(deltalist[deli][1]))
+                iso2name = deltalist[deli][0][0].upper() + deltalist[deli][0][1] + '-' + str(int(deltalist[deli][2]))
+            # readin loop
+            for i in range(len(tp_pos)):
+                iso1[i] = self.get(int(tp_pos[i]),isomassmf,iso1name)
+                iso2[i] = self.get(int(tp_pos[i]),isomassmf,iso2name)
+         
+            ## make number fractions
+            iso1 /= deltalist[deli][1]
+            iso2 /= deltalist[deli][2]
+      
+            ## calculate deltavalue array
+            deltavalues = (iso1/iso2 / solsysratio[deli] - 1.) * 1000.
+
+            ## append values to write_out
+            for i in range(len(deltavalues)):
+                write_out[i][deli+2] = deltavalues[i]
+         
+            ## header
+            deltaheader.append('del_' + deltalist[deli][0] + str(int(deltalist[deli][1])) + '_' + deltalist[deli][0] + str(int(deltalist[deli][2])))
+
+
+        ### WRITE OUT DATAFILE ###
+        outf = open(filename,'w')
+
+        # write header
+        outf.writelines('cycle_no,'.ljust(18) + 'c_o_ratio,'.ljust(18))
+        for i in range(len(deltaheader)):
+            if i != len(deltaheader)-1:
+                outfstr = deltaheader[i] + ','
+            else:
+                outfstr = deltaheader[i]
+            outf.writelines(outfstr.ljust(18))
+        outf.writelines('\n')
+   
+        # write data
+        for i in range(len(write_out)):
+            for j in range(len(write_out[i])):
+                if j != len(write_out[i])-1:
+                    outfstr = format(write_out[i][j],'.7E') + ','
+                else:
+                    outfstr = format(write_out[i][j],'.7E')
+                outf.writelines(outfstr.ljust(18))
+            outf.writelines('\n')
+   
+        # close file
+        outf.close()
+
+
+    def plot_isoratios(self,xiso,yiso,graintype=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,dcycle=500,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn'):
+        ''' returns the ratios of model surface data for validation w/ grain data
+        rt, 2012
         
+        xiso:       give isotopes as ['Fe',57,'Fe',56]. x axis, yaxis
+        yiso:       as x iso, but for y axis
+        graintype:	Example: [['sic','M'],['oxides','1','2']], see utils, graindata_handler routine
+        deltax:     True for plotting delta values on x-axis. If False, plots ratios not normalized to solar
+        deltay:     As deltax but for y axis
+        logx:       Logarithm of x axis
+        logy:       Logarithm of y axis
+        title:      Title of the plot
+        legend:     Legend in plot or not?
+        dcycle:     Difference between cycles to take for thermal pulse searching
+        iniabufile: Solar abundances that are used to normalize too. Lives in ../../frames/mppnp/USEEPP
+        '''
+        # read in thermal pulse position and co_ratio (from private routine)
+        tp_pos, co_return = self._tp_finder(dcycle)
+        ## read in isotope data
+        isox1 = array(self.get(tp_pos,xiso[0] + '-' + str(int(xiso[1]))))
+        isox2 = array(self.get(tp_pos,xiso[2] + '-' + str(int(xiso[3]))))
+        isoy1 = array(self.get(tp_pos,yiso[0] + '-' + str(int(yiso[1]))))
+        isoy2 = array(self.get(tp_pos,yiso[2] + '-' + str(int(yiso[3]))))
+        # ratios - number fractions!
+        isox_ratio = (isox1 / xiso[1]) / (isox2 / xiso[3])
+        isoy_ratio = (isoy1 / yiso[1]) / (isoy2 / yiso[3])
+        # load initial abundance file if necessary
+        inut = iniabu(iniabufile)
+        # make delta values if necessary
+        if deltax:
+            deltax_solsys = inut.isoratio_init(xiso)
+            ret_x = (isox_ratio / deltax_solsys - 1.) * 1000.
+        else:
+            ret_x = isox_ratio   # just the ratio
+        if deltay:
+            deltay_solsys = inut.isoratio_init(yiso)
+            ret_y = (isoy_ratio / deltay_solsys - 1.) * 1000.
+        else:
+            ret_y = isoy_ratio   # just the ratio
+        ### now plot it using the appropriate too ###
+        DataPlot.plot_ratios(self,graintype=graintype,misosx=ret_x,misosy=ret_y,m_co=co_return,misosxname=xiso,misosyname=yiso,deltax=deltax,deltay=deltax,logx=logx,logy=logy,title=title,legend=legend,iniabufile=iniabufile)
+        
+    def _tp_finder(self,dcycle):   # Private routine
+        '''
+        Routine to find thermal pulses in given star and returns an index vector that gives the cycle number in which the thermal pulse occure. The routine looks for the C/O ratio jumping up and up, so only useful in TP-AGB star. A vector is given back that indicates the position of the cycle that is at 95% of the thermal pulse (to make sure it's not in the next one and that most of the processing is done).
+        The script also returns the co_ratio vector - the C/O ratio (number fraction) at the given thermal pulse.
+        '''
+        # read in c and o isotopes for all cycles, regarding deltacycle
+        last_cycle = int(self.se.cycles[len(self.se.cycles)-1])
+        cyc_tp = range(1,last_cycle + dcycle, dcycle)
+        c_nf = array(self.get(cyc_tp,'elem_numf','C'))
+        o_nf = array(self.get(cyc_tp,'elem_numf','O'))
+        
+        # search for thermal pulses
+        co_ratio = c_nf / o_nf
+        tp_guess     = 200   # this should be an upper limit!
+        tp_guess_max = 200   # to through an error
+        # guess variables, i is the actual break criterion, n a max counter
+        gi = 0
+        gn = 0
+   
+        while gi != 1 and gn < 10000:
+            tp_ind = list()
+            i = 0
+            while i < len(co_ratio)-2:
+                gcompar= 1. / (dcycle*tp_guess*100.)
+                slope1 = (co_ratio[i+1]-co_ratio[i])/(dcycle)
+                slope2 = (co_ratio[i+2]-co_ratio[i+1])/dcycle
+                if slope1 > gcompar and slope2 < gcompar and co_ratio[i+1] > co_ratio[i]:
+                    tp_ind.append(i+1)
+                    i += 3   # jump three cycles to avoid defining a single cycle twice!
+                else:
+                    i += 1
+    
+            if abs(len(tp_ind) - tp_guess) < tp_guess/2:   # gotta be within factor two of guess
+                gi = 1
+            else:
+                gn += 1
+                tp_guess /= 2
+        # check w/ maximum of thermal pulses allowed
+        if len(tp_ind) > tp_guess_max:
+            print 'Problem detected with number of pulses'
+        # create thermal pulse vector
+        tp_startf = zeros(len(tp_ind))   # found start
+        for i in range(len(tp_startf)):
+            tp_startf[i] = cyc_tp[tp_ind[i]]   
+        # read out isotopic composition at 95% of the thermal pulse and the initial of the star
+        # set up thermal pulse positions
+        tp_limits = zeros(len(tp_startf)+1)
+        for i in range(len(tp_startf)):
+            tp_limits[i] = tp_startf[i]
+        tp_limits[len(tp_limits)-1] = int(self.se.cycles[len(self.se.cycles)-1])
+        # thermal pulse position (where to read the isotope ratio)
+        tp_pos = list()
+        for i in range(len(tp_startf)):
+            tp_pos.append(int(tp_limits[i] + 0.95 * (tp_limits[i+1] - tp_limits[i]))) 
+        # create co_ret vector to return c/o ratio vector
+        co_return = zeros(len(tp_pos))
+        for i in range(len(tp_pos)):
+            co_return[i] = co_ratio[tp_ind[i]]
+        # return the two vectors
+        return tp_pos,co_return
+
     def plot4(self,num):
         self.plot_prof_1(num,'H-1',0.,5.,-5,0.)
         self.plot_prof_1(num,'He-4',0.,5.,-5,0.)

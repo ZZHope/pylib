@@ -578,6 +578,14 @@ class iniabu(Utils):
 		for name in self.habu:
 			self.habu[name]=self.abu[self.hindex[name]]
 
+	def isoratio_init(self,isos):
+		'''
+		This file returns the isotopic ratio of two isotopes specified as iso1 and iso2
+		The isotopes are given as, e.g., ['Fe',56,'Fe',58] -> list
+		'''
+		ssratio = self.habu[isos[0].lower() + str(int(isos[1])).rjust(3)] / self.habu[isos[2].lower() + str(int(isos[3])).rjust(3)]
+		return ssratio
+
 
 def trajectory_SgConst(Sg=0.1,delta_logt_dex=-0.01):
 	'''setup trajectories for constant radiation entropy
@@ -1689,4 +1697,316 @@ def give_zip_element_z_and_names(element_name):
         for a,b in zip(element_name,dummy_index):
             index_z_for_elements[a]=b
 
+# subroutine to handle grain data, from presolar grain database
+# files available are specified in the beginning
+# routine can convert between ratios and deltas, also take inverse of a fraction
+# check if wanted values are available
+# grain data files live in validation/grain_data folder
+# maintained by RT
+# subroutine: october 2012, RT
+def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=True,iniabufile_in='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn'):
+    '''
+    This file reads in grain data and returns them. Possible values for input are:
+        isosx: isotopes to handle, format ['Si',29,'Si',28]
+        isosy: same format as isox, but not requred. If given, it's read at the same time and given back. required for plotting (2D plotting)
+        graintype:
+            - None -> All grains are returned
+            - 'sic', 'oxides', 'silicates', 'graphites', 'misc' for Silicon carbide, Oxides, Silicates, Graphites, and miscellaneous (at the moment Si3N4 grains), respectively
+            - A list combining several grains ['sic','oxides']
+            - Specific subgroups, e.g., [['sic','M'],['oxides','1','2']] would return mainstream SiC grains as well as group 1 and group 2 oxides
+            Subgroups are:
+            - SiC:
+                -- M >> Mainstream
+                -- X >> X-grains
+                -- Y >> Y-grains
+                -- Z >> Z-grains 
+                -- AB >> AB grains
+                -- N >> nova grains
+                -- U >> unclassified grains
+            - graphites:
+                -- LD >> low density graphites
+                -- HD >> high density graphites
+            - Oxides
+             -- 1, 2, 3, or 4  >> respective group of grains 
+             -- U >> unknown
+            - Silicates
+                -- 1, 2, 3, or 4  >> respective group of grains 
+                -- U >> unknown
+            - Misc
+                -- Si3N4 >> silicon nitride grains
+        deltax=True:    do you want delta values or not (on x-axis)? default is True (otherwise choose False). X axis is the axis of choice if no second isotope is chosen
+        deltay=True:    same as deltax, but for second axis if chosen
+        iniabufile_in: file with initial abundances. The specified file is taken if no option specified.
+    '''
+    # files
+    file_sic      = '../../validation/grain_data/SiC-All.txt'
+    file_graphite = '../../validation/grain_data/graphite-All.txt'
+    file_oxsi     = '../../validation/grain_data/oxide-silicate-all.txt'
+    file_misc     = '../../validation/grain_data/miscellaneous-SiN.txt'
+    # process input
+    allgraintypes = [['sic','M','X','Y','Z','AB','N','U'],
+                     ['oxides','1','2','3','4','U'],
+                     ['silicates','1','2','3','4','U'],
+                     ['graphites','LD','HD','U'],
+                     ['misc','Si3N4']]
+    if graintype_in == 'all':
+        graintype = allgraintypes
+    elif type(graintype_in) == str:   # only one grain input
+        graintype = list()
+        for i in range(len(allgraintypes)):
+            if allgraintypes[i][0] == graintype_in:
+                graintype.append(allgraintypes[i])
+    elif type(graintype_in) == list and type(graintype_in[0]) == str:
+        graintype = list()
+        for i in range(len(graintype_in)):
+            for j in range(len(allgraintypes)):
+                if graintype_in[i] == allgraintypes[j][0]:
+                    graintype.append(allgraintypes[j])
+    else:   # okay, it's a list in a list, as we want it
+        graintype = list()
+        for i in range(len(graintype_in)):
+            if graintype_in[i][1] != 'all':
+                graintype.append(graintype_in[i])
+            else:
+                for j in range(len(allgraintypes)):
+                    if graintype_in[i][0] == allgraintypes[j][0]:
+                        graintype.append(allgraintypes[j])
+                        break
+    # make everything string, if not already
+    for i in range(len(graintype)):
+        for j in range(len(graintype[i])):
+            graintype[i][j] = str(graintype[i][j])                    
+    # read in data for the different grains, each line in list is one grain type
+    graindata = list()
+    if isosy != None:
+        graindatay = list()
+    graintype_list = list()   # as graindata
+    for grain_i in range(len(graintype)):
+        # file
+        if graintype[grain_i][0] == 'sic':
+            fname = file_sic
+        elif graintype[grain_i][0] == 'oxides' or graintype[grain_i][0] == 'silicates':
+            fname = file_oxsi
+        elif graintype[grain_i][0] == 'graphites':
+            fname = file_graphite
+        elif graintype[grain_i][0] == 'misc':
+            fname = file_misc
+        else:
+            print 'Problem w/ database filename'
+            return -1
+        grainclass = graintype[grain_i][0]
+        graintype_tmp = graintype[grain_i][1:len(graintype[grain_i])]
+        # read data
+        if isosy == None:
+            graindata_tmp = _graindata_reader(isosx,isosy,grainclass,graintype_tmp,deltax,deltay,fname,iniabufile_in)
+            if graindata_tmp != -1:   # in case header does not exist, or other problem
+                for i in range(len(graindata_tmp)):
+                    graintype_list.append([graintype[grain_i][0], graintype_tmp[i]])
+                    graindata.append(graindata_tmp[i])
+        else:
+            graindata_tmp,graindatay_tmp = _graindata_reader(isosx,isosy,grainclass,graintype_tmp,deltax,deltay,fname,iniabufile_in)
+            if graindata_tmp != -1 and graindatay_tmp != -1:   # in case header does not exist, or other problem
+                for i in range(len(graindata_tmp)): 
+                    if graindata_tmp[i] != []:   # empty list
+                        graintype_list.append([graintype[grain_i][0], graintype_tmp[i]])
+                    graindata.append(graindata_tmp[i])
+                    graindatay.append(graindatay_tmp[i])
+    # check if no data at all
+    
+    # give back the read data and the labels for the data
+    if isosy == None:
+        return graintype_list, graindata
+    else:
+        return graintype_list, graindata, graindatay
+        
 
+### private routine to read data ###
+def _graindata_reader(isos,isos2,gclass,gtype,deltax,deltay,fname,iniabufile):
+    '''
+    Private function to actually read grain files
+    Only called from graindata_handler!
+    isos:  isotopes, style: ['Fe',58,'Fe',56]
+    isos2: if second isotope is required
+    gclass: grain class, e.g., 'sic'
+    gtype: grain type -> list!
+    '''
+    # isotopes
+    iso1 = str(isos[1]) + isos[0]
+    iso2 = str(isos[3]) + isos[2]
+    if isos2 != None:
+        iso3 = str(isos2[1]) + isos2[0]
+        iso4 = str(isos2[3]) + isos2[2]
+    # read file
+    f = open(fname,'r')
+    f_in = f.read().split('\n')
+    f.close()
+    # data
+    header = f_in[0].split('\t')
+    data = list()
+    for i in range(1,len(f_in)):
+        datatmp = list()
+        for j in range(len(f_in[i].split('\t'))):
+            datatmp.append(f_in[i].split('\t')[j])
+        data.append(datatmp)
+    # check if value is availabe as ratio or as delta, normal or 1 / (ratio)
+    for i in range(len(header)):
+        if header[i].lower() == iso1.lower() + '/' + iso2.lower():   # ratio
+            index = i
+            one_over = False
+            deltadb = False
+            break
+        elif header[i].lower() == iso2.lower() + '/' + iso1.lower():   # 1 / ratio
+            index = i
+            one_over = True
+            deltadb = False
+            break
+        elif header[i].lower() == 'd(' + iso1.lower() + '/' + iso2.lower() + ')':   # 1 / ratio
+            index = i
+            one_over = False
+            deltadb = True
+            break
+        elif header[i].lower() == 'd(' + iso2.lower() + '/' + iso1.lower() + ')':   # 1 / ratio
+            index = i
+            one_over = True
+            deltadb = True
+            break
+        else:
+            index = -1
+    if index == -1:
+        print 'Data entry does not exist for ' + iso1 + '/' + iso2
+        if isos2 == None:
+            return -1   # can be read by other file w/o error!
+        else:
+            return -1,-1
+    if isos2 != None:
+        for i in range(len(header)):
+            if header[i].lower() == iso3.lower() + '/' + iso4.lower():   # ratio
+                index2 = i
+                one_over2 = False
+                deltadb2 = False
+                break
+            elif header[i].lower() == iso4.lower() + '/' + iso3.lower():   # 1 / ratio
+                index2 = i
+                one_over2 = True
+                deltadb2 = False
+                break
+            elif header[i].lower() == 'd(' + iso3.lower() + '/' + iso4.lower() + ')':   # 1 / ratio
+                index2 = i
+                one_over2 = False
+                deltadb2 = True
+                break
+            elif header[i].lower() == 'd(' + iso4.lower() + '/' + iso3.lower() + ')':   # 1 / ratio
+                index2 = i
+                one_over2 = True
+                deltadb2 = True
+                break
+            else:
+                index2 = -1
+        if index2 == -1:
+            print 'Data entry does not exist for ' + iso1 + '/' + iso2
+            return -1,-1   # can be read by other file w/o error!
+    # get solar system ratio of wanted isotopes
+    inut = iniabu(iniabufile)
+    ss_ratio = inut.isoratio_init(isos)
+    if isos2 != None:
+        ss_ratio2 = inut.isoratio_init(isos2)
+    # now make return list
+    dataret = list()
+    if isos2 != None:
+        dataret2 = list()
+    for gtype_i in gtype:
+        datatmp = list()   # one list for each graintype
+        if isos2 != None:
+            datatmp2 = list()
+        for i in range(len(data)):
+            if data[i][0].replace(' ','') != '':
+                # oxide and silicate checker
+                if gclass == 'oxides':
+                    if data[i][1].lower() == 'oxide':
+                        ifchecksilox = True
+                    else:
+                        ifchecksilox = False
+                elif gclass == 'silicates':
+                    if data[i][1].lower() == 'silicate':
+                        ifchecksilox = True
+                    else:
+                        ifchecksilox = False
+                else:
+                    ifchecksilox = True
+            if data[i][0].lower() == gtype_i.lower() and ifchecksilox:   # 0 is the column where the grain type is saved, also silicates and oxides separation
+                if isos2 == None:
+                    ifcheck = data[i][index].replace(' ','') != ''   # replace to remove spaces from empty string w/ just spaces
+                else:
+                    ifcheck = data[i][index].replace(' ','') != '' and data[i][index2].replace(' ','') != ''
+                if ifcheck:
+                    try:
+                        cellvalue = float(data[i][index]) # in case of database error, give it back
+                        # run trhough if loop
+                        if deltax and deltadb and one_over != True:   # delta requested, delta available, this ratio
+                            datatmp.append(cellvalue)
+                        elif deltax and deltadb and one_over:   # delta requested, delta available, one over ratio
+                            tmpvalue = 1. / cellvalue
+                            datatmp.append(tmpvalue)
+                        elif deltax != True and deltadb != True and one_over != True:   # ratio requested, ratio available, this ratio
+                            datatmp.append(cellvalue)
+                        elif deltax != True and deltadb != True and one_over:   # ratio requested, ratio available, one over ratio
+                            tmpvalue = 1. / cellvalue
+                            datatmp.append(tmpvalue)
+                        elif deltax and deltadb != True and one_over != True:   # delta requested, ratio available, this ratio
+                            tmpvalue = (cellvalue / ss_ratio - 1.) * 1000.
+                            datatmp.append(tmpvalue)
+                        elif deltax and deltadb != True and one_over:   # delta requested, ratio available, one over ratio
+                            tmpvalue = ((1/cellvalue) / ss_ratio - 1.) * 1000.   
+                            datatmp.append(tmpvalue)
+                        elif deltax != True and deltadb and one_over != True:   # ratio requested, delta available, this ratio
+                            tmpvalue = (cellvalue / 1000. + 1.) * ss_ratio
+                            datatmp.append(tmpvalue)
+                        elif deltax != True and deltadb and one_over:   # ratio requested, delta available, one over ratio
+                            tmpvalue = ((1 / cellvalue) / 1000. + 1.) * ss_ratio
+                            datatmp.append(tmpvalue)
+                    except ValueError:
+                        print 'error in database, file: ' + fname + ' line ' + str(i+2) + ' column ' + str(index+1)
+                        print data[i][index]
+                if isos2 != None:
+                    if ifcheck:
+                       try:
+                           cellvalue = float(data[i][index2]) # in case of database error, give it back
+                           # run trough if loop
+                           if deltay and deltadb2 and one_over2 != True:   # delta requested, delta available, this ratio
+                               datatmp2.append(cellvalue)
+                           elif deltay and deltadb2 and one_over2:   # delta requested, delta available, one over ratio
+                               tmpvalue = 1. / cellvalue
+                               datatmp2.append(tmpvalue)
+                           elif deltay != True and deltadb2 != True and one_over2 != True:   # ratio requested, ratio available, this ratio
+                               datatmp2.append(cellvalue)
+                           elif deltay != True and deltadb2 != True and one_over2:   # ratio requested, ratio available, one over ratio
+                               tmpvalue = 1. / cellvalue
+                               datatmp2.append(tmpvalue)
+                           elif deltay and deltadb2 != True and one_over2 != True:   # delta requested, ratio available, this ratio
+                               tmpvalue = (cellvalue / ss_ratio2 - 1.) * 1000.
+                               datatmp2.append(tmpvalue)
+                           elif deltay and deltadb2 != True and one_over2:   # delta requested, ratio available, one over ratio
+                               tmpvalue = ((1/cellvalue) / ss_ratio2 - 1.) * 1000.   
+                               datatmp2.append(tmpvalue)
+                           elif deltay != True and deltadb2 and one_over2 != True:   # ratio requested, delta available, this ratio
+                               tmpvalue = (cellvalue / 1000. + 1.) * ss_ratio2
+                               datatmp2.append(tmpvalue)
+                           elif deltay != True and deltadb2 and one_over2:   # ratio requested, delta available, one over ratio
+                               tmpvalue = ((1 / cellvalue) / 1000. + 1.) * ss_ratio2
+                               datatmp2.append(tmpvalue)
+                       except ValueError:
+                           print 'error in database, file: ' + fname + ' line ' + str(i+2) + ' column ' + str(index2+1)
+        dataret.append(datatmp)
+        if isos2 != None:
+            dataret2.append(datatmp2)
+    # return the data
+    if isos2 == None:
+        return dataret
+    else:
+        return dataret,dataret2
+        
+    
+            
+        
+    
+    
