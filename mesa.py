@@ -4,11 +4,11 @@
 
     mesa.py provides tools to get MESA stellar evolution data output
     into your favourite python session. In the LOGS directory MESA
-    outputs two types of files: star.log is a time evolution output,
+    outputs two types of files: history.data or star.log  is a time evolution output,
     printing one line per so many cycles (e.g. each cycle) of all
-    sorts of things. lognnn.data files are profile data files. nnn is
-    the number of log.data files that is translated into model cycles
-    in the profiles.index file.
+    sorts of things. profilennn.data or lognnn.data files are profile data files. 
+    nnn is the number of profile.data or log.data files that is translated into 
+    model cycles in the profiles.index file.
 
     MESA allows users to freely define what should go into these two
     types of outputs, which means that column numbers can and do
@@ -25,9 +25,9 @@
     files that can be written with MESA can be read and processed with
     the nuh5.py tool.
 
-    mesa.py is providing two class objects, profile and star_log. The
-    first makes profile data available, the second reads and plots the
-    star.log file. Note that several instances of these can be
+    mesa.py is providing two class objects, mesa_profile and history_data.
+    The first makes profile data available, the second reads and plots the
+    history.dataor star.log file. Note that several instances of these can be
     initiated within one session and data from different instances
     (i.e. models, tracks etc) can be overplotted.
 
@@ -56,12 +56,12 @@
         In [2]: help ms
         ------> help(ms)
 
-        In [4]: s=ms.star_log('.')
+        In [4]: s=ms.history_data('.')
 
         In [5]: s.hrd()
     
      In order to find out what header attributes and columns are
-     available in star.log use:
+     available in history.data or star.log use:
      
         In [6]: s.header_attr
         Out[6]: 
@@ -80,14 +80,14 @@
          'center_he4': 37,
           ...  
           
-    In order to read the profile data from the first log.data file in
+    In order to read the profile data from the first profile.data file in
     profiles.index, and then get the mass and temperature out and
     finally plot them try:
 
         In [9]: a1=ms.mesa_profile('LOGS',1)
         100 in profiles.index file..
-        The 1. log.data file is 44
-        reading ./log44.data ...
+        The 1. profile.data file is 44
+        reading ./profile44.data ...
 
         In [10]: T=a1.get('temperature')
 
@@ -103,12 +103,12 @@
 
     Of course, a1.cols etc are available here as well and many other
     things. E.g. a.model contains an array with all the models for
-    which log.data are available. You may initiate a profile object
+    which profile.data or log.data  are available. You may initiate a profile object
     with a model number:
 
         In [14]: a2=ms.mesa_profile('.',55000,num_type='model')
         100 in profiles.index file ...
-        reading ./log87.data ...
+        reading ./profile87.data ...
 
 '''
 import numpy as np
@@ -126,32 +126,38 @@ class mesa_profile(DataPlot):
     ''' read profiles.index and prepare reading MESA profile files
 
     starts with reading profiles.index and creates hash array
-    log.data can then be accessed via prof_plot
+    profile.data can then be accessed via prof_plot
     
     '''
 
     sldir = ''
+
+
+
     
-    def __init__(self,sldir,num,num_type='log_i',prof_ind_name='profiles.index',log_prefix='log',data_suffix='.data'):
-        '''read a log.data profile file
+    def __init__(self,sldir,num,num_type='profiles_i',prof_ind_name='profiles.index',profile_prefix='profile',data_suffix='.data'):
+        '''read a profile.data profile file
 
         input:
         sldir       directory path of LOGS
 
-        num         by default this is the i. log.data available
+        num         by default this is the i. profile file (profile.data or log.data) available
                     (e.g. num=1 is the 1. available profile file),
                     however if you give 
-        num_type    as 'log_num' then num will be interpreted as the
-                    log.data number log_num (log_num is the number
+        num_type    as 'profile_num' then num will be interpreted as the
+                    profile.data or log.data number profile_num (profile_num is the number
                     that appears in the file names of type
-                    log23.data), or try 'model' to get the prfile
-                    log.data file for model (or cycle number) used by
+                    profile23.data or log23.data), or try 'model' to get the profile
+                    profile.data file for model (or cycle number) used by
                     the stellar evolution code
         prof_ind_name    use this optional argument if the profiles.index 
                          file hasn an alternative name, for example, do 
                          superpro=ms.profile('LOGS',1,prof_ind_name='super.prof') 
-        log_prefix, data_suffix are optional arguments that allow you to change
-                    the defaults for the log.data profile files. '''
+        log_prefix  Depending on what mesa version you use, for the case of mesa
+		    version before 4442 and no log.data file is found, 
+		    log_prefix is internal changed to 'log' for using log#.data files
+	data_suffix are optional arguments that allow you to change
+                    the defaults for the profile.data profile files. '''
 
         self.prof_ind_name = prof_ind_name
         self.sldir         = sldir
@@ -161,21 +167,28 @@ class mesa_profile(DataPlot):
             try:
                 log_num=self.log_ind[num]
             except KeyError:
-                print 'There is no log.data file for this model'
+                print 'There is no profile file for this model'
                 return
-        elif num_type is 'log_i':
+        elif num_type is 'profiles_i':
             log_num=self.log_file_ind(num)
             if log_num == -1:
-                print "Could not find a log.data file with that number"
+                print "Could not find a profile file with that number"
                 return
-        elif num_type is 'log_num':
+        elif num_type is 'profile_num':
             log_num = num
         else:
             print 'unknown num_type'
             return
 
-        filename=self.sldir+'/'+log_prefix+str(log_num)+data_suffix
-        
+        filename=self.sldir+'/'+profile_prefix+str(log_num)+data_suffix
+	if not os.path.exists(filename):
+		profile_prefix='log'			
+		filename=self.sldir+'/'+profile_prefix+str(log_num)+data_suffix
+		if not os.path.exists(filename):
+			print 'error: no profile.data file found in '+sldir
+			print 'error: no log.data file found in '+sldir       
+			
+ 
         print 'reading '+filename+' ...'
         header_attr = read_mesafile(filename,only='header_attr')
         num_zones=int(header_attr['num_zones'])
@@ -192,8 +205,8 @@ class mesa_profile(DataPlot):
     def profiles_index(self):
         ''' read profiles.index and make hash array
 
-        log_ind     hash array that returns log.data file number from model number
-        model       the models for which log.data is available'''
+        log_ind     hash array that returns profile.data or log.data file number from model number
+        model       the models for which profile.data or log.data is available'''
 
         prof_ind_name = self.prof_ind_name 
 
@@ -208,7 +221,7 @@ class mesa_profile(DataPlot):
             model.append(int(line.split()[0]))
             log_file_num.append(int(line.split()[2]))
 
-        log_ind={}    # log.data number from model
+        log_ind={}    # profile.data number from model
         for a,b in zip(model,log_file_num):
             log_ind[a] = b
             
@@ -218,10 +231,10 @@ class mesa_profile(DataPlot):
 # let's start with functions that aquire data
 
     def log_file_ind(self,inum):
-        ''' information about available log.data files
+        ''' information about available profile.data or log.data files
         
-        inmu       attempt to get number of inum's log.data file
-        inum_max   max number of log.data files available'''
+        inmu       attempt to get number of inum's profile.data file
+        inum_max   max number of profile.data or log.data files available'''
         
         self.profiles_index()
         if inum <= 0:
@@ -232,12 +245,12 @@ class mesa_profile(DataPlot):
         inum -= 1
         
         if inum > inum_max:
-            print 'There are only '+str(inum_max)+' log.data file available.'
+            print 'There are only '+str(inum_max)+' profile file available.'
             log_data_number = -1
             return log_data_number
         else:
             log_data_number=self.log_ind[self.model[inum]]
-            print 'The '+str(inum+1)+'. log.data file is '+ \
+            print 'The '+str(inum+1)+'. profile.data file is '+ \
                   str(log_data_number)
             return log_data_number
 
@@ -245,7 +258,7 @@ class mesa_profile(DataPlot):
         ''' return a column of data with the name str_name
         
         str_name is the name of the column as printed in the
-        lognnn.data file; get the available columns from self.cols
+        profilennn.data or lognnn.data file; get the available columns from self.cols
         (where you replace self with the name of your instance)'''
 
         column_array = self.data[:,self.cols[str_name]-1].astype('float')
@@ -254,15 +267,18 @@ class mesa_profile(DataPlot):
 
 
         
-class star_log(DataPlot):
-    ''' read star.log MESA output and plot various things, including
+class history_data(DataPlot):
+    ''' read history.data or star.log MESA output and plot various things, including
     HRD, Kippenhahn etc
     
     sldir              - which LOGS directory
-    slname='star.log'  - optional argument if star.log file has alternative name,
-    clean_starlog=True - request new cleaning of star.log, makes star.logsa which 
-                         is the file that is actually read and plotted
-    use like this: another=ms.star_log('LOGS',slname='anothername')
+    slname='history.data'  - if star.log is available instead, star.log file is read,
+			     this is an optional argument if history.data or star.log 
+			     file has an alternative name,
+    clean_starlog=True - request new cleaning of history.data or star.log, makes 
+			 history.datasa or star.logsa which is the file that 
+			 is actually read and plotted
+    use like this: another=ms.history_data('LOGS',slname='anothername')
     '''
 
     sldir  = ''
@@ -270,36 +286,40 @@ class star_log(DataPlot):
     header_attr = []
     cols = [] 
     
-    def __init__(self,sldir,slname='star.log',clean_starlog=True):
+    def __init__(self,sldir,slname='history.data',clean_starlog=True):
         self.sldir  = sldir
         self.slname = slname
         self.clean_starlog  = clean_starlog
-
-        if not os.path.exists(sldir+'/'+slname):
-            print 'error: no star.log file found in '+sldir
-        else:
+        if not os.path.exists(self.sldir+'/'+self.slname):
+	    if not os.path.exists(self.sldir+'/'+'star.log'):
+		print 'error: no history.data file found in '+sldir
+		print 'error: no star.log file found in '+sldir
+	    else:
+	    	self.slname='star.log'
+		self.read_starlog()
+	else:
             self.read_starlog()
 
     def __del__(self):
-        print 'Closing star_log tool ...'
+        print 'Closing', self.slname,' tool ...'
 
 # let's start with functions that aquire data
     def read_starlog(self):
-        ''' read star.log file again'''
+        ''' read history.data or star.log file again'''
 
         sldir   = self.sldir
         slname  = self.slname
         slaname = slname+'sa'
         if self.clean_starlog and os.path.exists(sldir+'/'+slaname):
-            jonesmod=str(raw_input("Clean star.log to make new star.logsa? (y/n)"))
+            jonesmod=str(raw_input("Clean "+self.slname+" to make new "+self.slname+"sa? (y/n)"))
             if jonesmod == 'y':
                 os.remove(sldir+'/'+slaname)
             
         if not os.path.exists(sldir+'/'+slaname):
-            print 'No star.logsa file found, create new one from star.log.'
+            print 'No '+self.slname+'sa file found, create new one from '+self.slname
             cleanstarlog(sldir+'/'+slname)
         else:
-            print 'Using old star.logsa file ...'
+            print 'Using old '+self.slname+'sa file ...'
             
         cmd=os.popen('wc '+sldir+'/'+slaname)    
         cmd_out=cmd.readline()
@@ -317,8 +337,8 @@ class star_log(DataPlot):
     def get(self,str_name):
         ''' return a column of data with the name str_name
         
-        str_name is the name of the column as printed in star.log
-        get the available columns from self.cols (where you replace
+        str_name is the name of the column as printed in history.data or
+	star.log get the available columns from self.cols (where you replace
         self with the name of your instance'''
 
         column_array = self.data[:,self.cols[str_name]-1].astype('float')
@@ -642,7 +662,7 @@ class star_log(DataPlot):
     def kip_vline(self,modstart,modstop,sparse,outfile,xlims=[0.,0.],ylims=[0.,0.],ixaxis='log_time_left',mix_zones=5,burn_zones=50):
         '''This function creates a Kippenhahn plot with energy flux using
         vertical lines, better thermal pulse resolution.
-        For a more comprehensive plot, your star.log file should contain columns
+        For a more comprehensive plot, your history.data or star.log file should contain columns
         called "mix_type_n","mix_qtop_n","burn_type_n" and "burn_qtop_n".
         The number of columns (i.e. the bbiggest value of n) is what goes in the
         arguments as mix_zones and burn_zones.
@@ -650,8 +670,8 @@ class star_log(DataPlot):
         values alone and the script should recognise that you do not have these
         columns and make the most detailed plot that is available to you.
 
-        modstart:        model from which you want to plot (be careful if your star.log
-                         output is sparse...)
+        modstart:        model from which you want to plot (be careful if your history.data
+                         or star.log output is sparse...)
         modstop:         model to which you wish to plot
         xlims,ylims:     plot limits, however these are somewhat obsolete now that we
                          have modstart and modstop. Leaving them as 0. is probably
@@ -665,11 +685,11 @@ class star_log(DataPlot):
                          mix_type_n, mix_qtop_n, burn_type_n and burn_qtop_n, you need
                          to specify the total number of columns for mixing zones and
                          burning zones that you have. Can't work this out from your
-                         star.log file? Check the log_columns.list that you used, it'll
+                         history.data or star.log file? Check the history_columns.list that you used, it'll
                          be the number after "mixing regions" and "burning regions".
                          Can't see these columns? leave it and 2 conv zones and 2 burn
                          zones will be drawn using other data that you certainly should
-                         have in your star.log file.'''
+                         have in your history.data or star.log file.'''
 
 
         xxyy=[self.get('star_age')[modstart:modstop],self.get('star_age')[modstart:modstop]]
@@ -838,7 +858,7 @@ class star_log(DataPlot):
     def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=True,rad_lines=False,profiles=[],showfig=True,outlines=True):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
-        For a more comprehensive plot, your star.log file should contain columns
+        For a more comprehensive plot, your history.data  or star.log file should contain columns
         called "mix_type_n","mix_qtop_n","burn_type_n" and "burn_qtop_n".
         The number of columns (i.e. the bbiggest value of n) is what goes in the
         arguments as mix_zones and burn_zones.
@@ -846,8 +866,8 @@ class star_log(DataPlot):
         values alone and the script should recognise that you do not have these
         columns and make the most detailed plot that is available to you.
 
-        modstart:        model from which you want to plot (be careful if your star.log
-                         output is sparse...)
+        modstart:        model from which you want to plot (be careful if your history.data
+                         or star.log output is sparse...)
         modstop:         model to which you wish to plot
         xlims[DEPPREC.], plot limits, however these are somewhat obsolete now that we
         ylims            have modstart and modstop. Leaving them as 0. is probably
@@ -869,11 +889,11 @@ class star_log(DataPlot):
                          mix_type_n, mix_qtop_n, burn_type_n and burn_qtop_n, you need
                          to specify the total number of columns for mixing zones and
                          burning zones that you have. Can't work this out from your
-                         star.log file? Check the log_columns.list that you used, it'll
+                         history.data or star.log file? Check the history_columns.list that you used, it'll
                          be the number after "mixing regions" and "burning regions".
                          Can't see these columns? leave it and 2 conv zones and 2 burn
                          zones will be drawn using other data that you certainly should
-                         have in your star.log file.
+                         have in your history.data or star.log file.
         plot_radius      Whether on a second y-axis you want to plot the radius of the surface
                          and the he-free core.
         engenPlus        Boolean whether or not to plot energy generation contours for eps_nuc>0.
@@ -1018,7 +1038,7 @@ class star_log(DataPlot):
 
 	########################################################################
 	#----------------------------------plot--------------------------------#
-	fig = pl.figure(1)
+	fig = pyl.figure(1)
 	fsize=20
         if landscape_plot == True:
 		fig.set_size_inches(9,4)
@@ -1030,7 +1050,7 @@ class star_log(DataPlot):
 	  'xtick.labelsize': fsize*0.8,
 	  'ytick.labelsize': fsize*0.8,
 	  'text.usetex': False}
-	pl.rcParams.update(params)
+	pyl.rcParams.update(params)
 
         #ax=pl.axes([0.1,0.1,0.9,0.8])
 
@@ -1074,7 +1094,7 @@ class star_log(DataPlot):
 #	cmapMIX = matplotlib.colors.ListedColormap(['w','k'])
         cmapMIX = matplotlib.colors.ListedColormap(['w','#8B8386']) # rose grey
 #        cmapMIX = matplotlib.colors.ListedColormap(['w','#23238E']) # navy blue
-        cmapB1  = pl.cm.get_cmap('Blues')
+        cmapB1  = pyl.cm.get_cmap('Blues')
 	cmapB2  = pl.cm.get_cmap('Reds')
 	#cmapB1  = matplotlib.colors.ListedColormap(['w','b'])
 	#cmapB2  = matplotlib.colors.ListedColormap(['r','w'])
@@ -1104,7 +1124,7 @@ class star_log(DataPlot):
         	CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5, locator=matplotlib.ticker.LogLocator())
                 CB1_outlines  = ax.contour(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.7, locator=matplotlib.ticker.LogLocator())
         	#CBURN1  = ax.contourf(xxx[::dx],y,B1, cmap=cmapB1, alpha=0.5)
-                CBARBURN1 = pl.colorbar(CBURN1)
+                CBARBURN1 = pyl.colorbar(CBURN1)
                 CBARBURN1.set_label('$|\epsilon_\mathrm{nuc}-\epsilon_{\\nu}| \; (\mathrm{erg\,g}^{-1}\mathrm{\,s}^{-1})$',fontsize=fsize)
         if engenstyle == 'full' and engenMinus == True:
         	CBURN2  = ax.contourf(xxx[::dx],y,B2, cmap=cmapB2, alpha=0.5, locator=matplotlib.ticker.LogLocator())
@@ -1139,10 +1159,18 @@ class star_log(DataPlot):
 
         fig.savefig(outfile,dpi=300)
 	if showfig == True:
-	        pl.show()
+	        pyl.show()
         fig.clear()
 
+
+class star_log(history_data):
+        '''Class derived from history_data class (copy). Existing just (for compatibility 
+        reasons) for older mesa python scripts.'''
+
+
+
 # below are some utilities that the user typically never calls directly
+
 
 def read_mesafile(filename,data_rows=0,only='all'):
     ''' private routine that is not directly called by the user
@@ -1188,12 +1216,12 @@ def read_mesafile(filename,data_rows=0,only='all'):
 
 
 def cleanstarlog(file_in):
-    ''' cleaning star.log, e.g. to take care of repetitive restarts
+    ''' cleaning history.data or star.log file, e.g. to take care of repetitive restarts
     
     private, should not be called by user directly
 
-    file_in     typically the filename of the mesa output star.log file,
-                creates a clean file called star.logsa
+    file_in     typically the filename of the mesa output history.data or star.log file,
+                creates a clean file called history.datasa or star.logsa
 
     (thanks to Raphael for providing this tool)            
     '''
