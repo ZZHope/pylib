@@ -27,7 +27,7 @@ import os
 import threading
 import time
 import sys
-import utils
+#import utils
 
 def padding_model_number(number,max_num):
     ''' this method returns a zero-front padded string
