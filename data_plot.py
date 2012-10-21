@@ -68,7 +68,7 @@ class DataPlot():
 			tmp='se'
 		elif 'mesa.mesa_profile' == c:
 			tmp='mesa_profile'
-		elif 'mesa.star_log' == c:
+		elif 'mesa.star_log' == c or 'mesa.history_data' == c:
 			tmp='mesa.star_log'
 		elif 'ppn.xtime' == c:
 			tmp='xtime'

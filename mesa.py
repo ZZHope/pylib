@@ -1,14 +1,18 @@
 ''' MESA output data loading and plotting
 
-    Falk Herwig for the MESA collaboration (v0.1, 23JUN2010)
+    v0.2, 15OCT2012: NuGrid collaboration (Sam Jones, Michael Bennett, Daniel Conti,
+                     William Hillary, Falk Herwig, Christian Ritter)
+    v0.1, 23JUN2010: Falk Herwig 
+    
 
     mesa.py provides tools to get MESA stellar evolution data output
     into your favourite python session. In the LOGS directory MESA
-    outputs two types of files: history.data or star.log  is a time evolution output,
-    printing one line per so many cycles (e.g. each cycle) of all
-    sorts of things. profilennn.data or lognnn.data files are profile data files. 
-    nnn is the number of profile.data or log.data files that is translated into 
-    model cycles in the profiles.index file.
+    outputs two types of files: history.data or star.log is a time
+    evolution output, printing one line per so many cycles (e.g. each
+    cycle) of all sorts of things. profilennn.data or lognnn.data
+    files are profile data files.  nnn is the number of profile.data
+    or log.data files that is translated into model cycles in the
+    profiles.index file.
 
     MESA allows users to freely define what should go into these two
     types of outputs, which means that column numbers can and do
@@ -32,7 +36,7 @@
     (i.e. models, tracks etc) can be overplotted.
 
     Here is how a simple session could look like that is plotting an
-    HRD (I prefer to load ipython with matplotlib and numpy support
+    HRD (We prefer to load ipython with matplotlib and numpy support
     via the alias
     alias mpython='ipython -pylab -p numpy -editor emacsclient')
 
@@ -80,14 +84,21 @@
          'center_he4': 37,
           ...  
           
-    In order to read the profile data from the first profile.data file in
-    profiles.index, and then get the mass and temperature out and
-    finally plot them try:
+    In order to read the profile data from the first profile.data file
+    in profiles.index, and then get the mass and temperature out and
+    finally plot them try. Typically you will have already a
+    Kippenhahn diagram as a function of model number in front of you,
+    and you want to access profile information for a given cycle
+    number. Typically you do not have profiles for all cycle
+    numbers. The best way to start a profile instance is with
+    num_type='nearest_model' (check the docstring for other ways to
+    select profiles for a profile instance):
 
-        In [9]: a1=ms.mesa_profile('LOGS',1)
-        100 in profiles.index file..
-        The 1. profile.data file is 44
-        reading ./profile44.data ...
+        In [9]: a1=ms.mesa_profile('LOGS',59070,,num_type='nearest_model')
+        2001 in profiles.index file ...
+        Found and load nearest profile for cycle 59000
+        reading LOGS/profile1801.data ...
+        Closing profile tool ...
 
         In [10]: T=a1.get('temperature')
 
@@ -97,7 +108,7 @@
         Out[12]: [<matplotlib.lines.Line2D object at 0x8456ed0>]
 
     Or, you could have had it easier in the following way:
-        In [13]: a1.plot('mass','na23',logY=True)
+        In [13]: a1.plot('mass','c12',logy=True,shape='-',legend='$^{12}\mathrm{C}$')
     where the superclass plot method interprets data column headers
     correctly and does all the work for you.
 
@@ -109,6 +120,12 @@
         In [14]: a2=ms.mesa_profile('.',55000,num_type='model')
         100 in profiles.index file ...
         reading ./profile87.data ...
+
+   a1.log_ind (for any profile instance) provides a map of model
+   number to profile file number. 
+   a1.cols and a1.header_attr gives the column names and header attributes.
+
+   
 
 '''
 import numpy as np
@@ -135,7 +152,7 @@ class mesa_profile(DataPlot):
 
 
     
-    def __init__(self,sldir,num,num_type='profiles_i',prof_ind_name='profiles.index',profile_prefix='profile',data_suffix='.data'):
+    def __init__(self,sldir,num,num_type='nearest_model',prof_ind_name='profiles.index',profile_prefix='profile',data_suffix='.data'):
         '''read a profile.data profile file
 
         input:
@@ -144,12 +161,17 @@ class mesa_profile(DataPlot):
         num         by default this is the i. profile file (profile.data or log.data) available
                     (e.g. num=1 is the 1. available profile file),
                     however if you give 
-        num_type    as 'profile_num' then num will be interpreted as the
-                    profile.data or log.data number profile_num (profile_num is the number
-                    that appears in the file names of type
-                    profile23.data or log23.data), or try 'model' to get the profile
-                    profile.data file for model (or cycle number) used by
-                    the stellar evolution code
+
+        num_type    'model' (exact) or 'nearest_model': get the profile
+                    profile.data file for model (or cycle number) used
+                    by the stellar evolution code
+
+                    'profile_num': num will be interpreted as the
+                    profile.data or log.data number profile_num
+                    (profile_num is the number that appears in the
+                    file names of type profile23.data or log23.data)
+
+                    'profiles_i': the ith file in profiles.index file
         prof_ind_name    use this optional argument if the profiles.index 
                          file hasn an alternative name, for example, do 
                          superpro=ms.profile('LOGS',1,prof_ind_name='super.prof') 
@@ -162,12 +184,25 @@ class mesa_profile(DataPlot):
         self.prof_ind_name = prof_ind_name
         self.sldir         = sldir
 
-        if num_type is 'model':
+        if num_type is 'nearest_model' or num_type is 'model':
             self.profiles_index()
+        if num_type is 'nearest_model':
+            amods=array(self.model)
+            nearmods=[where(amods<=num)[0][-1],where(amods>=num)[0][0]]
+            sometable={}
+            for thing in nearmods:
+                sometable[abs(self.model[thing]-num)]=thing
+            nearest       = min(abs(self.model[nearmods[0]]-num),\
+                                    abs(self.model[nearmods[1]]-num))
+            num = self.model[sometable[nearest]] 
+            print 'Found and load nearest profile for cycle '+str(num)
+            num_type = 'model'            
+        if num_type is 'model':
             try:
                 log_num=self.log_ind[num]
             except KeyError:
                 print 'There is no profile file for this model'
+                print "You may retry with num_type='nearest_model'"
                 return
         elif num_type is 'profiles_i':
             log_num=self.log_file_ind(num)
@@ -855,20 +890,37 @@ class history_data(DataPlot):
         #fig.savefig(outfile)
         pl.show()
 
-    def kip_cont(self,modstart,modstop,outfile,xlims=[0.,0.],ylims=[0.,0.],xres=50,yres=2000,ixaxis='log_time_left',mix_zones=5,burn_zones=50,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=True,rad_lines=False,profiles=[],showfig=True,outlines=True):
+    def kip_cont(self,ifig=110,modstart=0,modstop=-1,outfile='out.png',xlims=[0.,0.],ylims=[0.,0.],xres=1000,yres=1000,ixaxis='model_number',mix_zones=20,burn_zones=20,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=False,rad_lines=False,profiles=[],showfig=True,outlines=True):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
-        For a more comprehensive plot, your history.data  or star.log file should contain columns
-        called "mix_type_n","mix_qtop_n","burn_type_n" and "burn_qtop_n".
-        The number of columns (i.e. the bbiggest value of n) is what goes in the
-        arguments as mix_zones and burn_zones.
-        DO NOT WORRY! if you do not have these columns, just leave the default
-        values alone and the script should recognise that you do not have these
-        columns and make the most detailed plot that is available to you.
 
+        This plot uses mixing_regions and burning_regions written to
+        your history.data or star.log. Set both variables in the
+        log_columns.list file to 20 as a start. 
+
+
+        The output log file should then contain columns called
+        "mix_type_n", "mix_qtop_n", "burn_type_n" and "burn_qtop_n".
+        The number of columns (i.e. the bbiggest value of n) is what
+        goes in the arguments as mix_zones and burn_zones.  DO NOT
+        WORRY! if you do not have these columns, just leave the
+        default values alone and the script should recognise that you
+        do not have these columns and make the most detailed plot that
+        is available to you.
+
+        Defaults are set to get some plot, that may not look great if
+        you zoom in interactively. Play with xres and yres as well as
+        setting the xlims to ylims to the region you are interested
+        in.
+
+
+        ifig             figure frame number, default 110
         modstart:        model from which you want to plot (be careful if your history.data
-                         or star.log output is sparse...)
-        modstop:         model to which you wish to plot
+                         or star.log output is sparse...), =0 (default))start from beginning,
+                         works even if log_cnt > 1
+        modstop:         model to which you wish to plot, default -1 corresponds to end
+                         [if log_cnt>1, devide modstart and modstop by log_cnt, this needs 
+                         to be improved!]
         xlims[DEPPREC.], plot limits, however these are somewhat obsolete now that we
         ylims            have modstart and modstop. Leaving them as 0. is probably
                          no slower, and you can always zoom in afterwards in mpl.
@@ -889,7 +941,8 @@ class history_data(DataPlot):
                          mix_type_n, mix_qtop_n, burn_type_n and burn_qtop_n, you need
                          to specify the total number of columns for mixing zones and
                          burning zones that you have. Can't work this out from your
-                         history.data or star.log file? Check the history_columns.list that you used, it'll
+                         history.data or star.log file? Check the history_columns.list 
+                         that you used, it'll
                          be the number after "mixing regions" and "burning regions".
                          Can't see these columns? leave it and 2 conv zones and 2 burn
                          zones will be drawn using other data that you certainly should
@@ -1038,7 +1091,7 @@ class history_data(DataPlot):
 
 	########################################################################
 	#----------------------------------plot--------------------------------#
-	fig = pyl.figure(1)
+	fig = pyl.figure(ifig)
 	fsize=20
         if landscape_plot == True:
 		fig.set_size_inches(9,4)
@@ -1160,7 +1213,8 @@ class history_data(DataPlot):
         fig.savefig(outfile,dpi=300)
 	if showfig == True:
 	        pyl.show()
-        fig.clear()
+# we may or may not need this below
+#        fig.clear()
 
 
 class star_log(history_data):
