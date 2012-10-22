@@ -472,14 +472,16 @@ class DataPlot():
 			pl.xlim(limits[0],limits[1])
 			pl.ylim(limits[2],limits[3])
 		
-	def plot_ratios(self,misosx,misosy,graintype='all',m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn'):
+	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn'):
 		'''
 		Method for plotting ratio data from model output as well as grain data.
 		Important: You have to give some input to the routine!
 		RT, October 2012
-		graintype:	graintypes to plot, e.g., [['sic','M'],['oxides','1','2']], see utils.py -> graindata_handler routine for more information
+		graindata:	presolar grain data
 		misox:	model x data
 		misoy:	model y data
+      solsysx: solar system ratio of x-axis - only necessary if deltax=True, the two solsysx,y variable are necessary to avoid importing utils into DataPlot class. If you import it, mesa.py does not work anymore
+      solsysy: solar system ratio of y-axis - only necessary if deltay=True
 		m_co:	model C/O ratio
 		deltax:	Delta values on x-axis
 		deltay:	Delta values on y-axis
@@ -509,7 +511,7 @@ class DataPlot():
 				mydata_crich = misosy[index:len(misosy)]
 				
 		# plotting ifs, depending on available data
-		if graintype==None:
+		if graindata==None:
 			if m_co==None:
 				# plot
 				pl.plot(misosx,misosy,'o--')
@@ -562,8 +564,10 @@ class DataPlot():
 					pl.legend(loc=5)
 				return None
 		else:
-			# get data
-			gtypelist, gdatax, gdatay = utils.graindata_handler(misosxname,isosy=misosyname,graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
+			# transform data
+			gtypelist = graindata[0]
+			gdatax    = graindata[1]
+			gdatay    = graindata[2]
 			# plots
 			
 			# grains
@@ -652,15 +656,14 @@ class DataPlot():
 		# show plot
 		pl.show()
 		# plot horizontal and vertical lines
-		inut = utils.iniabu(iniabufile)
 		if deltax:
 			pl.hlines(0,pl.xlim()[0],pl.xlim()[1])
 		else:
-			pl.hlines(inut.isoratio_init(misoxname),pl.xlim()[0],pl.xlim()[1])
+			pl.hlines(solsysx,pl.xlim()[0],pl.xlim()[1])
 		if deltay:
 			pl.vlines(0,pl.ylim()[0],pl.ylim()[1])
 		else:
-			pl.vlines(inut.isoratio_init(misoyname),pl.ylim()[0],pl.ylim()[1])
+			pl.vlines(solsysy,pl.ylim()[0],pl.ylim()[1])
 
 		return None
 

@@ -216,6 +216,7 @@ class se(DataPlot,Utils):
         dcycle:   difference between cycles to search for thermal pulses
         iniabufile: file with initial abundances. as a standard value, the GN93 file is used (in USEEPP folder). Important, input file has to be USEEPP conform -> see NuGrid book!
         '''
+        print 'This is a preliminary version - contact Reto for more information!'
         # make filename
         filename = 'delta_outfile.txt'
         # which iso_massmf?
@@ -357,24 +358,44 @@ class se(DataPlot,Utils):
         outf.close()
 
 
-    def plot_isoratios(self,xiso,yiso,graintype=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,dcycle=500,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn'):
+    def plot_isoratios(self,xiso,yiso,graintype=None,tp_finding=False,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,dcycle=500,iniabufile='iniab2.0E-02GN93.ppn'):
         ''' returns the ratios of model surface data for validation w/ grain data
         rt, 2012
         
         xiso:       give isotopes as ['Fe',57,'Fe',56]. x axis, yaxis
         yiso:       as x iso, but for y axis
         graintype:	Example: [['sic','M'],['oxides','1','2']], see utils, graindata_handler routine
+        tp_finding:  Enables the finding of thermal pulses - especially for grain people important. Calls the private routine _tp_finder -> see below.
         deltax:     True for plotting delta values on x-axis. If False, plots ratios not normalized to solar
         deltay:     As deltax but for y axis
         logx:       Logarithm of x axis
         logy:       Logarithm of y axis
         title:      Title of the plot
         legend:     Legend in plot or not?
-        dcycle:     Difference between cycles to take for thermal pulse searching
-        iniabufile: Solar abundances that are used to normalize too. Lives in ../../frames/mppnp/USEEPP
+        dcycle:     Difference between cycles to take for thermal pulse searching, if searching is deactivated, dcycle describes how often cycles are sampled.
+        iniabufile: Solar abundances that are used to normalize too. Lives in ../../frames/mppnp/USEEPP, can also be given absolute to avoid to put it in USEEPP relative to frame. Attention: we assume a standard svn tree (see relative path)!
         '''
+        ### WORK ON PATH ###
+        # define svn path form path where script runs, depending on standard input or not
+        if len(iniabufile.split('/')) == 1 :   # means not an absolute path!
+            scriptpathtmp = __file__
+            if len(scriptpathtmp.split('/')) == 1:   # in folder where nugridse is
+                scriptpathtmp = os.path.abspath('.') + '/nugridse.py'   # to get the current dir
+            svnpathtmp = '/'
+            for i in range(len(scriptpathtmp.split('/'))-3):   # -3 to go to folders up! 
+                if scriptpathtmp.split('/')[i] != '':
+                    svnpathtmp += scriptpathtmp.split('/')[i] + '/'
+            iniabufile = svnpathtmp + 'frames/mppnp/USEEPP/' + iniabufile   # make absolute path for iniabufile
         # read in thermal pulse position and co_ratio (from private routine)
-        tp_pos, co_return = self._tp_finder(dcycle)
+        if tp_finding: 
+            tp_pos, co_return = self._tp_finder(dcycle) 
+        else:
+            # define equally spaced cycles to sample data, according to dcycle, we also call it tp_pos for now
+            tp_pos = range(1000,int(self.se.cycles[len(self.se.cycles)-1])+dcycle,dcycle)   # start at cycle 1000, in case some weird things go on before
+            # get c and o and form ratio of final vector
+            c_nf = array(self.get(tp_pos,'elem_numf','C'))
+            o_nf = array(self.get(tp_pos,'elem_numf','O'))
+            co_return = c_nf / o_nf
         ## read in isotope data
         isox1 = array(self.get(tp_pos,xiso[0] + '-' + str(int(xiso[1]))))
         isox2 = array(self.get(tp_pos,xiso[2] + '-' + str(int(xiso[3]))))
@@ -396,8 +417,15 @@ class se(DataPlot,Utils):
             ret_y = (isoy_ratio / deltay_solsys - 1.) * 1000.
         else:
             ret_y = isoy_ratio   # just the ratio
+        ### get graindata ###
+        if graintype == None:
+            graindata = None
+        else:
+            graindata = graindata_handler(xiso,isosy=yiso,graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
+            
+
         ### now plot it using the appropriate too ###
-        DataPlot.plot_ratios(self,graintype=graintype,misosx=ret_x,misosy=ret_y,m_co=co_return,misosxname=xiso,misosyname=yiso,deltax=deltax,deltay=deltax,logx=logx,logy=logy,title=title,legend=legend,iniabufile=iniabufile)
+        DataPlot.plot_ratios(self,graindata=graindata,misosx=ret_x,misosy=ret_y,solsysx=deltax_solsys,solsysy=deltay_solsys,m_co=co_return,misosxname=xiso,misosyname=yiso,deltax=deltax,deltay=deltax,logx=logx,logy=logy,title=title,legend=legend,iniabufile=iniabufile)
         
     def _tp_finder(self,dcycle):   # Private routine
         '''

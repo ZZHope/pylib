@@ -583,7 +583,7 @@ class iniabu(Utils):
 		This file returns the isotopic ratio of two isotopes specified as iso1 and iso2
 		The isotopes are given as, e.g., ['Fe',56,'Fe',58] -> list
 		'''
-		ssratio = self.habu[isos[0].lower() + str(int(isos[1])).rjust(3)] / self.habu[isos[2].lower() + str(int(isos[3])).rjust(3)]
+		ssratio = self.habu[isos[0].ljust(2).lower() + str(int(isos[1])).rjust(3)] / self.habu[isos[2].ljust(2).lower() + str(int(isos[3])).rjust(3)]
 		return ssratio
 
 
