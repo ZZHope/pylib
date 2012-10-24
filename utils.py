@@ -11,6 +11,7 @@ import scipy as sc
 import ascii_table as att
 from scipy import optimize
 import matplotlib.pyplot as pl
+import os
 
 class data_fitting():
 	'''
@@ -1738,11 +1739,20 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
         deltay=True:    same as deltax, but for second axis if chosen
         iniabufile_in: file with initial abundances. The specified file is taken if no option specified.
     '''
-    # files
-    file_sic      = '../../validation/grain_data/SiC-All.txt'
-    file_graphite = '../../validation/grain_data/graphite-All.txt'
-    file_oxsi     = '../../validation/grain_data/oxide-silicate-all.txt'
-    file_misc     = '../../validation/grain_data/miscellaneous-SiN.txt'
+    # do path
+    scriptpathtmp = __file__
+    if len(scriptpathtmp.split('/')) == 1:   # in folder where nugridse is
+        scriptpathtmp = os.path.abspath('.') + '/utils.py'   # to get the current dir
+    svnpathtmp = '/'
+    for i in range(len(scriptpathtmp.split('/'))-3):   # -3 to go to folders up! 
+        if scriptpathtmp.split('/')[i] != '':
+            svnpathtmp += scriptpathtmp.split('/')[i] + '/'
+    validationpath = svnpathtmp + 'validation/grain_data/'
+    # filenames
+    file_sic      = validationpath + 'SiC-All.txt'
+    file_graphite = validationpath + 'graphite-All.txt'
+    file_oxsi     = validationpath + 'oxide-silicate-all.txt'
+    file_misc     = validationpath + 'miscellaneous-SiN.txt'
     # process input
     allgraintypes = [['sic','M','X','Y','Z','AB','N','U'],
                      ['oxides','1','2','3','4','U'],

@@ -387,6 +387,7 @@ class se(DataPlot,Utils):
                     svnpathtmp += scriptpathtmp.split('/')[i] + '/'
             iniabufile = svnpathtmp + 'frames/mppnp/USEEPP/' + iniabufile   # make absolute path for iniabufile
         # read in thermal pulse position and co_ratio (from private routine)
+        print 'Need to get a lot of data - this might take a while the first time'
         if tp_finding: 
             tp_pos, co_return = self._tp_finder(dcycle) 
         else:
