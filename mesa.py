@@ -398,7 +398,7 @@ class history_data(DataPlot):
 		pyl.ylabel('log L')
     
     def kippenhahn_CO(self,num_frame,xax,t0_model=0,title='Kippenhahn diagram',\
-                       tp_agb=0.):
+                       tp_agb=0., ylim_CO=[0,0]):
 		''' Kippenhahn plot as a function of time or model with CO ratio
 		
 		num_frame    number of frame to plot this plot into 
@@ -415,6 +415,7 @@ class history_data(DataPlot):
                              ylim=[h1_min*1.-tp_agb/100 : h1_max*1.+tp_agb/100] 
                              with h1_min, h1_max the min and max H-free 
                              core mass coordinate
+                ylim_CO      default is automatic
                 '''
 	
 		pyl.figure(num_frame)
@@ -444,7 +445,8 @@ class history_data(DataPlot):
 		pyl.plot(xaxisarray[t0_model:]-t0_mod,COratio[t0_model:],'-k',label='CO ratio')
 		pyl.ylabel('C/O ratio')
 		pyl.legend(loc=4)
-
+                if ylim_CO[0] is not 0 and  ylim_CO[1] is not 0:
+                    pyl.ylim(ylim_CO)
 		if xax == 'time':
 		    pyl.xlabel('t / yrs')
 		elif xax == 'model':
