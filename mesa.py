@@ -892,7 +892,7 @@ class history_data(DataPlot):
         #fig.savefig(outfile)
         pl.show()
 
-    def kip_cont(self,ifig=110,modstart=0,modstop=-1,outfile='out.png',xlims=[0.,0.],ylims=[0.,0.],xres=1000,yres=1000,ixaxis='model_number',mix_zones=20,burn_zones=20,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=False,rad_lines=False,profiles=[],showfig=True,outlines=True):
+    def kip_cont(self,ifig=110,modstart=0,modstop=-1,outfile='out.png',xlims=[0.,0.],ylims=[0.,0.],xres=1000,yres=1000,ixaxis='model_number',mix_zones=20,burn_zones=20,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=False,rad_lines=False,profiles=[],showfig=True,outlines=True,boundaries=True):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
 
@@ -952,7 +952,9 @@ class history_data(DataPlot):
         plot_radius      Whether on a second y-axis you want to plot the radius of the surface
                          and the he-free core.
         engenPlus        Boolean whether or not to plot energy generation contours for eps_nuc>0.
-        endgenMinus      Boolean whether or not to plot energy generation contours for eos_nuc<0.'''
+        endgenMinus      Boolean whether or not to plot energy generation contours for eos_nuc<0.
+	outlines,	 Boolean whether or not to plot outlines of conv zones in darker colour.
+	boundaries	 Boolean whether or not to plot H-, He- and C-free boundaries.'''
 
         xxyy=[self.get('star_age')[modstart:modstop],self.get('star_age')[modstart:modstop]]
         mup = max(float(self.get('star_mass')[0])*1.02,1.0)
@@ -1195,10 +1197,11 @@ class history_data(DataPlot):
 	print 'plotting patches'
 	ax.plot(xxx[::dx],self.get('star_mass')[modstart:modstop][::dx],'k-')
 
-	print 'plotting abund boundaries'
-	ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary',linestyle='-')
-	ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary',linestyle='--')
-	ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
+	if boundaries == True:
+		print 'plotting abund boundaries'
+		ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary',linestyle='-')
+		ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary',linestyle='--')
+		ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
 
         ax.axis([xlims[0],xlims[1],ylims[0],ylims[1]])
 
