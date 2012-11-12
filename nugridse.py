@@ -413,11 +413,13 @@ class se(DataPlot,Utils):
             ret_x = (isox_ratio / deltax_solsys - 1.) * 1000.
         else:
             ret_x = isox_ratio   # just the ratio
+            deltax_solsys = None
         if deltay:
             deltay_solsys = inut.isoratio_init(yiso)
             ret_y = (isoy_ratio / deltay_solsys - 1.) * 1000.
         else:
             ret_y = isoy_ratio   # just the ratio
+            deltay_solsys = None
         ### get graindata ###
         if graintype == None:
             graindata = None
