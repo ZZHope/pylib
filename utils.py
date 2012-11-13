@@ -1960,7 +1960,8 @@ def _graindata_reader(isos,isos2,gclass,gtype,deltax,deltay,fname,iniabufile):
                         if deltax and deltadb and one_over != True:   # delta requested, delta available, this ratio
                             datatmp.append(cellvalue)
                         elif deltax and deltadb and one_over:   # delta requested, delta available, one over ratio
-                            tmpvalue = 1. / cellvalue
+                            tmpvalue2 = (cellvalue/1000. + 1) * (1. / ss_ratio)   # now ratio
+                            tmpvalue  = ((1/tmpvalue2) / ss_ratio - 1.) * 1000. 
                             datatmp.append(tmpvalue)
                         elif deltax != True and deltadb != True and one_over != True:   # ratio requested, ratio available, this ratio
                             datatmp.append(cellvalue)
@@ -1990,7 +1991,8 @@ def _graindata_reader(isos,isos2,gclass,gtype,deltax,deltay,fname,iniabufile):
                            if deltay and deltadb2 and one_over2 != True:   # delta requested, delta available, this ratio
                                datatmp2.append(cellvalue)
                            elif deltay and deltadb2 and one_over2:   # delta requested, delta available, one over ratio
-                               tmpvalue = 1. / cellvalue
+                               tmpvalue2 = (cellvalue/1000. + 1) * (1. / ss_ratio)   # now ratio
+                               tmpvalue  = ((1/tmpvalue2) / ss_ratio - 1.) * 1000.
                                datatmp2.append(tmpvalue)
                            elif deltay != True and deltadb2 != True and one_over2 != True:   # ratio requested, ratio available, this ratio
                                datatmp2.append(cellvalue)
