@@ -476,7 +476,7 @@ class DataPlot():
 		Method for plotting ratio data from model output as well as grain data.
 		Important: You have to give some input to the routine!
 		RT, October 2012
-		graindata:	presolar grain data
+		graindata:	presolar grain data -> private is for a private.txt database file, same structure as other files required!
 		misox:	model x data
 		misoy:	model y data
       solsysx: solar system ratio of x-axis - only necessary if deltax=True, the two solsysx,y variable are necessary to avoid importing utils into DataPlot class. If you import it, mesa.py does not work anymore
@@ -508,7 +508,6 @@ class DataPlot():
 				mydata_orich = misosy[0:index+1]
 				mxdata_crich = misosx[index:len(misosx)]
 				mydata_crich = misosy[index:len(misosy)]
-				
 		# plotting ifs, depending on available data
 		if graindata==None:
 			if m_co==None:
@@ -620,6 +619,9 @@ class DataPlot():
 						mcol = 'b'
 					else:
 						mcol = '0.7'
+				elif gtypelist[i][0] == 'private':
+					msymb = 'o'
+					mcol = 'k'
 				else:
 					msymb = '+'
 					mcol = '0.4'

@@ -425,7 +425,6 @@ class se(DataPlot,Utils):
             graindata = None
         else:
             graindata = graindata_handler(xiso,isosy=yiso,graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
-            
 
         ### now plot it using the appropriate too ###
         DataPlot.plot_ratios(self,graindata=graindata,misosx=ret_x,misosy=ret_y,solsysx=deltax_solsys,solsysy=deltay_solsys,m_co=co_return,misosxname=xiso,misosyname=yiso,deltax=deltax,deltay=deltax,logx=logx,logy=logy,title=title,legend=legend,iniabufile=iniabufile)

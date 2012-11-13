@@ -1735,6 +1735,8 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
                 -- U >> unknown
             - Misc
                 -- Si3N4 >> silicon nitride grains
+	    - Private
+	        -- private.txt -> database file in validation folder is used
         deltax=True:    do you want delta values or not (on x-axis)? default is True (otherwise choose False). X axis is the axis of choice if no second isotope is chosen
         deltay=True:    same as deltax, but for second axis if chosen
         iniabufile_in: file with initial abundances. The specified file is taken if no option specified.
@@ -1753,14 +1755,16 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
     file_graphite = validationpath + 'graphite-All.txt'
     file_oxsi     = validationpath + 'oxide-silicate-all.txt'
     file_misc     = validationpath + 'miscellaneous-SiN.txt'
+    file_private  = validationpath + 'private.txt'   # private database file - or compilation of grains (manual filtering...)
     # process input
     allgraintypes = [['sic','M','X','Y','Z','AB','N','U'],
                      ['oxides','1','2','3','4','U'],
                      ['silicates','1','2','3','4','U'],
                      ['graphites','LD','HD','U'],
-                     ['misc','Si3N4']]
+                     ['misc','Si3N4'],
+		     ['private','M','X','Y','Z','AB','N','U','1','2','3','4','LD','HD','Si3N4']]
     if graintype_in == 'all':
-        graintype = allgraintypes
+        graintype = allgraintypes[0:5]   # exclude private
     elif type(graintype_in) == str:   # only one grain input
         graintype = list()
         for i in range(len(allgraintypes)):
@@ -1801,6 +1805,8 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
             fname = file_graphite
         elif graintype[grain_i][0] == 'misc':
             fname = file_misc
+	elif graintype[grain_i][0] == 'private':
+	    fname = file_private
         else:
             print 'Problem w/ database filename'
             return -1
@@ -1819,10 +1825,9 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
                 for i in range(len(graindata_tmp)): 
                     if graindata_tmp[i] != []:   # empty list
                         graintype_list.append([graintype[grain_i][0], graintype_tmp[i]])
-                    graindata.append(graindata_tmp[i])
-                    graindatay.append(graindatay_tmp[i])
+                        graindata.append(graindata_tmp[i])
+                        graindatay.append(graindatay_tmp[i])
     # check if no data at all
-    
     # give back the read data and the labels for the data
     if isosy == None:
         return graintype_list, graindata
