@@ -1711,7 +1711,7 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
         isosx: isotopes to handle, format ['Si',29,'Si',28]
         isosy: same format as isox, but not requred. If given, it's read at the same time and given back. required for plotting (2D plotting)
         graintype:
-            - None -> All grains are returned
+            - not specified -> All grains are returned
             - 'sic', 'oxides', 'silicates', 'graphites', 'misc' for Silicon carbide, Oxides, Silicates, Graphites, and miscellaneous (at the moment Si3N4 grains), respectively
             - A list combining several grains ['sic','oxides']
             - Specific subgroups, e.g., [['sic','M'],['oxides','1','2']] would return mainstream SiC grains as well as group 1 and group 2 oxides
