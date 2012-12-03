@@ -1073,7 +1073,7 @@ class DataPlot():
 		return
 
 	def abu_flux_chart(self, cycle,ilabel = True,imlabel = True,imagic =  False,
-		boxstable=True,lbound=20,plotaxis=[0,0,0,0],which_flux=None,prange=None,show=True):
+		boxstable=True,lbound=15,plotaxis=[0,0,0,0],which_flux=None,prange=None,profile='charged',show=True):
 		'''
 		Plots an abundence and flux chart
 		input:
@@ -1094,6 +1094,8 @@ class DataPlot():
 		prange is the range of fluxes to be considered.
 		format: What format will this be saved in ['pdf'/'png']
 				Defaults to None
+		profile: 'charged' is ideal setting to show charged particle reactions flow.
+		    'neutron' is ideal setting for neutron captures flows.
 		show:  boolean of if the plot should be displayed useful with
 		       saving multiple plots using abu_chartMulti
 		'''
@@ -1241,8 +1243,10 @@ class DataPlot():
 		#pl.rcParams.update(params) #May cause Error, someting to do with tex
 		#fig=pl.figure(figsize=(xdim,ydim),dpi=100)
 		fig=pl.figure()
-		ax1 = fig.add_subplot(1, 2, 1)
-		#ax1 = fig.add_subplot(2, 1, 1)
+		if profile == 'charged':
+		    ax1 = fig.add_subplot(1, 2, 1)
+		elif profile == 'neutron':
+		    ax1 = fig.add_subplot(2, 1, 1)
 		#axx = 0.10
 		#axy = 0.10
 		#axw = 0.85
@@ -1320,7 +1324,8 @@ class DataPlot():
 		cb = pl.colorbar(p)
 
 		# colorbar label
-		#cb.set_label('log$_{10}$(X)',fontsize='x-large')
+		if profile == 'neutron':
+		    cb.set_label('log$_{10}$(X)',fontsize='x-large')
 
 		# plot file name
 		graphname = 'abundance-flux-chart'+str(cycle)
@@ -1409,8 +1414,9 @@ class DataPlot():
 		  ax1.axis(plotaxis)
 
 		# set x- and y-axis label
-		ax1.set_xlabel('Neutron number',fontsize='xx-large')
 		ax1.set_ylabel('Proton number',fontsize='xx-large')
+		if profile == 'charged':
+		    ax1.set_xlabel('Neutron number',fontsize='xx-large')
 		#pl.title('Isotopic Chart for cycle '+str(int(cycle)))
 
 		#
@@ -1566,8 +1572,10 @@ class DataPlot():
 				nzycheck[coord_x_out[i],coord_y_out[i],2] = 1
 
 		#### create plot
-		ax2 = fig.add_subplot(1, 2, 2)
-		#ax2 = fig.add_subplot(2, 1, 2)
+		if profile == 'charged':
+		    ax2 = fig.add_subplot(1, 2, 2)
+		elif profile == 'neutron':
+		    ax2 = fig.add_subplot(2, 1, 2)
 		# Tick marks
 		xminorlocator = MultipleLocator(1)
 		xmajorlocator = MultipleLocator(5)
@@ -1666,6 +1674,8 @@ class DataPlot():
 
 		# colorbar label
 		cb.set_label('log$_{10}$($x$)',fontsize='x-large')
+		if profile == 'neutron':
+		    cb.set_label('log$_{10}$(f)',fontsize='x-large')
 
 		# decide which array to take for label positions
 		iarr = 2
@@ -1716,7 +1726,8 @@ class DataPlot():
 
 		# set x- and y-axis label
 		ax2.set_xlabel('Neutron number',fontsize='xx-large')
-		#ax2.set_ylabel('Proton number',fontsize='xx-large')
+		if profile == 'neutron':
+		    ax2.set_ylabel('Proton number',fontsize='xx-large')
 		if which_flux == None or which_flux == 0:
 			max_flux_label="max flux = "+str('{0:.4f}'.format(max_flux))
 		elif which_flux == 1:
