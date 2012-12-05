@@ -694,7 +694,7 @@ class DataPlot():
 
 	def abu_chartMulti(self,cyclist, mass_range=None ,ilabel = True,imlabel = True,\
 			   imagic =  False,boxstable=True,lbound=20,plotaxis=[0,0,0,0],\
-			   pdf=False,title=None):
+			   color_map='jet',pdf=False,title=None):
 		'''
 		Method that plots abundence chart and saves those
 		figures to a .png file (by default). Plots a figure
@@ -718,7 +718,7 @@ class DataPlot():
 		max_num = max(cyclist)
 		for i in xrange(len(cyclist)):
 			self.abu_chart( cyclist[i], mass_range ,ilabel,imlabel,imagic,\
-					boxstable,lbound,plotaxis,False)
+					boxstable,lbound,plotaxis,False,color_map)
 			if title !=None:
 				pl.title(title)
 			else:
@@ -733,7 +733,7 @@ class DataPlot():
 		return None
 	#from mppnp.se
 	def abu_chart(self, cycle, mass_range=None ,ilabel = True,imlabel = True,imagic =  False,
-		boxstable=True,lbound=20,plotaxis=[0,0,0,0],show=True):
+		boxstable=True,lbound=20,plotaxis=[0,0,0,0],show=True,color_map='jet'):
 		'''
 		Plots an abundence chart
 		input:
@@ -760,6 +760,8 @@ class DataPlot():
 				Defaults to None
 		show:  boolean of if the plot should be displayed useful with
 		       saving multiple plots using abu_chartMulti
+                color_map  color map according to choices in matplotlib
+                           (e.g. www.scipy.org/Cookbook/Matplotlib/Show_colormaps)
 		'''
 		#######################################################################
 		#### plot options
@@ -775,7 +777,7 @@ class DataPlot():
 
 		if str(cycle.__class__)=="<type 'list'>":
 			self.abu_chartMulti(cycle, mass_range,ilabel,imlabel,imagic,boxstable,\
-					    lbound,plotaxis)
+					    lbound,plotaxis,color_map)
 			return
 		plotType=self.classTest()
 
@@ -915,8 +917,8 @@ class DataPlot():
 		ax.yaxis.set_minor_locator(yminorlocator)
 
 		# color map choice for abundances
-		#cmapa = cm.jet
-		cmapa = cm.autumn
+
+                cmapa = cm.get_cmap(name=color_map)
 		# color map choice for arrows
 		cmapr = cm.autumn
 		# if a value is below the lower limit its set to white
