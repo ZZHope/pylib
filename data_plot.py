@@ -1836,13 +1836,12 @@ class DataPlot():
 
 	def iso_abund(self,cycle, stable=False,amass_range=None,mass_range=None,\
 			      ylim=[1e-13,10],shape='o',ref=-1,show=True,\
-			      log_logic=True,decayed=False,color_plot=True,grid=False):
+			      log_logic=True,decayed=False,color_plot=True,grid=False,include_title=False):
 		''' plot the abundance of all the chemical species
 		inputs:
 
 		    cycle      - a string/integer of the cycle of interest.
-		    	         If it is a list of cycles, this method will
-		    	         do a plot for each cycle and save them to a file
+		    	         If it is a list of cycles, this method will		    	         do a plot for each cycle and save them to a file
 		    stable     - a boolean of whether to filter out the unstables.
 		    	         Defaults to False
 		    amass_range -a 1x2 array containing the lower and upper Atomic
@@ -2101,7 +2100,7 @@ class DataPlot():
 							tmpList=coordinates
 			coordinates=tmpList
 			if coordinates != [0,0]:
-				pl.text(coordinates[0],coordinates[1], el_list[j])  # changed
+				pl.text(coordinates[0]+0.3,coordinates[1]+(coordinates[1]*0.1), el_list[j])  # changed
 		    except ValueError:
 			None
 			#print 'Empty var:  ', abund_plot[j]
@@ -2112,14 +2111,14 @@ class DataPlot():
 		    try:
 			if log_logic == False:
 				if color_plot:
-					pl.plot(mass_num[j],abund_plot[j],'k'+shape)
+					pl.plot(mass_num[j],abund_plot[j],'k'+shape,markersize=10)
 				else:
-					pl.plot(mass_num[j],abund_plot[j],shape)
+					pl.plot(mass_num[j],abund_plot[j],shape,markersize=10)
 			if log_logic == True:
 				if color_plot:
-					pl.semilogy(mass_num[j],abund_plot[j],shape)
+					pl.semilogy(mass_num[j],abund_plot[j],shape,markersize=10)
 				else:
-					pl.semilogy(mass_num[j],abund_plot[j],'k'+shape)
+					pl.semilogy(mass_num[j],abund_plot[j],'k'+shape,markersize=10)
 		    except OverflowError:
 			None
 			#print 'div by zero', len(mass_num[j]), len(abund_plot[j])
@@ -2130,32 +2129,65 @@ class DataPlot():
 
 		cl_index = 0
 
-		if plotType=='se':
-                    if ref == -1:
-                        title = str('Range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
-                            str(' for cycle %d' %int(cycle))
+                if include_title:
+                    if plotType=='se':
+                        if ref == -1:
+                            title = str('Range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
+                                str(' for cycle %d' %int(cycle))
+                        else:
+                            title = str('Range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
+                                str(' for cycle %d' %int(cycle))+str(' relative to cycle %d'  %int(ref))
                     else:
-                        title = str('Range %4.2f' %mass_range[0]) + str('-%4.2f' %mass_range[1]) +\
-                        str(' for cycle %d' %int(cycle))+str(' relative to cycle %d'  %int(ref))
-		else:
-                    if ref == -1:
-                        title = str('Cycle %d' %int(cycle))
-                    else:
-                        title = str('Cycle %d' %int(cycle))+str(' relative to cycle %d'  %int(ref))
+                        if ref == -1:
+                            title = str('Cycle %d' %int(cycle))
+                        else:
+                            title = str('Cycle %d' %int(cycle))+str(' relative to cycle %d'  %int(ref))
                 if ref != -1 and ylim[0] < 1.1e-13:
                     ylim=(1.e-3,1.e3)
 		pl.ylim(ylim)
                 pl.xlim([amass_range[0]-.5,amass_range[1]+.5])
-		pl.title(title)
-		pl.xlabel('Mass Number')
+                if include_title:
+                    pl.title(title)
+		pl.xlabel('Mass Number (A)',fontsize=25)
 		if ref>-1:
-			pl.ylabel('Relative Abundance')
+                    solquest=str(raw_input("Are your reference abundances solar ones? (y/n)"))
+                    if solquest == 'y':
+			pl.ylabel(r'Production Factor (X$_{\rm i}$/X$_{\odot}$)',fontsize=25)
+                    else:
+                        pl.ylabel('Relative abundances',fontsize=25)
 		else:
-		        pl.ylabel('Abundance')
+		        pl.ylabel(r'Abundance (X$_{\rm i}$)',fontsize=25)
 		if grid:
                     pl.grid()
 		if show:
-			pl.show()
+                    pl.show()
+                pl.semilogy([amass_range[0]-.5,amass_range[1]+.5],[1,1],'k-')
+		ax=pl.axes()
+                labelsx=[]
+                iii = amass_range[0]%5
+                if iii == 0:
+                    labelsx.append(str(amass_range[0]))
+                else:
+                    labelsx.append(' ')
+                iii = iii+1
+                kkk = 0
+                for label1 in range(amass_range[1]-amass_range[0]):
+                    if iii == 5:
+                        kkk = kkk+1
+                        labelsx.append(str((iii*kkk)+amass_range[0]-(amass_range[0]%5)))
+                        iii = 0
+                        iii = iii+1
+                    else:
+                        labelsx.append(' ')
+                        iii = iii+1
+
+                xticks = arange(amass_range[0],amass_range[1],1)
+##!!FOR!!###### print 'LEN LABELS= ', len(labelsx)
+##DEBUGGING####
+####!!!######## for bbb in range (len(labelsx)):
+###############     print labelsx[bbb]
+
+                pl.xticks(xticks,labelsx)
 		return
 
 	def plotprofMulti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2,symbol=None):
