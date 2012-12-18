@@ -358,7 +358,7 @@ class se(DataPlot,Utils):
         outf.close()
 
 
-    def plot_isoratios(self,xiso,yiso,graintype=None,tp_finding=False,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,dcycle=500,iniabufile='iniab2.0E-02GN93.ppn'):
+    def plot_isoratios(self,xiso,yiso,graintype=None,tp_finding=False,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,dcycle=500,errbar=True,iniabufile='iniab2.0E-02GN93.ppn'):
         ''' returns the ratios of model surface data for validation w/ grain data
         rt, 2012
         
@@ -373,6 +373,7 @@ class se(DataPlot,Utils):
         title:      Title of the plot
         legend:     Legend in plot or not?
         dcycle:     Difference between cycles to take for thermal pulse searching, if searching is deactivated, dcycle describes how often cycles are sampled.
+        errbar:     Do you want to plot error bars with the grain data? True or False
         iniabufile: Solar abundances that are used to normalize too. Lives in ../../frames/mppnp/USEEPP, can also be given absolute to avoid to put it in USEEPP relative to frame. Attention: we assume a standard svn tree (see relative path)!
         '''
         ### WORK ON PATH ###
@@ -426,7 +427,7 @@ class se(DataPlot,Utils):
         else:
             graindata = graindata_handler(xiso,isosy=yiso,graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
         ### now plot it using the appropriate too ###
-        DataPlot.plot_ratios(self,graindata=graindata,misosx=ret_x,misosy=ret_y,solsysx=deltax_solsys,solsysy=deltay_solsys,m_co=co_return,misosxname=xiso,misosyname=yiso,deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=title,legend=legend,iniabufile=iniabufile)
+        DataPlot.plot_ratios(self,graindata=graindata,misosx=ret_x,misosy=ret_y,solsysx=deltax_solsys,solsysy=deltay_solsys,m_co=co_return,misosxname=xiso,misosyname=yiso,deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=title,legend=legend,iniabufile=iniabufile,errbar=errbar)
         
     def _tp_finder(self,dcycle):   # Private routine
         '''
@@ -488,6 +489,228 @@ class se(DataPlot,Utils):
             co_return[i] = co_ratio[tp_ind[i]]
         # return the two vectors
         return tp_pos,co_return
+
+
+    def plot4iso_exp(self,isotope_list,shift=0,graintype=None,deltax=False,deltay=False,logx=False,logy=False,addiso=None,weighting=None,co_toggle='c',pl_title=None,errbar=True,plt_symb='o',plt_col='b',plt_sparse=10,iniabufile='iniab2.0E-02GN93.ppn'):
+        '''
+        This subroutine plots 4 isotope plots for explosive stars, assuming one model initialized in nugridse
+        Description here on how it is done. It plots the model along w/ presolar grain data if wanted.
+        Grain data are plotted along with the models (if wanted)
+        Change once grainclass is done
+
+        Input:
+        - isotope_list:   List of isotopes, format ['C-12','C-13','N-14','N-15']. First pair: nominator, denominator of x-axis, second pair: y-axis
+        - shift:          By how much do you want to shift the models back. If zero, the last cycle is taken
+        - graintype:      Graintype, e.g., 'all', 'sic', ['sic','oxides'], [['sic','N']], ... see graindata_handler in utils.py
+        - deltax, deltay: Plot delta values on  x and y axes?
+        - logx, logy:     Logarithmic axes?
+        - addiso:         Add an isotope. Format ['C-12', 0.5 ,'N-12'] to add N12 to C12 and multiply it w/ a factor of 0.5. Multiple isotopes can be added, the factor is optional and does not have to be given. Isotopes can be added to other isotopes as well, i.e., [['C-12','N-12'],['C-13','N-13']]
+        - weighting:      None -> plot every profile separately, 'zone' -> average each zone
+        - co_toggle:      Select 'c' for selecting zones with C/O >= 1, select 'o' for C/O <= 1
+        - pl_title:       Plot title
+        - errbar:         Do you want errorbars for presolar grain data? True or False
+        - plt_symb:       Defines the symbol to plot the model data with
+        - plt_col:        Defines the color of the plotted model symbol
+        - plt_sparse:     Every so many datapoint is plotted for model data
+        - iniabufile:     File where the initial abundances are stored. Give absolute path or relative to USEEPP!
+        '''
+
+        ### WORK ON PATH ###
+        # define svn path form path where script runs, depending on standard input or not
+        if len(iniabufile.split('/')) == 1 :   # means not an absolute path!
+            scriptpathtmp = __file__
+            if len(scriptpathtmp.split('/')) == 1:   # in folder where nugridse is
+                scriptpathtmp = os.path.abspath('.') + '/nugridse.py'   # to get the current dir
+            svnpathtmp = '/'
+            for i in range(len(scriptpathtmp.split('/'))-3):   # -3 to go to folders up! 
+                if scriptpathtmp.split('/')[i] != '':
+                    svnpathtmp += scriptpathtmp.split('/')[i] + '/'
+            iniabufile = svnpathtmp + 'frames/mppnp/USEEPP/' + iniabufile   # make absolute path for iniabufile
+        ### END PATH WORK ###
+        
+        ### Input compatibility ###
+        co_toggle = co_toggle.lower()
+
+        # cycle
+        cyc_no = self.se.cycles[len(self.se.cycles)-1-shift]
+
+        mass =   array(self.get(cyc_no,'mass'))
+        c_elem = array(self.get(cyc_no,'C-12'))
+        c_elem +=array(self.get(cyc_no,'C-13'))
+        o_elem = array(self.get(cyc_no,'O-16'))
+        o_elem +=array(self.get(cyc_no,'O-17'))
+        o_elem +=array(self.get(cyc_no,'O-18'))
+        co_ratio = c_elem / o_elem * (16. / 12.)
+        # get isotopes
+        isotope_profile = []
+        for i in range(4):
+            isotope_profile.append(array(self.get(cyc_no,isotope_list[i])))
+
+        # add radioactive isotopes (if given)
+        if addiso != None:
+            if type(addiso[0] == list):   # then list of lists
+                for i in range(len(addiso)):
+                    for j in range(4):
+                        if isotope_list[j] == addiso[i][0]:
+                            multiplicator_addiso = 1.
+                            try:
+                                multiplicator_addiso = float(addiso[i][1])
+                                starter = 2
+                            except ValueError:
+                                starter = 1
+                            for k in range(starter,len(addiso[i])):
+                                isotope_profile[j] += array(self.get(cyc_no,addiso[i][k])) * multiplicator_addiso
+            else:
+                for j in range(4):
+                    if isotope_list[j] == addiso[0]:
+                        multiplicator_addiso = 1.
+                        try:
+                            multiplicator_addiso = float(addiso[1])
+                            starter = 2
+                        except ValueError:
+                                starter = 1
+                        for k in range(starter,len(addiso)):
+                            isotope_profile[j] += array(self.get(cyc_no,addiso[k])) * multiplicator_addiso
+
+        # search for carbon / oxygen rich layers
+        crich = []   # alternating start stop values. if odd number, then surface is c-rich, but add stop number
+        dumb = True
+        for i in range(len(co_ratio)):
+            if co_toggle == 'c':   # carbon rich
+                if dumb:
+                    if co_ratio[i] >= 1:
+                        crich.append(i)
+                        dumb = False
+                        continue
+                else: 
+                    if co_ratio[i] < 1:
+                        crich.append(i)
+                        dumb = True
+            elif co_toggle == 'o':   # oxygen richt
+                if dumb:
+                    if co_ratio[i] <= 1:
+                        crich.append(i)
+                        dumb = False
+                        continue
+                else: 
+                    if co_ratio[i] > 1:
+                        crich.append(i)
+                        dumb = True
+            else:
+                print 'Select your enrichment!'
+                return None
+
+        if len(crich)%2 == 1:
+            crich.append(len(co_ratio)-1)
+
+        if len(crich) == 0:
+            print 'Star did not get rich in C or O, depending on what you specified'
+            return None
+        
+        # make isotope_profile into array and transpose
+        isotope_profile = array(isotope_profile).transpose()
+
+        
+        # Ask user which zones to use
+        if co_toggle == 'c':
+            print '\n\nI have found the following carbon rich zones:\n'
+        elif co_toggle == 'o':
+            print '\n\nI have found the following oxygen rich zones:\n'
+        
+        mass_tmp = zeros((len(crich)))
+        for i in range(len(crich)):
+            mass_tmp[i] = mass[crich[i]]
+
+        j = 1
+        for i in range(len(crich)/2):
+            print 'Mass range (' + str(j) + '):\t' + str(mass_tmp[2*i]) + ' - ' + str(mass_tmp[2*i+1]) 
+            j += 1
+        print '\n'
+        usr_zones = input('Please select which mass range you want to use. Select 0 for all zones. Otherwise give one zone or a list of zones separated by comma (e.g.: 1, 2, 4): ')
+
+        crich_dumb = crich
+        if usr_zones == 0:
+            print 'I continue w/ all zones then'
+        elif type(usr_zones) == int:   # only one zone selected
+            tmp = int(usr_zones)-1
+            crich = crich_dumb[2*tmp:2*tmp+2]
+        else:
+            crich = []
+            for i in range(len(usr_zones)):
+                tmp = int(usr_zones[i])-1
+                crich.append(crich_dumb[2*tmp])
+                crich.append(crich_dumb[2*tmp + 1])
+
+        # weight profiles according to weighting factor using the selected crich
+        # define isos_to_use variable for later
+        if weighting == None:
+            isos_to_use = []
+            for i in range(len(crich)/2):
+                isos_dumb = []
+                n = crich[2*i]
+                while n <= crich[2*i+1]:
+                    isos_dumb.append(isotope_profile[n])
+                    n += 1
+                isos_to_use.append(array(isos_dumb))
+
+
+        elif weighting.lower() == 'zone' or weighting.lower() == 'zones':
+            # make array w/ mass weigted isotope ratio (4) for all mass zones
+            isotope_profile_cweight = zeros((len(crich)/2,4))
+            mass_tot = []
+            for i in range(len(isotope_profile_cweight)):   # 2*i is start, 2*i+1 is stop value
+                if crich[2*i] == 0:
+                    print 'C- / O-rich in first shell (core).'
+                else:
+                    dumb = crich[2*i + 1]
+                    j = crich[2*i]
+                    mass_tmp = 0
+                    while j <= dumb:
+                        mass_shell = mass[j] - mass[j-1]
+                        mass_tmp += mass_shell
+                        for k in range(4):
+                            isotope_profile_cweight[i][k] += isotope_profile[j][k]*mass_shell
+                        j += 1
+                    mass_tot.append(mass_tmp)
+            for i in range(len(isotope_profile_cweight)):
+                for j in range(4):
+                    isotope_profile_cweight[i][j] /= mass_tot[i]
+            isos_to_use = [array(isotope_profile_cweight)]
+
+        # legend for model
+        modlegend = self.se.filename.split('/')
+        modlegend = modlegend[len(modlegend)-1]   # depth of folder
+
+
+        # do the ratios and stuff
+        inut = iniabu(iniabufile)
+        ratiox = []
+        ratioy = []
+        for i in range(len(isos_to_use)):
+            ratiox_dumb = []
+            ratioy_dumb = []
+            for j in range(len(isos_to_use[i])):
+                ratiox_dumb.append(isos_to_use[i][j][0] / isos_to_use[i][j][1])
+                ratioy_dumb.append(isos_to_use[i][j][2] / isos_to_use[i][j][3])
+            ratiox.append(array(ratiox_dumb))
+            ratioy.append(array(ratioy_dumb))
+        
+        ratiox_solsys = inut.isoratio_init(isotope_list[0:2])
+        ratioy_solsys = inut.isoratio_init(isotope_list[2:4])
+        if deltax:
+            ratiox = (ratiox / ratiox_solsys - 1.) * 1000.
+        if deltay:
+            ratioy = (ratioy / ratioy_solsys - 1.) * 1000.
+
+        ### get graindata ###
+        if graintype == None:
+            graindata = None
+        else:
+            graindata = graindata_handler(isotope_list[0:2],isosy=isotope_list[2:4],graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
+
+        ### send to data_plot.py -> plot_ratios ###
+        DataPlot.plot_ratios(self,ratiox,ratioy,solsysx=ratiox_solsys,solsysy=ratioy_solsys,graindata=graindata,m_co=None,misosxname=isotope_list[0:2],misosyname=isotope_list[2:4],deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=pl_title,legend=True,iniabufile=iniabufile,modlegend=modlegend,calling_routine='4iso_exp',plt_symb=plt_symb,plt_col=plt_col,plt_sparse=plt_sparse,errbar=errbar)
+
 
     def plot4(self,num):
         self.plot_prof_1(num,'H-1',0.,5.,-5,0.)

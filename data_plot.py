@@ -473,25 +473,52 @@ class DataPlot():
 			pl.xlim(limits[0],limits[1])
 			pl.ylim(limits[2],limits[3])
 
-	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn'):
+	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',modlegend=None,plt_symb='o',plt_col='b',plt_sparse=0,calling_routine='all'):
 		'''
 		Method for plotting ratio data from model output as well as grain data.
 		Important: You have to give some input to the routine!
 		RT, October 2012
 		graindata:	presolar grain data -> private is for a private.txt database file, same structure as other files required!
-		misox:	model x data
-		misoy:	model y data
-      solsysx: solar system ratio of x-axis - only necessary if deltax=True, the two solsysx,y variable are necessary to avoid importing utils into DataPlot class. If you import it, mesa.py does not work anymore
-      solsysy: solar system ratio of y-axis - only necessary if deltay=True
-		m_co:	model C/O ratio
-		deltax:	Delta values on x-axis
-		deltay:	Delta values on y-axis
-		logx:	logarithmic x-axis
-		logy:	logarithmic y-axis
-		title:	Title of plot
-		legend:	True or False. Use legend(loc=?) command to move legend around after plotting.
+		misox:		model x data
+		misoy:		model y data
+      solsysx: 	solar system ratio of x-axis - only necessary if deltax=True, the two solsysx,y variable are necessary to avoid importing utils into DataPlot class. If you import it, mesa.py does not work anymore
+      solsysy: 	solar system ratio of y-axis - only necessary if deltay=True
+		m_co:			model C/O ratio
+		deltax:		Delta values on x-axis
+		deltay:		Delta values on y-axis
+		logx:			logarithmic x-axis
+		logy:			logarithmic y-axis
+		title:		Title of plot
+		legend:		True or False. Use legend(loc=?) command to move legend around after plotting.
 		iniabufile:	initial abundance file - necessary
+		modlegend:	legend for model data
+		plt_symb:	symbold for plotting model data
+		plt_col:		color for plotting model data
+		plt_sparse:	sparse function for model data
+		calling_routine:	to identify where it comes from for some special treatment
 		'''
+		# compatibility
+		if misosxname != None and len(misosxname) == 2:
+			dumb = []
+			dumb = misosxname[0].split('-')
+			dumb.append(misosxname[1].split('-')[0])
+			dumb.append(misosxname[1].split('-')[1])
+			misosxname = dumb
+		if misosyname != None and len(misosyname) == 2:
+			dumb = []
+			dumb = misosyname[0].split('-')
+			dumb.append(misosyname[1].split('-')[0])
+			dumb.append(misosyname[1].split('-')[1])
+			misosyname = dumb
+		# style
+		# Size of font etc.
+		params = {'axes.labelsize':  15,
+          'text.fontsize':   12,
+          'legend.fontsize': 12,
+          'xtick.labelsize': 12,
+          'ytick.labelsize': 12}
+		pl.rcParams.update(params)
+
 		# prepare model data (if necessary) - here PPN / Nugridse difference if included at some point!
 		if m_co != None:
 			# find co_ratio, where it gets > 1
@@ -514,7 +541,18 @@ class DataPlot():
 		if graindata==None:
 			if m_co==None:
 				# plot
-				pl.plot(misosx,misosy,'o--')
+				if modlegend == None:
+					pl.plot(misosx,misosy,'o--')
+				else:
+					if calling_routine == 'general':
+						pl.plot(misosx,misosy,'o--',label=modlegend)
+					elif calling_routine == '4iso_exp':
+						plt_symb = plt_symb + '-'
+						for it in range(len(misosx)):
+							if it == 0:
+								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10,label=modlegend)
+							else:
+								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10)
 				# axis
 				if logx and logy:
 					pl.loglog()
@@ -535,7 +573,8 @@ class DataPlot():
 						pl.ylabel('$^{' + str(misosyname[1]) + '}$' + misosyname[0] + '/$^{' + str(misosyname[3]) + '}$' + misosyname[2])
 				if title != None:
 					pl.title(title)
-				return None
+				if legend != None or modlegend != None:
+					pl.legend(loc=5)
 			else:
 				# plot
 				pl.plot(mxdata_orich,mydata_orich,'--',c='b',label='C/O<1')
@@ -562,13 +601,15 @@ class DataPlot():
 					pl.title(title)
 				if legend:
 					pl.legend(loc=5)
-				return None
 		else:
 			# transform data
 			gtypelist = graindata[0]
 			gdatax    = graindata[1]
-			gdatay    = graindata[2]
-			# plots
+			gdataxerr = graindata[2]
+			gdatay    = graindata[3]
+			gdatayerr = graindata[4]
+
+			### PLOTS ### 
 
 			# grains
 			for i in range(len(gtypelist)):
@@ -627,13 +668,50 @@ class DataPlot():
 				else:
 					msymb = '+'
 					mcol = '0.4'
+				# make nice labels in gtypelist now
+				for jt in range(len(gtypelist[i])):
+					if gtypelist[i][jt] == 'sic':
+						gtypelist[i][jt] = 'SiC'
+					elif gtypelist[i][jt] == 'oxides':
+						gtypelist[i][jt] = 'Oxides'
+					elif gtypelist[i][jt] == 'silicates':
+						gtypelist[i][jt] = 'Silicated'
+					elif gtypelist[i][jt] == 'graphites':
+						gtypelist[i][jt] = 'Graphites'
+					elif gtypelist[i][jt] == 'N':
+						gtypelist[i][jt] = 'Nova'
+					elif gtypelist[i][jt] == 'M':
+						gtypelist[i][jt] = 'Mainstream'
+					elif gtypelist[i][jt] == 'U':
+						gtypelist[i][jt] = 'Unclassified'
+					elif gtypelist[i][jt] == 'LD':
+						gtypelist[i][jt] = 'low density'
+					elif gtypelist[i][jt] == 'HD':
+						gtypelist[i][jt] = 'high density'
 				# now plot the grain data!
-				pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=gtypelist[i][0] + ' ' + gtypelist[i][1])
-
+				if errbar:
+					pl.errorbar(gdatax[i],gdatay[i],xerr=gdataxerr[i],yerr=gdatayerr[i],marker=msymb,c=mcol,linestyle='')
+					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=gtypelist[i][0] + ' ' + gtypelist[i][1])
+				else:
+					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=gtypelist[i][0] + ' ' + gtypelist[i][1])
 			# plot model:
-			pl.plot(mxdata_orich,mydata_orich,'--',c='k',label='C/O<1',lw=3)
-			pl.plot(mxdata_crich,mydata_crich,'*-',c='k',label='C/O>1',lw=3,markersize=15,markeredgecolor='k',markerfacecolor='y')
-
+			if m_co != None:
+				pl.plot(mxdata_orich,mydata_orich,'--',c='k',label='C/O<1',lw=3)
+				pl.plot(mxdata_crich,mydata_crich,'*-',c='k',label='C/O>1',lw=3,markersize=11,markeredgecolor='k',markerfacecolor='y')
+			else:
+				if modlegend != None:
+					if calling_routine == 'general':
+						pl.plot(misosx,misosy,'o--',label=modlegend)
+						print misosx, misosy
+					elif calling_routine == '4iso_exp':
+						plt_symb = plt_symb + '-'
+						for it in range(len(misosx)):
+							if it == 0:
+								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10,label=modlegend)
+							else:
+								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10)
+				else:
+					pl.plot(misosx,misosy,'o--')
 			# axis
 			if logx and logy:
 				pl.loglog()
@@ -656,19 +734,18 @@ class DataPlot():
 				pl.title(title)
 			if legend:
 				pl.legend(loc=5)
-		# show plot
-		pl.show()
+
 		# plot horizontal and vertical lines
 		if deltax:
-			pl.hlines(0,pl.xlim()[0],pl.xlim()[1])
+			pl.axhline(0,color='k')
 		else:
-			pl.hlines(solsysx,pl.xlim()[0],pl.xlim()[1])
+			pl.axhline(solsysx,color='k')
 		if deltay:
-			pl.vlines(0,pl.ylim()[0],pl.ylim()[1])
+			pl.axvline(0,color='k')
 		else:
-			pl.vlines(solsysy,pl.ylim()[0],pl.ylim()[1])
+			pl.axvline(solsysy,color='k')
 
-		return None
+		# pl.show()
 
 
 
