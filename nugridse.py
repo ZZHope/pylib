@@ -629,11 +629,14 @@ class se(DataPlot,Utils):
             print 'Mass range (' + str(j) + '):\t' + str(mass_tmp[2*i]) + ' - ' + str(mass_tmp[2*i+1]) 
             j += 1
         print '\n'
-        usr_zones = input('Please select which mass range you want to use. Select 0 for all zones. Otherwise give one zone or a list of zones separated by comma (e.g.: 1, 2, 4): ')
+        usr_zones = input('Please select which mass range you want to use. Select 0 for all zones. Otherwise give one zone or a list of zones separated by comma (e.g.: 1, 2, 4) or type \'skip\' if you want to do so: ')
 
         crich_dumb = crich
         if usr_zones == 0:
             print 'I continue w/ all zones then'
+        elif usr_zones == 'skip':
+            print 'Model skipped'
+            return None
         elif type(usr_zones) == int:   # only one zone selected
             tmp = int(usr_zones)-1
             crich = crich_dumb[2*tmp:2*tmp+2]
@@ -702,9 +705,11 @@ class se(DataPlot,Utils):
         ratiox_solsys = inut.isoratio_init(isotope_list[0:2])
         ratioy_solsys = inut.isoratio_init(isotope_list[2:4])
         if deltax:
-            ratiox = (ratiox / ratiox_solsys - 1.) * 1000.
+            for i in range(len(ratiox)):
+                ratiox[i] = (ratiox[i] / ratiox_solsys - 1.) * 1000.
         if deltay:
-            ratioy = (ratioy / ratioy_solsys - 1.) * 1000.
+            for i in range(len(ratioy)):
+                ratioy[i] = (ratioy[i] / ratioy_solsys - 1.) * 1000.
         
         # create massrange array if necessary
         if plt_massrange:
