@@ -491,7 +491,7 @@ class se(DataPlot,Utils):
         return tp_pos,co_return
 
 
-    def plot4iso_exp(self,isotope_list,shift=0,graintype=None,deltax=False,deltay=False,logx=False,logy=False,addiso=None,weighting=None,co_toggle='c',pl_title=None,errbar=True,plt_symb='o',plt_col='b',plt_sparse=10,iniabufile='iniab2.0E-02GN93.ppn'):
+    def plot4iso_exp(self,isotope_list,shift=0,graintype=None,deltax=False,deltay=False,logx=False,logy=False,addiso=None,weighting=None,co_toggle='c',pl_title=None,modlegend=None,errbar=True,plt_show=True,plt_symb='o',plt_col='b',plt_sparse=10,plt_massrange=False,iniabufile='iniab2.0E-02GN93.ppn'):
         '''
         This subroutine plots 4 isotope plots for explosive stars, assuming one model initialized in nugridse
         Description here on how it is done. It plots the model along w/ presolar grain data if wanted.
@@ -508,10 +508,13 @@ class se(DataPlot,Utils):
         - weighting:      None -> plot every profile separately, 'zone' -> average each zone
         - co_toggle:      Select 'c' for selecting zones with C/O >= 1, select 'o' for C/O <= 1
         - pl_title:       Plot title
+        - modlegend:      Legend for model, if None the script uses the folder the data are in as a title
         - errbar:         Do you want errorbars for presolar grain data? True or False
+        - plt_show:       Show the plot or not. Set to False if you're overprinting several models.
         - plt_symb:       Defines the symbol to plot the model data with
         - plt_col:        Defines the color of the plotted model symbol
         - plt_sparse:     Every so many datapoint is plotted for model data
+        - plt_massrange:  Plot mass of shell with first and last datapoint of each zone.
         - iniabufile:     File where the initial abundances are stored. Give absolute path or relative to USEEPP!
         '''
 
@@ -678,8 +681,9 @@ class se(DataPlot,Utils):
             isos_to_use = [array(isotope_profile_cweight)]
 
         # legend for model
-        modlegend = self.se.filename.split('/')
-        modlegend = modlegend[len(modlegend)-1]   # depth of folder
+        if modlegend == None:
+            modlegend = self.se.filename.split('/')
+            modlegend = modlegend[len(modlegend)-1]   # depth of folder
 
 
         # do the ratios and stuff
@@ -701,6 +705,12 @@ class se(DataPlot,Utils):
             ratiox = (ratiox / ratiox_solsys - 1.) * 1000.
         if deltay:
             ratioy = (ratioy / ratioy_solsys - 1.) * 1000.
+        
+        # create massrange array if necessary
+        if plt_massrange:
+            plt_massrange = []
+            for i in range(len(ratiox)):
+                plt_massrange.append([ratiox[i][0], ratioy[i][0], mass[crich[2*i]], ratiox[i][len(ratiox[i])-1], ratioy[i][len(ratioy[i])-1], mass[crich[2*i+1]]])   # start: x-ratio, y-ratio, mass label, then same for stop
 
         ### get graindata ###
         if graintype == None:
@@ -709,7 +719,7 @@ class se(DataPlot,Utils):
             graindata = graindata_handler(isotope_list[0:2],isosy=isotope_list[2:4],graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
 
         ### send to data_plot.py -> plot_ratios ###
-        DataPlot.plot_ratios(self,ratiox,ratioy,solsysx=ratiox_solsys,solsysy=ratioy_solsys,graindata=graindata,m_co=None,misosxname=isotope_list[0:2],misosyname=isotope_list[2:4],deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=pl_title,legend=True,iniabufile=iniabufile,modlegend=modlegend,calling_routine='4iso_exp',plt_symb=plt_symb,plt_col=plt_col,plt_sparse=plt_sparse,errbar=errbar)
+        DataPlot.plot_ratios(self,ratiox,ratioy,solsysx=ratiox_solsys,solsysy=ratioy_solsys,graindata=graindata,m_co=None,misosxname=isotope_list[0:2],misosyname=isotope_list[2:4],deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=pl_title,legend=True,iniabufile=iniabufile,modlegend=modlegend,calling_routine='4iso_exp',plt_symb=plt_symb,plt_col=plt_col,plt_sparse=plt_sparse,plt_show=plt_show,plt_mrng=plt_massrange,errbar=errbar)
 
 
     def plot4(self,num):
