@@ -748,11 +748,11 @@ class DataPlot():
 		if deltax:
 			pl.axhline(0,color='k')
 		else:
-			pl.axhline(solsysx,color='k')
+			pl.axhline(solsysy,color='k')
 		if deltay:
 			pl.axvline(0,color='k')
 		else:
-			pl.axvline(solsysy,color='k')
+			pl.axvline(solsysx,color='k')
 
 		if plt_show:
 			pl.show()
