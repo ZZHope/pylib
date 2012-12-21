@@ -1783,10 +1783,9 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
                      ['Silicates','1','2','3','4','U'],
                      ['Graphites','LD','HD','U'],
                      ['Misc','Si3N4'],
-		     ['private','M','X','Y','Z','AB','N','U','1','2','3','4','LD','HD','Si3N4']]
-    if type(graintype_in) == str:
-        if graintype_in.lower() == 'all':
-            graintype = allgraintypes[0:5]   # exclude private
+                     ['private','M','X','Y','Z','AB','N','U','1','2','3','4','LD','HD','Si3N4']]
+    if graintype_in == 'all':
+        graintype = allgraintypes[0:5]   # exclude private
     elif type(graintype_in) == str:   # only one grain input
         graintype = list()
         for i in range(len(allgraintypes)):
@@ -1821,15 +1820,15 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
     graintype_list = list()   # as graindata
     for grain_i in range(len(graintype)):
         # file
-        if graintype[grain_i][0] == 'sic':
+        if graintype[grain_i][0].lower() == 'sic':
             fname = file_sic
-        elif graintype[grain_i][0] == 'oxides' or graintype[grain_i][0] == 'silicates':
+        elif graintype[grain_i][0].lower() == 'oxides' or graintype[grain_i][0] == 'silicates':
             fname = file_oxsi
-        elif graintype[grain_i][0] == 'graphites':
+        elif graintype[grain_i][0].lower() == 'graphites':
             fname = file_graphite
-        elif graintype[grain_i][0] == 'misc':
+        elif graintype[grain_i][0].lower() == 'misc':
             fname = file_misc
-	elif graintype[grain_i][0] == 'private':
+	elif graintype[grain_i][0].lower() == 'private':
 	    fname = file_private
         else:
             print 'Problem w/ database filename'
@@ -1988,7 +1987,7 @@ def _graindata_reader(isos,isos2,gclass,gtype,deltax,deltay,fname,iniabufile):
                     try:
                         cellvalue = float(data[i][index]) # in case of database error, give it back
                         cellvalueerr = data[i][index+1].replace(' ','')
-                        if cellvalueerr == '':
+                        if cellvalueerr == '' or cellvalue == 0.:
                             cellvalueerr = 0.
                         else:
                             cellvalueerr = float(data[i][index+1])/cellvalue   # relative uncertainty
@@ -2029,7 +2028,7 @@ def _graindata_reader(isos,isos2,gclass,gtype,deltax,deltay,fname,iniabufile):
                         try:
                             cellvalue = float(data[i][index2]) # in case of database error, give it back
                             cellvalueerr = data[i][index2+1].replace(' ','')
-                            if cellvalueerr == '':
+                            if cellvalueerr == '' or cellvalue == 0.:
                                 cellvalueerr = 0.
                             else:
                                 cellvalueerr = float(data[i][index2+1])/cellvalue   # relative uncertainty

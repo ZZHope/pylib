@@ -620,7 +620,7 @@ class DataPlot():
 			# grains
 			for i in range(len(gtypelist)):
 				# determine plot symbols and color
-				if gtypelist[i][0] == 'sic':
+				if gtypelist[i][0].lower() == 'sic':
 					msymb = 'o'
 					if gtypelist[i][1] == 'M':
 						mcol = '0.4'
@@ -636,7 +636,7 @@ class DataPlot():
 						mcol = 'm'
 					else:
 						mcol = '0.7'
-				elif gtypelist[i][0] == 'oxides':
+				elif gtypelist[i][0].lower() == 'oxides':
 					msymb = '^'
 					if gtypelist[i][1] == '1':
 						mcol = '0.4'
@@ -648,7 +648,7 @@ class DataPlot():
 						mcol = 'r'
 					else:
 						mcol = '0.7'
-				elif gtypelist[i][0] == 'silicates':
+				elif gtypelist[i][0].lower() == 'silicates':
 					msymb = 'v'
 					if gtypelist[i][1] == '1':
 						mcol = '0.4'
@@ -660,7 +660,7 @@ class DataPlot():
 						mcol = 'r'
 					else:
 						mcol = '0.7'
-				elif gtypelist[i][0] == 'graphites':
+				elif gtypelist[i][0].lower() == 'graphites':
 					msymb = 's'
 					if gtypelist[i][1] == 'HD':
 						mcol = '0.4'
@@ -668,7 +668,7 @@ class DataPlot():
 						mcol = 'b'
 					else:
 						mcol = '0.7'
-				elif gtypelist[i][0] == 'private':
+				elif gtypelist[i][0].lower() == 'private':
 					msymb = 'o'
 					mcol = 'k'
 				else:
