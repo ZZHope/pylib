@@ -166,6 +166,42 @@ class se(DataPlot,Utils):
         	sparse - implements a sparsity factor on the fetched data
         '''
         return self.se.get(cycle_list,dataitem,isotope,sparse)
+
+
+    def get_decayed(self, cycle_list, dataitem=None, isotope=None, sparse=1):
+        '''
+        This function gives back the fully decayed isotope. By default, it wants to
+        beta-decays every isotope, however, then checks if this is okay or not. If not
+        it actually does goes into a database (see routine below) to do the proper decay.
+        This database might not be complete, so pay attention to the chart of the 
+        nuclides.
+        
+        Standard input is as in regular get function:
+        "There are three ways to call this function
+            option 1
+            get(dataitem)
+                fetches the dataitem for all cycles, interperates the argument 
+                cycle list, as Data Item
+           option 2
+           get(cycle_list, dataitem)
+                fetches the dataitem from the list of cycles. If Dataitem is an 
+                isotope, it then returns self.get(cycle_list,'iso_massf',dataitem)
+           option 3
+            get(cycle_list, 'iso_massf', isotope)
+               isotope Must be in the form 'H-2'
+                fetches the isotope data for a list of cycles
+         Additional Input:
+        	sparse - implements a sparsity factor on the fetched data"
+
+         Additional features are:
+         
+         IN PROGRESS: CONTACT RETO: trappitsch@uchicago.edu
+            - 
+            - 
+
+        '''
+        return None
+
         
     def plot_prof_1(self,mod,species,xlim1,xlim2,ylim1,ylim2,symbol=None):
 
@@ -505,8 +541,8 @@ class se(DataPlot,Utils):
         - deltax, deltay: Plot delta values on  x and y axes?
         - logx, logy:     Logarithmic axes?
         - addiso:         Add an isotope. Format ['C-12', 0.5 ,'N-12'] to add N12 to C12 and multiply it w/ a factor of 0.5. Multiple isotopes can be added, the factor is optional and does not have to be given. Isotopes can be added to other isotopes as well, i.e., [['C-12','N-12'],['C-13','N-13']]
-        - weighting:      None -> plot every profile separately, 'zone' -> average each zone
-        - co_toggle:      Select 'c' for selecting zones with C/O >= 1, select 'o' for C/O <= 1
+        - weighting:      None -> plot every profile separately, 'zone' -> average each zone, 'all' -> average all selected zones
+        - co_toggle:      Select 'c' for selecting zones with C/O >= 1, select 'o' for C/O <= 1, 'a' takes the whole star
         - pl_title:       Plot title
         - modlegend:      Legend for model, if None the script uses the folder the data are in as a title
         - errbar:         Do you want errorbars for presolar grain data? True or False
@@ -578,30 +614,35 @@ class se(DataPlot,Utils):
         # search for carbon / oxygen rich layers
         crich = []   # alternating start stop values. if odd number, then surface is c-rich, but add stop number
         dumb = True
-        for i in range(len(co_ratio)):
-            if co_toggle == 'c':   # carbon rich
-                if dumb:
-                    if co_ratio[i] >= 1:
-                        crich.append(i)
-                        dumb = False
-                        continue
-                else: 
-                    if co_ratio[i] < 1:
-                        crich.append(i)
-                        dumb = True
-            elif co_toggle == 'o':   # oxygen richt
-                if dumb:
-                    if co_ratio[i] <= 1:
-                        crich.append(i)
-                        dumb = False
-                        continue
-                else: 
-                    if co_ratio[i] > 1:
-                        crich.append(i)
-                        dumb = True
-            else:
-                print 'Select your enrichment!'
-                return None
+        if co_toggle != 'a':
+            for i in range(len(co_ratio)):
+                if co_toggle == 'c':   # carbon rich
+                    if dumb:
+                        if co_ratio[i] >= 1:
+                            crich.append(i)
+                            dumb = False
+                            continue
+                    else: 
+                        if co_ratio[i] < 1:
+                            crich.append(i)
+                            dumb = True
+                elif co_toggle == 'o':   # oxygen richt
+                    if dumb:
+                        if co_ratio[i] <= 1:
+                            crich.append(i)
+                            dumb = False
+                            continue
+                    else: 
+                        if co_ratio[i] > 1:
+                            crich.append(i)
+                            dumb = True
+                else:
+                    print 'Select your enrichment!'
+                    return None
+        else:   # take whole star
+            print 'Using all profiles to mix'
+            crich.append(0)
+            crich.append(len(co_toggle))
 
         if len(crich)%2 == 1:
             crich.append(len(co_ratio)-1)
@@ -615,37 +656,35 @@ class se(DataPlot,Utils):
 
         
         # Ask user which zones to use
-        if co_toggle == 'c':
-            print '\n\nI have found the following carbon rich zones:\n'
-        elif co_toggle == 'o':
-            print '\n\nI have found the following oxygen rich zones:\n'
-        
-        mass_tmp = zeros((len(crich)))
-        for i in range(len(crich)):
-            mass_tmp[i] = mass[crich[i]]
+        if co_toggle != 'a':
+            if co_toggle == 'c':
+                print '\n\nI have found the following carbon rich zones:\n'
+            elif co_toggle == 'o':
+                print '\n\nI have found the following oxygen rich zones:\n'
+            
+            mass_tmp = zeros((len(crich)))
+            for i in range(len(crich)):
+                mass_tmp[i] = mass[crich[i]]
 
-        j = 1
-        for i in range(len(crich)/2):
-            print 'Mass range (' + str(j) + '):\t' + str(mass_tmp[2*i]) + ' - ' + str(mass_tmp[2*i+1]) 
-            j += 1
-        print '\n'
-        usr_zones = input('Please select which mass range you want to use. Select 0 for all zones. Otherwise give one zone or a list of zones separated by comma (e.g.: 1, 2, 4) or type \'skip\' if you want to do so: ')
+            j = 1
+            for i in range(len(crich)/2):
+                print 'Mass range (' + str(j) + '):\t' + str(mass_tmp[2*i]) + ' - ' + str(mass_tmp[2*i+1]) 
+                j += 1
+            print '\n'
+            usr_zones = input('Please select which mass range you want to use. Select 0 for all zones. Otherwise give one zone or a list of zones separated by comma (e.g.: 1, 2, 4): ')
 
-        crich_dumb = crich
-        if usr_zones == 0:
-            print 'I continue w/ all zones then'
-        elif usr_zones == 'skip':
-            print 'Model skipped'
-            return None
-        elif type(usr_zones) == int:   # only one zone selected
-            tmp = int(usr_zones)-1
-            crich = crich_dumb[2*tmp:2*tmp+2]
-        else:
-            crich = []
-            for i in range(len(usr_zones)):
-                tmp = int(usr_zones[i])-1
-                crich.append(crich_dumb[2*tmp])
-                crich.append(crich_dumb[2*tmp + 1])
+            crich_dumb = crich
+            if usr_zones == 0:
+                print 'I continue w/ all zones then'
+            elif type(usr_zones) == int:   # only one zone selected
+                tmp = int(usr_zones)-1
+                crich = crich_dumb[2*tmp:2*tmp+2]
+            else:
+                crich = []
+                for i in range(len(usr_zones)):
+                    tmp = int(usr_zones[i])-1
+                    crich.append(crich_dumb[2*tmp])
+                    crich.append(crich_dumb[2*tmp + 1])
 
         # weight profiles according to weighting factor using the selected crich
         # define isos_to_use variable for later
@@ -683,11 +722,26 @@ class se(DataPlot,Utils):
                     isotope_profile_cweight[i][j] /= mass_tot[i]
             isos_to_use = [array(isotope_profile_cweight)]
 
+        elif weighting.lower() == 'all':   # average all zones by mass
+            isos_tmp = zeros((1, len(isotope_profile[0])))
+            for i in range(len(isotope_profile)-1):   # neglect surface effects
+                for j in range(len(isos_tmp[0])):
+                    mass_shell = mass[i+1] - mass[i]
+                    isos_tmp[0][j] += isotope_profile[i][j]*mass_shell
+            # weight all
+            isos_tmp /= sum(mass)
+            isos_to_use = [isos_tmp]
+
         # legend for model
         if modlegend == None:
             modlegend = self.se.filename.split('/')
             modlegend = modlegend[len(modlegend)-1]   # depth of folder
 
+        # change to isotope numbers from mass!
+        for i in range(len(isos_to_use)):
+            for j in range(len(isos_to_use[i])):
+                for k in range(len(isos_to_use[i][j])):
+                    isos_to_use[i][j][k] /= float(isotope_list[k].split('-')[1])
 
         # do the ratios and stuff
         inut = iniabu(iniabufile)
@@ -705,11 +759,9 @@ class se(DataPlot,Utils):
         ratiox_solsys = inut.isoratio_init(isotope_list[0:2])
         ratioy_solsys = inut.isoratio_init(isotope_list[2:4])
         if deltax:
-            for i in range(len(ratiox)):
-                ratiox[i] = (ratiox[i] / ratiox_solsys - 1.) * 1000.
+            ratiox = (ratiox / ratiox_solsys - 1.) * 1000.
         if deltay:
-            for i in range(len(ratioy)):
-                ratioy[i] = (ratioy[i] / ratioy_solsys - 1.) * 1000.
+            ratioy = (ratioy / ratioy_solsys - 1.) * 1000.
         
         # create massrange array if necessary
         if plt_massrange:

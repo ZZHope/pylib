@@ -399,6 +399,13 @@ class Utils():
 		self.decay_idp=decay_index_pointer
 		self.idp_to_stables_in_isostoplot=ind_tmp
 
+	def is_stable(iso):
+		'''
+		This routine accepts input formatted like 'He-3' and checks with stable_el list if
+		occurs in there. If it does, the routine returns True, otherwise False
+		'''
+		return False
+
 class iniabu(Utils):
 	'''
 	This class in the utils package reads an abundance
@@ -1783,9 +1790,10 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
                      ['Silicates','1','2','3','4','U'],
                      ['Graphites','LD','HD','U'],
                      ['Misc','Si3N4'],
-                     ['private','M','X','Y','Z','AB','N','U','1','2','3','4','LD','HD','Si3N4']]
-    if graintype_in == 'all':
-        graintype = allgraintypes[0:5]   # exclude private
+		     ['private','M','X','Y','Z','AB','N','U','1','2','3','4','LD','HD','Si3N4']]
+    if type(graintype_in) == str:
+        if graintype_in.lower() == 'all':
+            graintype = allgraintypes[0:5]   # exclude private
     elif type(graintype_in) == str:   # only one grain input
         graintype = list()
         for i in range(len(allgraintypes)):
@@ -1820,15 +1828,15 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
     graintype_list = list()   # as graindata
     for grain_i in range(len(graintype)):
         # file
-        if graintype[grain_i][0].lower() == 'sic':
+        if graintype[grain_i][0] == 'sic':
             fname = file_sic
-        elif graintype[grain_i][0].lower() == 'oxides' or graintype[grain_i][0] == 'silicates':
+        elif graintype[grain_i][0] == 'oxides' or graintype[grain_i][0] == 'silicates':
             fname = file_oxsi
-        elif graintype[grain_i][0].lower() == 'graphites':
+        elif graintype[grain_i][0] == 'graphites':
             fname = file_graphite
-        elif graintype[grain_i][0].lower() == 'misc':
+        elif graintype[grain_i][0] == 'misc':
             fname = file_misc
-	elif graintype[grain_i][0].lower() == 'private':
+	elif graintype[grain_i][0] == 'private':
 	    fname = file_private
         else:
             print 'Problem w/ database filename'
@@ -1987,7 +1995,7 @@ def _graindata_reader(isos,isos2,gclass,gtype,deltax,deltay,fname,iniabufile):
                     try:
                         cellvalue = float(data[i][index]) # in case of database error, give it back
                         cellvalueerr = data[i][index+1].replace(' ','')
-                        if cellvalueerr == '' or cellvalue == 0.:
+                        if cellvalueerr == '':
                             cellvalueerr = 0.
                         else:
                             cellvalueerr = float(data[i][index+1])/cellvalue   # relative uncertainty
@@ -2028,7 +2036,7 @@ def _graindata_reader(isos,isos2,gclass,gtype,deltax,deltay,fname,iniabufile):
                         try:
                             cellvalue = float(data[i][index2]) # in case of database error, give it back
                             cellvalueerr = data[i][index2+1].replace(' ','')
-                            if cellvalueerr == '' or cellvalue == 0.:
+                            if cellvalueerr == '':
                                 cellvalueerr = 0.
                             else:
                                 cellvalueerr = float(data[i][index2+1])/cellvalue   # relative uncertainty
