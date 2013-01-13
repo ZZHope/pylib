@@ -668,6 +668,9 @@ class DataPlot():
 						mcol = 'b'
 					else:
 						mcol = '0.7'
+				elif gtypelist[i][0].lower() == 'idp':
+					msymb = '>'
+					mcol = '0.4'
 				elif gtypelist[i][0].lower() == 'private':
 					msymb = 'o'
 					mcol = 'k'
@@ -694,12 +697,19 @@ class DataPlot():
 						gtypelist[i][jt] = 'low density'
 					elif gtypelist[i][jt] == 'HD':
 						gtypelist[i][jt] = 'high density'
+					elif gtypelist[i][jt] == 'idp':
+						gtypelist[i][jt] = 'IDP'
 				# now plot the grain data!
+				# IDP grain labels properly
+				if gtypelist[i][0] == 'IDP':
+					grainlabelclean = 'IDP'
+				else:
+					grainlabelclean = gtypelist[i][0] + ' ' + gtypelist[i][1]
 				if errbar:
 					pl.errorbar(gdatax[i],gdatay[i],xerr=gdataxerr[i],yerr=gdatayerr[i],marker=msymb,c=mcol,linestyle='')
-					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=gtypelist[i][0] + ' ' + gtypelist[i][1])
+					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=grainlabelclean)
 				else:
-					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=gtypelist[i][0] + ' ' + gtypelist[i][1])
+					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=grainlabelclean)
 			# plot model:
 			if m_co != None:
 				pl.plot(mxdata_orich,mydata_orich,'--',c='k',label='C/O<1',lw=3)
@@ -708,7 +718,6 @@ class DataPlot():
 				if modlegend != None:
 					if calling_routine == 'general':
 						pl.plot(misosx,misosy,'o--',label=modlegend)
-						print misosx, misosy
 					elif calling_routine == '4iso_exp':
 						plt_symb = plt_symb + '-'
 						for it in range(len(misosx)):

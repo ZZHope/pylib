@@ -1748,6 +1748,8 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
                 -- U >> unknown
             - Misc
                 -- Si3N4 >> silicon nitride grains
+            - IDP
+                -- Interplanetary dust particles -> Pepin data only at the moment (no official file) -> Nova
 	    - Private
 	        -- private.txt -> database file in validation folder is used
         deltax=True:    do you want delta values or not (on x-axis)? default is True (otherwise choose False). X axis is the axis of choice if no second isotope is chosen
@@ -1783,6 +1785,7 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
     file_graphite = validationpath + 'graphite-All.txt'
     file_oxsi     = validationpath + 'oxide-silicate-all.txt'
     file_misc     = validationpath + 'miscellaneous-SiN.txt'
+    file_idp      = validationpath + 'idp.txt'
     file_private  = validationpath + 'private.txt'   # private database file - or compilation of grains (manual filtering...)
     # process input
     allgraintypes = [['SiC','M','X','Y','Z','AB','N','U'],
@@ -1790,15 +1793,16 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
                      ['Silicates','1','2','3','4','U'],
                      ['Graphites','LD','HD','U'],
                      ['Misc','Si3N4'],
+                     ['IDP', 'IDP'],
 		     ['private','M','X','Y','Z','AB','N','U','1','2','3','4','LD','HD','Si3N4']]
     if type(graintype_in) == str:
         if graintype_in.lower() == 'all':
             graintype = allgraintypes[0:5]   # exclude private
-    elif type(graintype_in) == str:   # only one grain input
-        graintype = list()
-        for i in range(len(allgraintypes)):
-            if allgraintypes[i][0].lower() == graintype_in.lower():
-                graintype.append(allgraintypes[i])
+        else:
+           graintype = list()
+           for i in range(len(allgraintypes)):
+               if allgraintypes[i][0].lower() == graintype_in.lower():
+                   graintype.append(allgraintypes[i])
     elif type(graintype_in) == list and type(graintype_in[0]) == str:
         graintype = list()
         for i in range(len(graintype_in)):
@@ -1836,6 +1840,8 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
             fname = file_graphite
         elif graintype[grain_i][0] == 'misc':
             fname = file_misc
+        elif graintype[grain_i][0].lower() == 'idp':
+            fname = file_idp
 	elif graintype[grain_i][0] == 'private':
 	    fname = file_private
         else:
