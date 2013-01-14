@@ -615,7 +615,7 @@ class DataPlot():
 			gdatay    = graindata[3]
 			gdatayerr = graindata[4]
 
-			### PLOTS ### 
+			### PLOTS ###
 
 			# grains
 			for i in range(len(gtypelist)):
@@ -2426,8 +2426,11 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 	elif which_flux == 1:
 		print 'chart for energy fluxes'
 		line_to_read = 10
-	elif which_flux > 1:
-		print "you have only option 0 or 1, not larger than 1"
+	elif which_flux == 2:
+		print 'chart for timescales'
+		line_to_read = 11
+	elif which_flux > 2:
+		print "you have only option 0, 1 or 2, not larger than 2"
 
         single_line = []
         for i in range(len(lines)):
@@ -2504,6 +2507,9 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
         max_flux = max(flux_log10)
 	ind_max_flux = flux_log10.index(max_flux)
 	max_flux_small = max(flux_log10_small)
+        min_flux = min(flux_log10)
+	ind_min_flux = flux_log10.index(min_flux)
+	min_flux_small = min(flux_log10_small)
 
   	#nzmax = int(max(max(coord_y_1),max(coord_y_2),max(coord_y_3)))+1
   	#nnmax = int(max(max(coord_x_1),max(coord_x_2),max(coord_x_3)))+1
@@ -2545,7 +2551,10 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
                         coord_y_out[i] = coord_y_3_small[i]
     			nzycheck[coord_x_out[i],coord_y_out[i],0] = 1
     			nzycheck[coord_x_out[i],coord_y_out[i],1] = flux_log10_small[i]
-    		if flux_log10_small[i]>max_flux_small-prange:
+    		if which_flux == None or which_flux < 2 and flux_log10_small[i]>max_flux_small-prange:
+      			nzycheck[coord_x_1_small[i],coord_y_1_small[i],2] = 1
+      			nzycheck[coord_x_out[i],coord_y_out[i],2] = 1
+      		elif which_flux == 2 and flux_log10_small[i]<min_flux_small+prange:
       			nzycheck[coord_x_1_small[i],coord_y_1_small[i],2] = 1
       			nzycheck[coord_x_out[i],coord_y_out[i],2] = 1
 
@@ -2589,7 +2598,10 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 	# color map choice for abundances
 	cmapa = cm.jet
 	# color map choice for arrows
-	cmapr = cm.autumn
+	if which_flux == None or which_flux < 2:
+	    cmapr = cm.autumn
+	elif  which_flux == 2:
+	    cmapr = cm.autumn_r
 	# if a value is below the lower limit its set to white
 	cmapa.set_under(color='w')
 	cmapr.set_under(color='w')
@@ -2630,11 +2642,18 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 
  	apatches = []
   	acolor = []
-  	m = 0.8/prange
-  	vmax=np.ceil(max(flux_log10_small))
-  	vmin=max(flux_log10_small)-prange
-  	b=-vmin*m+0.1
-  	normr = colors.Normalize(vmin=vmin,vmax=vmax)
+  	m = 0.8/prange#0.8/prange
+  	if which_flux == None or which_flux < 2:
+  	    vmax=np.ceil(max(flux_log10_small))
+  	    vmin=max(flux_log10_small)-prange
+  	    b=-vmin*m+0.1
+  	elif which_flux == 2:
+  	    vmin=min(flux_log10_small)
+  	    vmax=np.ceil(min(flux_log10_small)+prange)
+  	    b=vmax*m+0.1
+  	if which_flux == None or which_flux < 3:
+  	    normr = colors.Normalize(vmin=vmin,vmax=vmax)
+  	    print 'vmin and vmax =',vmin,vmax
   	ymax=0.
   	xmax=0.
 
@@ -2644,17 +2663,29 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
     		dx = coord_x_out[i]-coord_x_1_small[i]
     		dy = coord_y_out[i]-coord_y_1_small[i]
                 if plot_type == 0:
-    			if flux_log10_small[i]>=vmin:
-      				arrowwidth = flux_log10_small[i]*m+b
-      				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
-     				if xmax<x:
-        				xmax=x
-      				if ymax<y:
-        				ymax=y
-      				acol = flux_log10_small[i]
-      				apatches.append(arrow)
-      				acolor.append(acol)
-    		elif plot_type == 1:
+                    if which_flux == None or which_flux < 2:
+    			    if flux_log10_small[i]>=vmin:
+      				    arrowwidth = flux_log10_small[i]*m+b
+      				    arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     				    if xmax<x:
+        			    	xmax=x
+      				    if ymax<y:
+        			    	ymax=y
+      				    acol = flux_log10_small[i]
+      				    apatches.append(arrow)
+      				    acolor.append(acol)
+                    elif which_flux == 2:
+    			    if flux_log10_small[i]<=vmax:
+      				    arrowwidth = -flux_log10_small[i]*m+b
+      				    arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     				    if xmax<x:
+        			    	xmax=x
+      				    if ymax<y:
+        			    	ymax=y
+      				    acol = flux_log10_small[i]
+      				    apatches.append(arrow)
+      				    acolor.append(acol)
+    		elif plot_type == 1 and which_flux != 2:
 			if x==I_am_the_target[0] and y==I_am_the_target[1] and flux_log10_small[i]>=vmin:
       				arrowwidth = flux_log10_small[i]*m+b
       				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
@@ -2667,6 +2698,27 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
       				acolor.append(acol)
 			if x+dx==I_am_the_target[0] and y+dy==I_am_the_target[1] and flux_log10_small[i]>=vmin:
       				arrowwidth = flux_log10_small[i]*m+b
+      				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     				if xmax<x:
+        				xmax=x
+      				if ymax<y:
+        				ymax=y
+      				acol = flux_log10_small[i]
+      				apatches.append(arrow)
+      				acolor.append(acol)
+    		elif plot_type == 1 and which_flux == 2:
+			if x==I_am_the_target[0] and y==I_am_the_target[1] and flux_log10_small[i]<=vmax:
+      				arrowwidth = -flux_log10_small[i]*m+b
+      				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
+     				if xmax<x:
+        				xmax=x
+      				if ymax<y:
+        				ymax=y
+      				acol = flux_log10_small[i]
+      				apatches.append(arrow)
+      				acolor.append(acol)
+			if x+dx==I_am_the_target[0] and y+dy==I_am_the_target[1] and flux_log10_small[i]<=vmax:
+      				arrowwidth = -flux_log10_small[i]*m+b
       				arrow = Arrow(x,y,dx,dy, width=arrowwidth)
      				if xmax<x:
         				xmax=x
@@ -2743,7 +2795,13 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
   	cb = plt.colorbar(a)
 
   	# colorbar label
-  	cb.set_label('log$_{10}$(f)')
+  	if which_flux == None or which_flux == 0:
+  	    cb.set_label('log$_{10}$(f)')
+  	elif which_flux ==1:
+  	    cb.set_label('log$_{10}$(E)')
+  	elif which_flux ==2:
+  	    cb.set_label('log$_{10}$(timescale)')
+
 
   	# plot file name
   	graphname = 'flow-chart.'+format
@@ -2800,13 +2858,22 @@ def flux_chart(file_name,plotaxis,plot_type,which_flux=None,I_am_the_target=None
 		max_flux_label="max flux = "+str('{0:.4f}'.format(max_flux))
 	elif which_flux == 1:
 		max_flux_label="max energy flux = "+str('{0:.4f}'.format(max_flux))
+	elif which_flux == 2:
+		min_flux_label="min timescale [s] = "+str('{0:.4f}'.format(min_flux))
 	if print_max_flux_in_plot:
-		ax.text(plotaxis[1]-1.8,plotaxis[2]+0.1,max_flux_label,fontsize=10.)
+	    if which_flux == None or which_flux < 2:
+		    ax.text(plotaxis[1]-1.8,plotaxis[2]+0.1,max_flux_label,fontsize=10.)
+	    elif which_flux == 2:
+		    ax.text(plotaxis[1]-1.8,plotaxis[2]+0.1,min_flux_label,fontsize=10.)
+
 
 
 	fig.savefig(graphname)
 	print graphname,'is done'
-	print max_flux_label,'for reaction =',ind_max_flux+1
+	if which_flux == None or which_flux < 2:
+	    print max_flux_label,'for reaction =',ind_max_flux+1
+	elif which_flux == 2:
+	    print min_flux_label,'for reaction =',ind_min_flux+1
 
 	plt.show()
 
