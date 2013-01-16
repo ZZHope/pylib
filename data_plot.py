@@ -2257,10 +2257,28 @@ class DataPlot():
                     pl.grid()
 		if show:
                     pl.show()
+
+                if amass_range != None:
+                    minimum_mass = amass_range[0]
+                    maximum_mass = amass_range[1]
+
+                elif mass_range != None:
+                    minimum_mass = mass_range[0]
+                    maximum_mass = mass_range[1]
+
+                else:
+                    minimum_mass = 0
+                    maximum_mass = 200
+                    
                 pl.semilogy([amass_range[0]-.5,amass_range[1]+.5],[1,1],'k-')
 		ax=pl.axes()
                 labelsx=[]
-                iii = amass_range[0]%5
+                if (maximum_mass-minimum_mass) > 100:
+                    delta_labelsx = 10
+                else:
+                    delta_labelsx = 5
+
+                iii = amass_range[0]%delta_labelsx
                 if iii == 0:
                     labelsx.append(str(amass_range[0]))
                 else:
@@ -2277,13 +2295,16 @@ class DataPlot():
                         labelsx.append(' ')
                         iii = iii+1
 
-                xticks = arange(amass_range[0],amass_range[1],1)
+                if delta_labelsx == 5:
+                    xticks = arange(amass_range[0],amass_range[1],1)
+                    pl.xticks(xticks,labelsx)
+                else:
+                    pl.xticks()
+
 ##!!FOR!!###### print 'LEN LABELS= ', len(labelsx)
 ##DEBUGGING####
 ####!!!######## for bbb in range (len(labelsx)):
 ###############     print labelsx[bbb]
-
-                pl.xticks(xticks,labelsx)
 		return
 
 	def plotprofMulti(self,ini,end,delta,what_specie,xlim1,xlim2,ylim1,ylim2,symbol=None):
