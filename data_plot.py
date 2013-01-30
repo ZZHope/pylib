@@ -632,6 +632,10 @@ class DataPlot():
 						mcol = 'r'
 					elif gtypelist[i][1] == 'AB':
 						mcol = 'c'
+					elif gtypelist[i][1] == 'C':
+						mcol = 'y'
+					elif gtypelist[i][1] == 'U/C':
+						mcol = '0.6'
 					elif gtypelist[i][1] == 'N':
 						mcol = 'm'
 					else:
