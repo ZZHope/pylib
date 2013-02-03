@@ -473,13 +473,13 @@ class DataPlot():
 			pl.xlim(limits[0],limits[1])
 			pl.ylim(limits[2],limits[3])
 
-	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_sparse=0,plt_mrng=False,calling_routine='all'):
+	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10,plt_modlw=3,plt_sparse=0,plt_mrng=False,calling_routine='all'):
 		'''
 		Method for plotting ratio data from model output as well as grain data.
 		Important: You have to give some input to the routine!
 		RT, October 2012
 		graindata:	presolar grain data -> private is for a private.txt database file, same structure as other files required!
-		misox:		model x data
+		misox:		model x data, set None for grain plot only
 		misoy:		model y data
       solsysx: 	solar system ratio of x-axis - only necessary if deltax=True, the two solsysx,y variable are necessary to avoid importing utils into DataPlot class. If you import it, mesa.py does not work anymore
       solsysy: 	solar system ratio of y-axis - only necessary if deltay=True
@@ -494,6 +494,8 @@ class DataPlot():
 		plt_show:	Show the plot or not, default is of course
 		modlegend:	legend for model data
 		plt_symb:	symbold for plotting model data
+		plt_modms:	markersize for models
+		plt_modlw:	linewidht for models
 		plt_col:		color for plotting model data
 		plt_sparse:	sparse function for model data
 		plt_mrng:   Plot mass range for massive stars (used by plot4iso_exp routine in nugridse)
@@ -542,6 +544,7 @@ class DataPlot():
 		# plotting ifs, depending on available data
 		if graindata==None:
 			if m_co==None:
+				#markersize, and style stuff
 				# plot
 				if modlegend == None:
 					pl.plot(misosx,misosy,'o--')
@@ -715,25 +718,26 @@ class DataPlot():
 				else:
 					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=grainlabelclean)
 			# plot model:
-			if m_co != None:
-				pl.plot(mxdata_orich,mydata_orich,'--',c='k',label='C/O<1',lw=3)
-				pl.plot(mxdata_crich,mydata_crich,'*-',c='k',label='C/O>1',lw=3,markersize=11,markeredgecolor='k',markerfacecolor='y')
-			else:
+			if m_co != None and misox!=None:
+				# actual plotting
+				pl.plot(mxdata_orich,mydata_orich,'--',c='k',label='C/O<1',lw=plt_modlw)
+				pl.plot(mxdata_crich,mydata_crich,'*-',c='k',label='C/O>1',lw=plt_modlw,markersize=plt_modms,markeredgecolor='k',markerfacecolor='y')
+			elif misox != None:
 				if modlegend != None:
 					if calling_routine == 'general':
-						pl.plot(misosx,misosy,'o--',label=modlegend)
+						pl.plot(misosx,misosy,'o--',label=modlegend,markersize=plt_modms,lw=plt_modlw)
 					elif calling_routine == '4iso_exp':
 						plt_symb = plt_symb + '-'
 						for it in range(len(misosx)):
 							if it == 0:
-								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10,label=modlegend)
+								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=plt_modms,lw=plt_modlw,label=modlegend)
 							else:
-								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10)
+								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=plt_modms,lw=plt_modlw)
 							if plt_mrng != False:
 								pl.text(plt_mrng[it][0],plt_mrng[it][1],str(plt_mrng[it][2]),ha='right',va='bottom',color=plt_col)   # start point
 								pl.text(plt_mrng[it][3],plt_mrng[it][4],str(plt_mrng[it][5]),ha='right',va='bottom',color=plt_col)   # end   point
 				else:
-					pl.plot(misosx,misosy,'o--')
+					pl.plot(misosx,misosy,'o--',markersize=plt_modms,lw=plt_modlw)
 			# axis
 			if logx and logy:
 				pl.loglog()
