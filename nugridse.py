@@ -23,11 +23,11 @@
    want only every 10th; example:k
    3 : pt =mp.se('.','M1.65Z0.020.00') 
 
-      note: initialising an instance with 120 files with 1000 packets
+      note: initializing an instance with 120 files with 1000 packets
       each may take 3-4 minutes, which is too long for many people;
-      therefore the initialisation module will generate and write an
-      index file; if such an index file is present initialisation will
-      take less then a second; the initialisation module will
+      therefore the initialization module will generate and write an
+      index file; if such an index file is present initialization will
+      take less then a second; the initialization module will
       automatically detect various situations in which the index file
       needs to be rewritten, for example if there is a new file.
 
@@ -42,15 +42,139 @@
       pt.se.hattrs
       pt.se.dcols
 
-   Available cylces can be viewed with
+   Available cycles can be viewed with
       pt.se.cycles
 
-   You can get any of the quanties via the 'get' method, which is
+   You can get any of the quantities via the 'get' method, which is
    relatively smart to give you things in various ways:
       pt.get('rho')
 
    would give you all rho vectors for all cycles, which is maybe more
-   than you want, so try
+   than you want, so try/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0012001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0013001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0014001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0015001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0016001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0017001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0018001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0019001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0020001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0021001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0022001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0023001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0024001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0025001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0026001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0027001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0028001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0029001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0030001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0031001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0032001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0033001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0034001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0035001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0036001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0037001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0038001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0039001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0040001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0041001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0042001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0043001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0044001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0045001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0046001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0047001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0048001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0049001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0050001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0051001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0052001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0053001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0054001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0055001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0056001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.0057001.se.h5
+/rpod2/fherwig/M/work_operator0/Mop0_2.0MsunZ0.01/M2.00Z0.010.idx
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0000001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0001001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0002001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0003001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0004001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0005001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0006001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0007001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0008001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0009001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0010001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0011001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0012001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0013001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0014001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0015001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0016001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0017001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0018001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0019001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0020001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0021001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0022001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0023001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0024001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0025001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0026001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0027001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0028001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0029001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0030001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0031001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0032001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0033001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0034001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0035001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0036001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0037001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0038001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0039001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0040001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0041001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0042001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0043001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0044001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0045001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0046001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0047001.se.h5
+/rpod2/fherwig/M/work_operator0_fullnet/Mop0_2.0MsunZ0.01/M2.00Z0.010.0048001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0000001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0001001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0002001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0003001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0004001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0005001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0006001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0007001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0008001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0009001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0010001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0011001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0012001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0013001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0014001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0015001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0016001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0017001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0018001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0019001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0020001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0021001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0022001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0023001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0024001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0025001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0026001.se.h5
+/rpod2/fherwig/M/work_operator7/Mop7_2.0MsunZ0.01/M2.00Z0.010.0027001.se.h5
+
       pt.get(300,'rho')
    to get the rho vector for cycle 300, instead of one cycle you may
    also supply a cycle list for the first argument
@@ -64,15 +188,15 @@
       example in lists:
          cases=[pt1,pt2,pt3]
          for this_case in cases:
-            do someting with this_case
+            do something with this_case
 
-   There are various plotting methodes, including plotting abundance
+   There are various plotting methods, including plotting abundance
    charts (abu_chart), isotopic abundance distributions and the
    generic 'plot' method that lets you plot every quantity against any
    other quantity that can possibly be plotted. Some of the methods
    (including the three just mentioned) are available via the super
    class data_plot, and are equally available in other python
-   modulues, as for example mesa.py or ppn.py. Several methods accept
+   modules, as for example mesa.py or ppn.py. Several methods accept
    lists of cycles which implies to create a series of frames to be
    written to disk in order to make movies.
 

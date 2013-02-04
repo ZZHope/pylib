@@ -33,6 +33,7 @@ from data_plot import *
 from utils import *
 import os
 
+
 class xtime(DataPlot):
     ''' read and plot x-time.dat output files
     Example:
@@ -81,7 +82,7 @@ class xtime(DataPlot):
 	output:
 		A xtime instance
         '''
-        self.sldir = sldir
+        self.sldir= sldir 
 		
 	if not os.path.exists(sldir):  # If the path does not exist
 		print 'error: Directory, '+sldir+ ' not found'
@@ -195,7 +196,7 @@ class abu_vector(DataPlot,Utils):
 	>>> import ppn
 	>>> p=ppn.abu_vector('./run/')
 	39 cycle numbers found in ./run/
-	Rangeing from 0 to 38
+	Ranging from 0 to 38
 
 	To find the cycle attributes:
 	>>> p.cattrs
@@ -225,9 +226,9 @@ class abu_vector(DataPlot,Utils):
         >>> p.plot('abundance_yps', 'Z',0)
 	plots data
 	>>> p.iso_abund(0)
-	Plots an isotope abundence distribution
+	Plots an isotope abundance distribution
 	>>> p.abu_chart(0)
-	Plots an isotope abundence chart
+	Plots an isotope abundance chart
 	
 	One note about the plot functions, if instead of a single cycle the user 
 	inputs a list of cycles, the method will then, instead of plotting them, 
@@ -235,28 +236,31 @@ class abu_vector(DataPlot,Utils):
 	plot saved, the user can input their cycle, in a list like [0]. And that 
 	will save their plot.
 	'''
-	sldir=''  #Standard Directory
+	sldir = ''  #Standard Directory
+	inputdir = '' # A copy of Standard Directory which never changes 
 	cattrs={} # cycle attributes
 	dcols=[]  # list of the column attributes
 	index=0   # index of were column data begins in the file
 	files=[]  # list of files
-	isotopes=[]# list of isotopes
+	isotopes=[]# list of isotopes 
 	def __init__(self,sldir='./', filenames='iso_massf'):
 		''' 
 		initial method of this class
 		Input:
 			fname - The .DAT file the user is looking at.
 			sldir - where fname exists
-			filenames - the default finenames of the abundence vectors
+			file-names - the default file-names of the abundance vectors
 				    Defaults to iso_massf
 		Output: 
-			A PPn instance
+			A PPN instance
 		
 		'''
                 self.debug=False
                 self._stable_names() # provides in addition to stable_el from 
                                      # utils also just the stable element names
 		self.sldir = sldir
+		self.inputdir = ''
+		self.startdir = os.getcwd()
 		self.cattrs=[]
 		self.dcols=[]
 		self.files=[]
@@ -276,10 +280,10 @@ class abu_vector(DataPlot,Utils):
 		self.files.sort()
 		
 		if len(self.files)==0: 
-			# If there are no Files in thes Directory
+			# If there are no Files in the directory
 		    	print 'Error: no '+filenames+ ' named files exist in Directory'
 		    	print 'Now returning None'
-		    	return None
+		    	return None	
 		fname=self.files[len(self.files)-1]
 		self.cattrs,self.dcols,self.index=self._readFile(fname,sldir)
 		
@@ -294,11 +298,11 @@ class abu_vector(DataPlot,Utils):
 		for i in xrange(len(self.files)):
 			self.files[i]=self.sldir+self.files[i]
 		print str(len(self.files))+' cycle numbers found in '+sldir
-		print 'Rangeing from 0 to '+str(len(self.files)-1)
+		print 'Ranging from 0 to '+str(len(self.files)-1)
 		self.isotopes=self.get('ISOTP',self.files[0],numtype='file')
 		
 	
-	def getCycleData(self,attri,fname,numType='cycNum'):
+	def getCycleData(self,attri,fname,numtype='cycNum'): 
 		"""
 		In this method a column of data for the associated cycle 
 		attribute is returned
@@ -313,9 +317,21 @@ class abu_vector(DataPlot,Utils):
 			 number
 		"""
 		
-		fname=self.findFile(fname,numType)
+		fname=self.findFile(fname,numtype) 
+		
+		if self.inputdir == '':
+			self.inputdir = self.sldir      # This chunk of code changes into the directory where fname is,		
+		os.chdir(self.inputdir)				  # and appends a '/' to the directory title so it accesses the
+		self.sldir=os.getcwd() + '/'		  # file correctly
+		
 		f=open(fname,'r')
 		lines=f.readlines()
+		
+		if self.inputdir != './': 				#This chunk of code changes back into the directory you started in.
+			os.chdir(self.startdir)				
+			self.sldir = self.inputdir
+
+			
 		for i in range(len(lines)):
 			lines[i]=lines[i].strip()
 			
@@ -345,7 +361,10 @@ class abu_vector(DataPlot,Utils):
 				print 'Returning None'
 				return None
 		
-	def getColData(self,attri,fname,numType='cycNum'):
+		
+			
+		
+	def getColData(self,attri,fname,numtype='cycNum'):
 		"""
 		In this method a column of data for the associated column 
 		attribute is returned
@@ -360,7 +379,7 @@ class abu_vector(DataPlot,Utils):
 			 number
 		
 		"""
-		fname=self.findFile(fname,numType)
+		fname=self.findFile(fname,numtype)
 		f=open(fname,'r')
 		for i in range(self.index+1):
 			f.readline()
@@ -405,7 +424,7 @@ class abu_vector(DataPlot,Utils):
 		
 		return array(data)
 		
-	def getElement(self,attri,fname,numType='cycNum'):
+	def getElement(self,attri,fname,numtype='cycNum'):
 		'''
 		In this method instead of getting a particular column of data,
 		the program gets a paticular row of data for a paticular 
@@ -432,7 +451,7 @@ class abu_vector(DataPlot,Utils):
 		abd=[]	   #Variable for holding the array of Abundance
 		data=[]	   #variable for the final list of data
 		
-		fname=self.findFile(fname,numType)
+		fname=self.findFile(fname,numtype)
 		f=open(fname,'r')
 		for i in range(self.index+1):
 			f.readline()
@@ -448,7 +467,7 @@ class abu_vector(DataPlot,Utils):
 				break
 			index+=1
 		
-		element=self.get(self.dcols[5],fname,numType)
+		element=self.get(self.dcols[5],fname,numtype)
 		number=[]
 		z=[]
 		a=[]
@@ -478,9 +497,8 @@ class abu_vector(DataPlot,Utils):
 
 
 
-        def get(self,attri,fname=None,numtype='cycNum',decayed=False):
-		'''
-		In this method all data for an entire cycle (basically
+        def get(self,attri,fname=None,numtype='cycNum',decayed=False): 
+		'''In this method all data for an entire cycle (basically
 		the content of an iso_massfnnnn.DAT file) or a column
 		of data for the associated attribute is returned. 
 
@@ -574,7 +592,6 @@ class abu_vector(DataPlot,Utils):
                 isList=False
 		
             data=[]
-            
             if fname==None:
                 fname=self.files
                 numtype='file'
@@ -655,7 +672,7 @@ class abu_vector(DataPlot,Utils):
 		
 		return cattrs,cols, index
 		
-	def findFile(self,fname,numType):
+	def findFile(self,fname,numtype):
 		"""
 		Function that finds the associated file for FName when Fname is 
 		time or NDump
@@ -669,7 +686,7 @@ class abu_vector(DataPlot,Utils):
 			with fname's model number
 		Fname the name of the file we are looking or
 		"""
-		numType=numType.upper()
+		numType=numtype.upper() 
 		if numType == 'FILE':
                     #do nothing
                     return fname
