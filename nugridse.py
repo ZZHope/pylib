@@ -905,14 +905,11 @@ class se(DataPlot,Utils):
                     mrng_i -= 1
                 mratx = isotope_profile[mrng_i][0]/isotope_profile[mrng_i][1]
                 mraty = isotope_profile[mrng_i][2]/isotope_profile[mrng_i][3]
-                print mraty
                 if deltax:
                     mratx = (mratx / ratiox_solsys - 1.) * 1000.
                 if deltay:
                     mraty = (mraty / ratioy_solsys - 1.) * 1000.
-                print mraty
                 plt_massrange_lst.append([mratx,mraty,mass[mrng_i]])
-        print plt_massrange_lst
 
         ### get graindata ###
         if graintype == None:
