@@ -473,14 +473,14 @@ class DataPlot():
 			pl.xlim(limits[0],limits[1])
 			pl.ylim(limits[2],limits[3])
 
-	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10,plt_modlw=3,plt_sparse=0,plt_mrng=False,calling_routine='all'):
+	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10.,plt_modlw=3.,plt_sparse=0,plt_mrng=False,calling_routine='all'):
 		'''
 		Method for plotting ratio data from model output as well as grain data.
 		Important: You have to give some input to the routine!
 		RT, October 2012
 		graindata:	presolar grain data -> private is for a private.txt database file, same structure as other files required!
-		misox:		model x data, set None for grain plot only
-		misoy:		model y data
+		misosx:		model x data, set None for grain plot only
+		misosy:		model y data
       solsysx: 	solar system ratio of x-axis - only necessary if deltax=True, the two solsysx,y variable are necessary to avoid importing utils into DataPlot class. If you import it, mesa.py does not work anymore
       solsysy: 	solar system ratio of y-axis - only necessary if deltay=True
 		m_co:			model C/O ratio
@@ -558,10 +558,10 @@ class DataPlot():
 								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10,label=modlegend)
 							else:
 								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10)
-							# annotate mass range
-							if plt_mrng != False:
-								pl.text(plt_mrng[it][0],plt_mrng[it][1],str(plt_mrng[it][2]),ha='right',va='bottom',color=plt_col)   # start point
-								pl.text(plt_mrng[it][3],plt_mrng[it][4],str(plt_mrng[it][5]),ha='right',va='bottom',color=plt_col)   # end   point
+						# annotate mass range
+						if plt_mrng != False:
+							for imrng in range(len(plt_mrng)):
+								pl.text(plt_mrng[0],plt_mrng[1],str(plt_mrng[it][2]),ha='right',va='bottom',color=plt_col)   # start point
 				# axis
 				if logx and logy:
 					pl.loglog()
@@ -718,11 +718,11 @@ class DataPlot():
 				else:
 					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=grainlabelclean)
 			# plot model:
-			if m_co != None and misox!=None:
+			if m_co != None and misosx!=None:
 				# actual plotting
 				pl.plot(mxdata_orich,mydata_orich,'--',c='k',label='C/O<1',lw=plt_modlw)
 				pl.plot(mxdata_crich,mydata_crich,'*-',c='k',label='C/O>1',lw=plt_modlw,markersize=plt_modms,markeredgecolor='k',markerfacecolor='y')
-			elif misox != None:
+			elif misosx != None:
 				if modlegend != None:
 					if calling_routine == 'general':
 						pl.plot(misosx,misosy,'o--',label=modlegend,markersize=plt_modms,lw=plt_modlw)
@@ -733,9 +733,9 @@ class DataPlot():
 								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=plt_modms,lw=plt_modlw,label=modlegend)
 							else:
 								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=plt_modms,lw=plt_modlw)
-							if plt_mrng != False:
-								pl.text(plt_mrng[it][0],plt_mrng[it][1],str(plt_mrng[it][2]),ha='right',va='bottom',color=plt_col)   # start point
-								pl.text(plt_mrng[it][3],plt_mrng[it][4],str(plt_mrng[it][5]),ha='right',va='bottom',color=plt_col)   # end   point
+						if plt_mrng != False:
+							for mrng_ind in range(len(plt_mrng)):
+								pl.text(plt_mrng[mrng_ind][0],plt_mrng[mrng_ind][1],str(plt_mrng[mrng_ind][2]),ha='right',va='bottom',color=plt_col)
 				else:
 					pl.plot(misosx,misosy,'o--',markersize=plt_modms,lw=plt_modlw)
 			# axis

@@ -651,7 +651,7 @@ class se(DataPlot,Utils):
         return tp_pos,co_return
 
 
-    def plot4iso_exp(self,isotope_list,shift=0,graintype=None,deltax=False,deltay=False,logx=False,logy=False,addiso=None,weighting=None,co_toggle='c',pl_title=None,modlegend=None,errbar=True,plt_show=True,plt_symb='o',plt_col='b',plt_markersize=None,plt_linewidth=None,plt_sparse=10,plt_massrange=False,iniabufile='iniab2.0E-02GN93.ppn'):
+    def plot4iso_exp(self,isotope_list,shift=0,graintype=None,deltax=False,deltay=False,logx=False,logy=False,addiso=None,weighting=None,co_toggle='c',pl_title=None,modlegend=None,errbar=True,plt_show=True,plt_symb='o',plt_col='b',plt_markersize=10.,plt_linewidth=3.,plt_sparse=10,plt_massrange=False,iniabufile='iniab2.0E-02GN93.ppn'):
         '''
         This subroutine plots 4 isotope plots for explosive stars, assuming one model initialized in nugridse
         Description here on how it is done. It plots the model along w/ presolar grain data if wanted.
@@ -676,7 +676,7 @@ class se(DataPlot,Utils):
         - plt_markersize: Array that defines all the markersized. If you use it, make sure there are enough sizes given!
         - plt_linewidth:  Linewidth for everything, as markersize and symbols. Make sure you have enough values
         - plt_sparse:     Every so many datapoint is plotted for model data
-        - plt_massrange:  Plot mass of shell with first and last datapoint of each zone.
+        - plt_massrange:  Plot mass of shell with first and last datapoint of each zone. If list given, label those zones
         - iniabufile:     File where the initial abundances are stored. Give absolute path or relative to USEEPP!
         '''
 
@@ -890,10 +890,29 @@ class se(DataPlot,Utils):
             ratioy = (ratioy / ratioy_solsys - 1.) * 1000.
         
         # create massrange array if necessary
-        if plt_massrange:
-            plt_massrange = []
+        plt_massrange_lst = []
+        if plt_massrange==True:   # use == True because otherwise the list enters here too... why?
             for i in range(len(ratiox)):
-                plt_massrange.append([ratiox[i][0], ratioy[i][0], mass[crich[2*i]], ratiox[i][len(ratiox[i])-1], ratioy[i][len(ratioy[i])-1], mass[crich[2*i+1]]])   # start: x-ratio, y-ratio, mass label, then same for stop
+                plt_massrange_lst.append([ratiox[i][0], ratioy[i][0], mass[crich[2*i]]])
+                plt_massrange_lst.append([ratiox[i][len(ratiox[i])-1], ratioy[i][len(ratioy[i])-1], mass[crich[2*i+1]]])   # start: x-ratio, y-ratio, mass label
+        
+        elif plt_massrange != False:
+            for plt_mr_val in plt_massrange:
+                mrng_i = 0
+                while plt_mr_val > mass[mrng_i] and mrng_i < len(mass):
+                    mrng_i += 1
+                if mrng_i > 0:
+                    mrng_i -= 1
+                mratx = isotope_profile[mrng_i][0]/isotope_profile[mrng_i][1]
+                mraty = isotope_profile[mrng_i][2]/isotope_profile[mrng_i][3]
+                print mraty
+                if deltax:
+                    mratx = (mratx / ratiox_solsys - 1.) * 1000.
+                if deltay:
+                    mraty = (mraty / ratioy_solsys - 1.) * 1000.
+                print mraty
+                plt_massrange_lst.append([mratx,mraty,mass[mrng_i]])
+        print plt_massrange_lst
 
         ### get graindata ###
         if graintype == None:
@@ -902,7 +921,7 @@ class se(DataPlot,Utils):
             graindata = graindata_handler(isotope_list[0:2],isosy=isotope_list[2:4],graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
 
         ### send to data_plot.py -> plot_ratios ###
-        DataPlot.plot_ratios(self,ratiox,ratioy,solsysx=ratiox_solsys,solsysy=ratioy_solsys,graindata=graindata,m_co=None,misosxname=isotope_list[0:2],misosyname=isotope_list[2:4],deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=pl_title,legend=True,iniabufile=iniabufile,modlegend=modlegend,calling_routine='4iso_exp',plt_symb=plt_symb,plt_col=plt_col,plt_modms=plt_markersize,plt_modlw=plt_linewidth,plt_sparse=plt_sparse,plt_show=plt_show,plt_mrng=plt_massrange,errbar=errbar)
+        DataPlot.plot_ratios(self,ratiox,ratioy,solsysx=ratiox_solsys,solsysy=ratioy_solsys,graindata=graindata,m_co=None,misosxname=isotope_list[0:2],misosyname=isotope_list[2:4],deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=pl_title,legend=True,iniabufile=iniabufile,modlegend=modlegend,calling_routine='4iso_exp',plt_symb=plt_symb,plt_col=plt_col,plt_modms=plt_markersize,plt_modlw=plt_linewidth,plt_sparse=plt_sparse,plt_show=plt_show,plt_mrng=plt_massrange_lst,errbar=errbar)
 
 
     def plot4(self,num):
