@@ -555,13 +555,14 @@ class DataPlot():
 						plt_symb = plt_symb + '-'
 						for it in range(len(misosx)):
 							if it == 0:
-								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10,label=modlegend)
+								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=plt_modms,lw=plt_modlw,label=modlegend)
 							else:
-								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=10)
+								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=plt_modms,lw=plt_modlw)
 						# annotate mass range
 						if plt_mrng != False:
-							for imrng in range(len(plt_mrng)):
-								pl.text(plt_mrng[0],plt_mrng[1],str(plt_mrng[it][2]),ha='right',va='bottom',color=plt_col)   # start point
+							for mrng_ind in range(len(plt_mrng)):
+								pl.text(plt_mrng[mrng_ind][0],plt_mrng[mrng_ind][1],str(plt_mrng[mrng_ind][2]),ha='right',va='bottom',color=plt_col)
+
 				# axis
 				if logx and logy:
 					pl.loglog()
@@ -733,6 +734,7 @@ class DataPlot():
 								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=plt_modms,lw=plt_modlw,label=modlegend)
 							else:
 								pl.plot(misosx[it],misosy[it],plt_symb,color=plt_col,markevery=plt_sparse,markersize=plt_modms,lw=plt_modlw)
+						# annotate mass range
 						if plt_mrng != False:
 							for mrng_ind in range(len(plt_mrng)):
 								pl.text(plt_mrng[mrng_ind][0],plt_mrng[mrng_ind][1],str(plt_mrng[mrng_ind][2]),ha='right',va='bottom',color=plt_col)
