@@ -1220,6 +1220,142 @@ class history_data(DataPlot):
 	        pyl.show()
 # we may or may not need this below
 #        fig.clear()
+	
+    def find_TP_attributes(self,fig,t0_model,color,marker_type,h_core_mass=False):
+		'''
+			Function which finds TPs and uses the calc_DUP_parameter function
+			to calculate DUP parameter evolution dependent of the star or core mass.			
+			fig - figure number to plot 
+			t0_model - first he-shell lum peak
+			color - color of the plot
+			marker_type - marker type
+			h_core_mass - If True: plot dependence from h free core , else star mass 
+		'''
+		t0_idx=(t0_model-self.get("model_number")[0])	
+		first_TP_he_lum=10**(self.get("log_LHe")[t0_idx])
+		he_lum=10**(self.get("log_LHe")[t0_idx:])
+		h_lum=10**(self.get("log_LH")[t0_idx:])
+		model=self.get("model_number")[t0_idx:]	
+		h1_bndry=self.get("h1_boundary_mass")[t0_idx:]
+		#define label	
+		z=self.header_attr["initial_z"]
+		mass=self.header_attr["initial_mass"]
+		leg=str(mass)+"M$_{\odot}$ Z= "+str(z)	
+		peak_lum_model=[]
+		h1_mass_tp=[]
+		h1_mass_min_DUP_model=[]	
+		##TP identification with he lum if within 1% of first TP luminosity
+		perc=0.01
+		min_TP_distance=300 #model
+		lum_1=[]
+		model_1=[]
+		h1_mass_model=[]
+		TP_counter=0
+		new_TP=True
+		TP_interpulse=False
+		interpulse_counter=0
+		for i in range(len(he_lum)):
+			if (h_lum[i]>he_lum[i]):
+				TP_interpulse=True
+				interpulse_counter+=1		
+			if (h_lum[i]<he_lum[i]):
+				interpulse_counter=0	
+				new_TP=True
+				TP_interpulse=False
+				if i > 0:	
+					h1_mass_1.append(h1_bndry[i])
+					h1_mass_model.append(model[i])
+			#print i
+			if i ==0:
+				#peak_lum_model=[t0_model]
+				#TP_counter=1 #for first TP
+				lum_1.append(first_TP_he_lum)
+				model_1.append(t0_model)
+				h1_mass_1=[h1_bndry[0]]
+				h1_mass_model=[t0_model]
+			else:
+				lum_1.append(he_lum[i])										
+				model_1.append(model[i])
+						
+			if (new_TP == True and TP_interpulse==True and interpulse_counter >200): #and (model[i] - t0_model	>min_TP_distance):
+										#if (he_lum[i]> (perc*first_TP_he_lum)) or (i == len(he_lum)-1):		
+					#if (model[i] - model_1[-1]	>min_TP_distance):			
+					#calculate maximum of peak lum of certain TP
+					max_value=np.array(lum_1).max()					
+					max_index = lum_1.index(max_value)
+					#print max_index,i
+					peak_lum_model.append(model_1[max_index])
+					#for DUP calc
+					max_lum_idx=h1_mass_model.index(model_1[max_index])												
+					min_value=np.array(h1_mass_1[max_lum_idx:]).min()					
+					min_index = h1_mass_1.index(min_value)										
+					h1_mass_min_DUP_model.append(h1_mass_model[min_index])					
+					TP_counter+=1
+					lum_1=[]
+					model_1=[]
+					h1_mass_1=[]		
+					h1_mass_model=[]
+					new_TP=False
+					#TP_interpulse=False
+				
+		#print peak_lum_model
+		#print h1_mass_min_DUP_model
+		#print h1_mass_tp
+		modeln=[]			
+		for i in range(len(peak_lum_model)):
+			modeln.append(peak_lum_model[i])
+			modeln.append(h1_mass_min_DUP_model[i])
+		self.calc_DUP_parameter(fig,modeln,leg,color,marker_type,h_core_mass)
+		
+    def calc_DUP_parameter(self,fig,modeln,leg,color,marker_type,h_core_mass=False): 
+		'''
+		Method to calculate the DUP parameter evolution for different TPs specified specified
+		by their model number.
+	
+		fig - figure number to plot
+		modeln - array containing pairs of models each corresponding to a TP. First model where
+		h boundary mass will be taken before DUP, second model where DUP reaches lowest mass. 	
+		h_core_mass - If True: plot dependence from h free core , else star mass 		
+		'''
+		number_DUP=(len(modeln)/2 -1) #START WITH SECOND	
+		h1_bnd_m=self.get('h1_boundary_mass')
+		star_mass=self.get('star_mass')	
+		age=self.get("star_age")
+		firstTP=h1_bnd_m[modeln[0]]
+		first_m_dredge=h1_bnd_m[modeln[1]]
+		DUP_parameter=np.zeros(number_DUP)
+		DUP_xaxis=np.zeros(number_DUP)
+		j=0
+		for i in np.arange(2,len(modeln),2):
+			TP=h1_bnd_m[modeln[i]]
+			m_dredge=h1_bnd_m[modeln[i+1]]	
+			if i ==2:
+				last_m_dredge=first_m_dredge
+			#print "testest"		
+			#print modeln[i]
+			if h_core_mass==True:	
+				DUP_xaxis[j]=h1_bnd_m[modeln[i]]			#age[modeln[i]] - age[modeln[0]]
+			else:
+				DUP_xaxis[j]=star_mass[modeln[i]]			
+			#DUP_xaxis[j]=modeln[i]	
+			DUP_parameter[j]=(TP-m_dredge)/(TP-last_m_dredge)
+			last_m_dredge=m_dredge
+			j+=1
+		
+		pl.figure(fig)	
+		pl.rcParams.update({'font.size': 18})
+		pl.rc('xtick', labelsize=18) 
+		pl.rc('ytick', labelsize=18) 
+	
+		pl.plot(DUP_xaxis,DUP_parameter,marker=marker_type,markersize=12,mfc=color,color='k',linestyle='-',label=leg)	
+		if h_core_mass==True:
+			pl.xlabel("$M_H$",fontsize=20)
+		else:	
+			pl.xlabel("M/M$_{\odot}$",fontsize=24)
+		pl.ylabel("$\lambda_{DUP}$",fontsize=24)
+		pl.minorticks_on()
+		pl.legend()
+
 
 
 class star_log(history_data):
@@ -1311,4 +1447,6 @@ def cleanstarlog(file_in):
     for j in np.arange(len(lignes)):
         fout.write(lignes[j])
     fout.close()
+
+
  
