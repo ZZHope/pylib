@@ -49,11 +49,7 @@
 
 	#for calculation of yields of the set 
 
-
-
 '''
-
-
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -438,20 +434,35 @@ class mesa_set(history_data):
 
 	def __init__(self,rundir='.',multi_dir=[]):
 
-		slist = os.listdir(rundir)
-
+		if len(multi_dir)==0:
+			slist = os.listdir(rundir)
+		else:
+			slist = multi_dir
 		self.runs_H5=[]
 		self.run_LOGS=[]
+		i=0
 		for element in slist:
-			run_path=rundir+"/"+element
-		
+			if len(multi_dir)==0:
+				run_path=rundir+"/"+element
+			else:
+				if multi_dir[i][0] == "/":
+					run_path=multi_dir[i]
+				else:
+					run_path=os.getcwd()+"/"+multi_dir[i]	
+				
 			run_path_1=glob.glob(run_path+"/*/*.h5")
-			if len(run_path_1)>0:
+			if len(glob.glob(run_path+"/*/*.h5"))>0:
 				h5_dir=run_path_1[0].split("/")[-2]		
 				self.runs_H5.append(run_path+"/"+h5_dir)
+			else:
+				print "Warning: h5 files are not available"
+			if (len(glob.glob(run_path+"/*/*.data"))>0) or (len(glob.glob(run_path+"/*/*.log"))>0):
 				self.run_LOGS.append(run_path+"/LOGS")
-				print "Read "+run_path		
-
+				print "Read "+run_path
+			else:
+				if len(multi_dir)>=0:
+					print "Error: not history.data or star.log file found"		
+			i+=1
 
 	
 	def multi_DUP(self,dirs=[],path=path,t0_model=4*[5000],h_core_mass=False):
