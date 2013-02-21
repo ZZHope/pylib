@@ -50,8 +50,9 @@
 	#for calculation of yields of the set 
 
 '''
-
+##need to be changed, matplotlib import
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import * 
 import numpy as np
 import os
 from nugridse import *
@@ -429,10 +430,27 @@ class mesa_set(history_data):
 		This class allows access to multiple MESA runs in the path dir.
 		Instead of defining one path, an array of paths , mult_dir can be
 		defined. In this case each path in multi_dir represents a run.
-		
+
+		rundir - dir with run directory
+		multi_dir - specify dirs at different location
+		extra_label - set labels of runs, else run dir name will be chosen	
+	
+		e.g.:
+	
+			setres=set.mesa_set(".",extra_label=["double-f","reference"])		
+			
+			or
+				
+			setres=set.mesa_set(multi_dir=["M3.00Z2.0e-02_1_re_double_f","M3.00Z2.0e-02_re_referencerun"],extra_label=["double-f","reference]])
+
+		Using the set_plot* functions you can instantly plot diagrams
+		for all runs defined in mesa set
+
+                	setres.set_plot_kipp_CO()
+
 	'''
 
-	def __init__(self,rundir='.',multi_dir=[]):
+	def __init__(self,rundir='.',multi_dir=[],extra_label=[]):
 
 		if len(multi_dir)==0:
 			slist = os.listdir(rundir)
@@ -440,6 +458,8 @@ class mesa_set(history_data):
 			slist = multi_dir
 		self.runs_H5=[]
 		self.run_LOGS=[]
+		self.run_historydata=[]
+		self.run_label=[]
 		i=0
 		for element in slist:
 			if len(multi_dir)==0:
@@ -459,6 +479,11 @@ class mesa_set(history_data):
 			if (len(glob.glob(run_path+"/*/*.data"))>0) or (len(glob.glob(run_path+"/*/*.log"))>0):
 				self.run_LOGS.append(run_path+"/LOGS")
 				print "Read "+run_path
+				self.run_historydata.append(history_data(run_path+"/LOGS"))
+				if len(extra_label)>0:
+					self.run_label.append(self.create_label(self.run_historydata[-1],extra_label[i]))
+				else:
+					self.run_label.append(self.create_label(self.run_historydata[-1],element))
 			else:
 				if len(multi_dir)>=0:
 					print "Error: not history.data or star.log file found"		
@@ -488,8 +513,180 @@ class mesa_set(history_data):
 			historydata=history_data(dirs[i])
 			historydata.find_TP_attributes(0,t0_model[i],color[i],marker_type[i],h_core_mass)			
 
+	###the following methods allow are part of Falks vis3.py file, thanks Falk
+
+	def set_plot_hrd(self):
+		m=self.run_historydata
+		figure(1)
+    		i=0
+    		for case in m:
+        		logTeff=case.get('log_Teff')
+        		logL=case.get('log_L')
+        		plot(logTeff[noffset:],logL[noffset:],symbs[i],label=self.run_label[i])
+        	i += 1
+		case.xlimrev()
+    		legend(loc=4)
+   		xlabel('log Teff')
+    		ylabel('log L')
+ 
+	def set_plot_t_mass(self):
+    				
+		m=self.run_historydata
+		figure(2)
+    		i=0
+    		for case in m:
+        		star_age=case.get('star_age')
+       			h1_boundary_mass=case.get('h1_boundary_mass')
+        		star_mass=case.get('star_mass')
+        		plot(star_age[noffset:],h1_boundary_mass[noffset:],symbs[i],label=self.run_label[i])
+        		plot(star_age[noffset:],star_mass[noffset:],symbs[i],label=self.run_label[i])
+        	i += 1
+    		legend(loc=6)
+    		xlabel('time / yr')
+    		ylabel('star mass, core mass')
+
+
+	def set_plot_model_mass(self):
+    		m=self.run_historydata
+		figure(3)
+    		i=0
+    		for case in m:
+        		model_number=case.get('model_number')
+        		h1_boundary_mass=case.get('h1_boundary_mass')
+      			star_mass=case.get('star_mass')
+			plot(model_number[noffset:],h1_boundary_mass[noffset:],symbs[i],label=self.run_label[i])
+        		plot(model_number[noffset:],star_mass[noffset:],symbs[i],label='')
+        		i += 1
+    		legend(loc=1)
+    		xlabel('model number')
+    		ylabel('star mass, core mass')
+
+	def set_plot_CO(self):
+		m=self.run_historydata    
+		figure(4)
+		i=0
+	    	for case in m:
+	       		star_age=case.get('star_age')
+			model_number=case.get('model_number')
+        		C=case.get('surface_c12')
+        		O=case.get('surface_o16')
+			CO=C*4./(O*3.)
+        		plot(model_number[noffset:],CO[noffset:],symbs[i],label=self.run_label[i])
+			i += 1
+	    	legend(loc=2)
+		xlabel('model number')
+	    	ylabel('C/O ratio')
+
+	def set_plot_CO_mass(self):
+    		m=self.run_historydata
+		figure(4)
+    		i=0
+    		for case in m:
+        		star_age=case.get('star_age')
+        		model_number=case.get('model_number')
+        		star_mass=case.get('star_mass')
+        		C=case.get('surface_c12')
+			O=case.get('surface_o16')
+        		CO=C*4./(O*3.)
+			plot(star_mass[noffset:],CO[noffset:],symbs[i],label=self.run_label[i])
+        		i += 1
+   		legend(loc=2)
+    		ax = plt.gca()
+    		ax.invert_xaxis()
+    		xlabel('star mass')
+    		ylabel('C/O ratio')
+
+	def set_plot_vsurf(self):
+    		m=self.run_historydata
+		figure(55)
+   		i=0
+    		for case in m:
+			case.plot('model_number','v_div_csound_surf',legend=self.run_label[i],shape=symbs[i])
+        	i += 1
+    		legend(loc=2)
+    		xlabel('model number')
+    		ylabel('v_div_csound_surf')
+    		if xlim_mod_min >= 0:
+        		xlim(xlim_mod_min,xlim_mod_max)
+    		ylim(-10.,10.)
+
+	def set_plot_mdot(self):
+    		m=self.run_historydata
+		figure(6)
+   		i=0
+    		for case in m:
+        		case.plot('model_number','log_abs_mdot',legend=self.run_label[i],shape=symbs[i])
+       		i += 1
+    		legend(loc=2)
+    		xlabel('model number')
+    		ylabel('log_abs_mdot')
+    		if xlim_mod_min >= 0:
+        		xlim(xlim_mod_min,xlim_mod_max)
+    		ylim(-7,-3.5)
+
+	def set_plot_R(self):
+		m=self.run_historydata
+	    	figure(7)
+    		i=0
+    		for case in m:
+        		case.plot('star_age','log_R',legend=self.run_label[i],shape=symbs[i])
+        	i += 1
+    		legend(loc=2)
+    		xlabel('model number')
+    		ylabel('log_R')
+    		if xlim_mod_min >= 0:
+        		xlim(xlim_mod_min,xlim_mod_max)
+	
+	def set_plot_kipp(self):
+    		m=self.run_historydata
+		i=10
+    		for case in m:
+        		case.kippenhahn(i,'model',t0_model=0,c12_bm=False)
+        		title(self.run_label[i-10])
+        		i += 1
+
+	def set_plot_kipp_CO(self):
+		m=self.run_historydata
+    		i=10
+    		for case in m:
+        		case.kippenhahn_CO(i,'model',t0_model=0)
+        		title(self.run_label[i-10])
+        		i += 1
+
+	def set_plot_surfabu(self):
+    		m=self.run_historydata
+		i=40
+    		for case in m:
+    			case.t_surfabu(i,'model')
+			title(self.run_label[i-40])
+        		legend(loc=4)
+        		i += 1
+
+	def set_thing(self,thing=['log_LH','log_LHe']):
+		'''
+			Specify what to plot
+		'''
+    		m=self.run_historydata
+		i=70
+   		for case in m:
+        		figure(i)
+			j = 0
+			for thing in things:
+            			case.plot('model_number',thing,legend=thing,shape=symbs[j])
+            			j += 1
+        		title(self.run_label[i-70])
+        		i += 1
+
+
+
 	#####################Internal use
 
+	def create_label(self,historydata,extra_label):
+		mass=historydata.header_attr['initial_mass']		
+		z=historydata.header_attr['initial_z']
+		return str(mass)+"$M_{\odot}$, z="+str(z)+" , "+extra_label
+
+ 
 	def weighted_yields(self,sefiles,cyclestart=11000,cycleend=12000,sparse=100,isotopes=["H-1","H-2","H-3","He-4"],star_mass=1.65,label=True,legend="",color="r",title=" -Final wind yields - isotopic composition folded with IMF",plot_fig=True):
 		import utils as u
 		import re	
