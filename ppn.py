@@ -11,15 +11,15 @@ Header attributes are separated from their value by white space or by white spac
 	surrounding an equals sign.
 An Header attribute is separated by the previous Header attribute by white space
 	or a line break.
-There are only 6 data columns. The first being the number, second being Z, third being A, Fourth isomere state
-	A fifth abundance_yps and finally the element name.
+There are only 6 data columns. The first being the number, second being Z, third being A, fourth being isomere state,
+	fifth being abundance_yps, and sixth the element name.
 The first Five columns consist purely of numbers, no strings are allowed. 
 Of the values in the final column, the name column, the first two are letters 
 specifying the element name, and the rest are spaces or numbers (in that strict
 order), except for the element names: Neut and Prot
 All the profile files in the directory have the same cycle attributes.	
 The cycle numbers of the 'filename'+xxxxx start at 0.
-PPN files allways end in .DAT and are not allowed any '.'
+PPN files always end in .DAT and are not allowed any '.'
 The can not be any blank lines in the data files.
 No cycle numbers are skipped, ie if cycle 0 and 3 are present, 1 and 2 must be 
 	here aswell.
@@ -32,6 +32,11 @@ from matplotlib.pylab import *
 from data_plot import *
 from utils import *
 import os
+import utils
+
+import pdb
+
+
 
 
 class xtime(DataPlot):
@@ -77,7 +82,7 @@ class xtime(DataPlot):
     def __init__(self,sldir='./',fname='x-time.dat'):
         ''' read x-time.dat file
         input:
-		sldir - the directory of the pecified filename
+		sldir - the directory of the specified filename
 		fname - specify alternative filename of file of type x-time.dat
 	output:
 		A xtime instance
@@ -243,7 +248,7 @@ class abu_vector(DataPlot,Utils):
 	index=0   # index of were column data begins in the file
 	files=[]  # list of files
 	isotopes=[]# list of isotopes 
-	def __init__(self,sldir='./', filenames='iso_massf'):
+	def __init__(self,sldir='./', filenames='iso_massf',USEEPP='auto'):
 		''' 
 		initial method of this class
 		Input:
@@ -270,38 +275,90 @@ class abu_vector(DataPlot,Utils):
 			print 'Now returning None'
 			return None
 		f=os.listdir(sldir) # reads the directory
-		for file in f:  
+		
+		def iniabmode(): #Where we go if dealing with iniab files in a USEEPP directory 
+			print "---> In iniab mode"
+			for file in f:  
 			# Removes any files that are not ppn files
-			filelength=len(filenames)+4
-		    	if filenames in file and 'DAT' in file and '~' not in file \
+		    		if filenames in file and 'ppn' in file and '~' not in file \
+                                and '#' not in file and  file[-1] is 'n' \
+                                and file[-2] is 'p' and file[-3] is 'p'\
+                                and 'restart' not in file:
+		    			self.files.append(file)
+			self.files.sort()	
+	
+			if len(self.files)==0: 
+				# If there are no Files in the Directory
+		    		print 'Error: no '+filenames+ ' named files exist in Directory'
+		    		print 'Now returning None'
+		    		return None
+			fname=self.files[len(self.files)-1]
+			self.dcols,self.index=self._readPPN(fname,sldir)
+			indexp_cyc2filels={}  # created index pointer from mod (cycle
+			i = 0                 # name) to index in files array
+			for file in self.files:
+				mod=utils.iniabu(file)
+				indexp_cyc2filels[mod] = i
+				i += 1
+			self.indexp_cyc2filels = indexp_cyc2filels
+			
+			for i in xrange(len(self.files)):
+				self.files[i]=self.sldir+self.files[i]
+			print str(len(self.files))+' cycle numbers found in '+sldir
+			print 'Ranging from 0 to '+str(len(self.files)-1)
+			self.isotopes=self.get('ISOTP',self.files[0],numtype='file')
+		    		
+		def iso_massfmode():
+			for file in f:  
+			# Removes any files that are not ppn files
+				filelength=len(filenames)+4
+		    		if filenames in file and 'DAT' in file and '~' not in file \
                                 and '#' not in file and len(file)>filelength \
                                 and 'restart' not in file:
-		    		self.files.append(file)
-		self.files.sort()
-		
-		if len(self.files)==0: 
-			# If there are no Files in the directory
-		    	print 'Error: no '+filenames+ ' named files exist in Directory'
-		    	print 'Now returning None'
-		    	return None	
-		fname=self.files[len(self.files)-1]
-		self.cattrs,self.dcols,self.index=self._readFile(fname,sldir)
-		
-                indexp_cyc2filels={}  # created index pointer from mod (cycle
-                i = 0                 # name) to index in files array
-                for file in self.files:
-                    mod=self.get('mod',fname=file,numtype='file')
-                    indexp_cyc2filels[mod] = i
-                    i += 1
-                self.indexp_cyc2filels = indexp_cyc2filels
+		    			self.files.append(file)
+			self.files.sort()
+					
+			if len(self.files)==0: 
+				# If there are no Files in the Directory
+		    		print 'Error: no '+filenames+ ' named files exist in Directory'
+		    		print 'Now returning None'
+		    		return None
+			fname=self.files[len(self.files)-1]
+			self.cattrs,self.dcols,self.index=self._readFile(fname,sldir)
+			indexp_cyc2filels={}  # created index pointer from mod (cycle
+			i = 0                 # name) to index in files array
+			for file in self.files:
+				mod=self.get('mod',fname=file,numtype='file')
+				indexp_cyc2filels[mod] = i
+				i += 1
+			self.indexp_cyc2filels = indexp_cyc2filels
 
-		for i in xrange(len(self.files)):
-			self.files[i]=self.sldir+self.files[i]
-		print str(len(self.files))+' cycle numbers found in '+sldir
-		print 'Ranging from 0 to '+str(len(self.files)-1)
-		self.isotopes=self.get('ISOTP',self.files[0],numtype='file')
-		
-	
+			for i in xrange(len(self.files)):
+				self.files[i]=self.sldir+self.files[i]
+			print str(len(self.files))+' cycle numbers found in '+sldir
+			print 'Ranging from 0 to '+str(len(self.files)-1)
+			self.isotopes=self.get('ISOTP',self.files[0],numtype='file')
+
+
+		'''
+		In this chunk of code we find whether the specified directory includes USEEPP
+		and if it does, go to 'iniabmode' otherwise (or if USEEPP='off' is thrown) we 
+		deal with 'iso_massfmode'
+		'''	
+		if ('USEEPP' in sldir or 'USEEPP' in self.startdir) and (USEEPP == 'on' or USEEPP == 'auto'):
+			print '--> Going to iniab mode'
+			filenames='iniab'
+			iniabmode()
+		elif ('USEEPP' in sldir or 'USEEPP' in self.startdir) and USEEPP == 'off':
+			print "--> Skipping iniab mode (USEEPP == 'off')"
+			iso_massfmode()
+		elif ('USEEPP' not in sldir or 'USEEPP' not in self.startdir) and USEEPP == 'on':
+			print "--> Error: Not in, or referencing, a USEEPP directory. Cannot enter iniab mode"
+			print "--> Skipping iniab mode"
+			iso_massfmode()
+		else:
+			iso_massfmode()
+			
 	def getCycleData(self,attri,fname,numtype='cycNum'): 
 		"""
 		In this method a column of data for the associated cycle 
@@ -427,10 +484,10 @@ class abu_vector(DataPlot,Utils):
 	def getElement(self,attri,fname,numtype='cycNum'):
 		'''
 		In this method instead of getting a particular column of data,
-		the program gets a paticular row of data for a paticular 
+		the program gets a particular row of data for a particular 
 		element name.
 		Input: attri is the name of the attribute we are looking for.
-		       A complete list of them can be obtaind by calling,
+		       A complete list of them can be obtained by calling,
 		       'get('element_name')'
 		Fname: the name of the file we are getting the data from or
 			the cycle number found in the filename.
@@ -440,9 +497,9 @@ class abu_vector(DataPlot,Utils):
 			 if it is 'cycNum' it will then  interpret it as a 
 			 cycle number
 		Output:
-			A numpy array of the four ellement attributes, number, Z, A
+			A numpy array of the four element attributes, number, Z, A
 			and abundance, in that order
-		Warnig
+		Warning
 		'''
 		element=[] #Variable for holding the list of element names
 		number=[]  #Variable for holding the array of numbers
@@ -518,7 +575,7 @@ class abu_vector(DataPlot,Utils):
 		
 		2: Input attri is just one integer cycle number (cycle arrays are not supported):
                 decayed   boolean: instantaneously decay abundance distribution
-                Output: the following varibales will be added to the instance
+                Output: the following variables will be added to the instance
                 a_iso_to_plot      mass number of plotted range of species"
                 isotope_to_plot    corresponding list of isotopes"
                 z_iso_to_plot      corresponding charge numbers"
@@ -622,7 +679,33 @@ class abu_vector(DataPlot,Utils):
                     return None
 		
             return data
+
+
+	def _readPPN(self,fname,sldir):
+		'''
+		Private method that reads in and organizes the .ppn file
+		Loads the data of the .ppn file into the variable cols.
+		'''
+		if sldir.endswith(os.sep): 
+			#Making sure fname will be formatted correctly
+			fname = str(sldir)+str(fname)
+		else:
+			fname = str(sldir)+os.sep+str(fname)
+			self.sldir+=os.sep
+		f=open(fname,'r')
+		lines=f.readlines()
+		for i in range(len(lines)):
+			lines[i]=lines[i].strip()
+		
+		cols = ['ISOTP', 'ABUNDANCE_MF'] #These are constant, .ppn files have no header to read from
+		for i in range(len(lines)):
+			if not lines[i].startswith('H'):
+				index = i-1
+				break
 			
+		return cols, index
+		
+	
 	def _readFile(self,fname,sldir):
 		'''
 		private method that reads in and organizes the .DAT file
@@ -634,7 +717,7 @@ class abu_vector(DataPlot,Utils):
 		'''
 		cattrs=[]
 		if sldir.endswith(os.sep): 
-			#Making sure fname will be formated correctly
+			#Making sure fname will be formatted correctly
 			fname = str(sldir)+str(fname)
 		else:
 			fname = str(sldir)+os.sep+str(fname)

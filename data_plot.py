@@ -159,7 +159,7 @@ class DataPlot():
 	def sparse(self,x,y,sparse):
 			"""
 			Method that removes every non sparse th element.  For example
-			if this argument was 5, This method would plotthe 0th, 5th, 10th
+			if this argument was 5, This method would plot the 0th, 5th, 10th
 			... elements.
 			Input:
 			x: list of x values, of lenthe j
@@ -177,7 +177,7 @@ class DataPlot():
 					tmpY.append(y[i])
 			return tmpX, tmpY
 
-	def plotMulti(self,atrix,atriy, cyclist,title,legend=None,labelx=None, labely=None,logx=False, logy=False, \
+	def plotMulti(self,atrix,atriy, cyclist,title,path='/',legend=None,labelx=None, labely=None,logx=False, logy=False, \
 			      base=10,sparse=1,pdf=False,limits=None,):
 		'''
 		Method for plotting multiple plots and saving it to multiple pngs
@@ -186,13 +186,13 @@ class DataPlot():
 		atrix: The name of the attribute you want on the x axis
 		atriy: The name of the attribute you want on the Y axis
 		cyclist: List of cycles that you would like plotted
-		title: The title of the grapgh and the name of the file.
+		title: The title of the graph and the name of the file.
 		Legend: A list of legends for each of your cycles, or one legend
 			for all of the cycles
 		pdf: A boolean of if the image should be saved to a pdf file.
-			xMin,xMax, yMin, YMax:  plot coopdinates.
-		logx: A boolean of weather the user wants the x axis logarithmically
-		logy: A boolean of weather the user wants the Y axis logarithmically
+			xMin,xMax, yMin, YMax:  plot coordinates.
+		logx: A boolean of whether the user wants the x axis logarithmically
+		logy: A boolean of whether the user wants the Y axis logarithmically
 		base: The base of the logarithm. Default = 10
 		sparse: Argument that skips every so many data points. For
 			example if this argument was 5, This method would plot
@@ -218,9 +218,15 @@ class DataPlot():
 
 			pl.title(title)
 			if not pdf:
+				currentDir = os.getcwd()
+				os.chdir(path)
 				pl.savefig(title+str(cyclist[i])+'.png', dpi=400)
+				os.chdir(currentDir)
 			else:
+				currentDir = os.getcwd()
+				os.chdir(path)
 				pl.savefig(title+cyclist[i]+'.pdf', dpi=400)
+				os.chdir(currentDir)
 			pl.clf()
 		return None
 
@@ -253,7 +259,7 @@ class DataPlot():
 		shape: What shape and colour the user would like their plot in.
 		       Please see
 		       http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot
-		       for all possable choices
+		       for all possible choices
 		title: The Title of the Graph
 		logx: A boolean of weather the user wants the x axis logarithmically
 		logy: A boolean of weather the user wants the Y axis logarithmically
@@ -261,7 +267,7 @@ class DataPlot():
 		sparse: Argument that skips every so many data points. For
 			example if this argument was 5, This method would plot
 			the 0th, 5th, 10th ... elements.
-		show: A boolean of if the plot should be displayed usefull with
+		show: A boolean of if the plot should be displayed useful with
 			the multiPlot method
 		WARNING: Unstable if get returns a list with only one element (x=[0])
 		limits: The length four list of the x and y limits. The order of
@@ -841,17 +847,17 @@ class DataPlot():
 	def abu_chart(self, cycle, mass_range=None ,ilabel = True,imlabel = True,imagic =  False,
 		boxstable=True,lbound=20,plotaxis=[0,0,0,0],show=True,color_map='jet'):
 		'''
-		Plots an abundence chart
+		Plots an abundance chart
 		input:
 		cycle: The cycle we are looking in. It it is a list of cycles,
-			this method will then do a plot for each of theses cycles
+			this method will then do a plot for each of these cycles
 			and save them all to a file
 		ilabel: elemental labels off/on [False/True] defaults to True
 		imlabel: label for isotopic masses off/on [False/True], defaults to True
 		imagic:  turn lines for magic numbers off/on [False/True] defaults to False
 		boxstable: plot the black boxes around the stable elements,
 			   defaults to true
-		lbound: The lower bound of the colour spectrum ploted. Defaults
+		lbound: The lower bound of the colour spectrum plotted. Defaults
 			to 20
 		plotaxis: Set axis limit: If default [0,0,0,0] the complete
 			range in (N,Z) will be plotted. It equates to
@@ -1183,7 +1189,7 @@ class DataPlot():
 	def abu_flux_chart(self, cycle,ilabel = True,imlabel = True,imagic =  False,
 		boxstable=True,lbound=15,plotaxis=[0,0,0,0],which_flux=None,prange=None,profile='charged',show=True):
 		'''
-		Plots an abundence and flux chart
+		Plots an abundance and flux chart
 		input:
 		cycle: The cycle we are looking in. It it is a list of cycles,
 			this method will then do a plot for each of theses cycles
@@ -2256,7 +2262,7 @@ class DataPlot():
                     pl.title(title)
 		pl.xlabel('Mass Number (A)',fontsize=25)
 		if ref>-1:
-                    solquest=str(raw_input("Are your reference abundances solar ones? (y/n)"))
+                    solquest=str(raw_input("For y-axis label: Are your reference abundances solar ones? (y='Production Factor', n='Relative Abundances')"))
                     if solquest == 'y':
 			pl.ylabel(r'Production Factor (X$_{\rm i}$/X$_{\odot}$)',fontsize=25)
                     else:
