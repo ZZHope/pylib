@@ -518,7 +518,7 @@ class se(DataPlot,Utils):
         outf.close()
 
 
-    def plot_isoratios(self,xiso,yiso,graintype=None,tp_finding=False,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,dcycle=500,errbar=True,iniabufile='iniab2.0E-02GN93.ppn'):
+    def plot_isoratios(self,xiso,yiso,graintype=None,tp_finding=False,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend='',dcycle=500,errbar=True,iniabufile='iniab2.0E-02GN93.ppn',plt_symb='o',plt_col='k'):
         ''' returns the ratios of model surface data for validation w/ grain data
         rt, 2012
         
@@ -587,7 +587,7 @@ class se(DataPlot,Utils):
         else:
             graindata = graindata_handler(xiso,isosy=yiso,graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
         ### now plot it using the appropriate too ###
-        DataPlot.plot_ratios(self,graindata=graindata,misosx=ret_x,misosy=ret_y,solsysx=deltax_solsys,solsysy=deltay_solsys,m_co=co_return,misosxname=xiso,misosyname=yiso,deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=title,legend=legend,iniabufile=iniabufile,errbar=errbar)
+        DataPlot.plot_ratios(self,graindata=graindata,misosx=ret_x,misosy=ret_y,solsysx=deltax_solsys,solsysy=deltay_solsys,m_co=co_return,misosxname=xiso,misosyname=yiso,deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=title,legend=legend,extra_legend=extra_legend,iniabufile=iniabufile,errbar=errbar,plt_symb=plt_symb,plt_col=plt_col)
         
     def _tp_finder(self,dcycle):   # Private routine
         '''
