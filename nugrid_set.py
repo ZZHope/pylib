@@ -115,6 +115,10 @@ class mppnp_set(se):
 		self.runs_H5_surf=[]
 		self.run_dirs_name=[]
 		self.extra_label=[]
+                runs_H5_out=[]
+                runs_H5_surf=[]
+                run_dirs_name=[]
+		extra_label_1=[]
 		i=0
 		for element in slist:
                         
@@ -131,21 +135,32 @@ class mppnp_set(se):
 				if (filter(expr.search,sefiles)) <1:
 					print "Warning: No hdf5 out files found in "+run_path+"/H5_out"
 				else:
-					self.runs_H5_out.append(run_path+"/H5_out")	
+					runs_H5_out.append(run_path+"/H5_out")	
 				sefiles = os.listdir(run_path+"/H5_surf")
 				if (filter(expr.search,sefiles)) <1:
 					print "Warning: No hdf5 surf files found in "+run_path+"/H5_surf"
 				else:
-					self.runs_H5_surf.append(run_path+"/H5_surf")				
+					runs_H5_surf.append(run_path+"/H5_surf")				
 				if len(extra_label)>0:
-					self.extra_label.append(extra_label[i])
+					extra_label_1.append(extra_label[i])
 				else:
-					self.extra_label.append(element)
-				self.run_dirs_name.append(element)
+					extra_label_1.append(element)
+				run_dirs_name.append(element)
 				print "Read "+run_path		
 			i+=1
-				
-			
+		###order lists###
+		sorted_indices=sorted(range(len(run_dirs_name)),key=lambda k: run_dirs_name[k])	
+		print sorted_indices
+		print run_dirs_name
+		k=0
+		for i in sorted_indices:
+			print i
+			self.run_dirs_name.append(run_dirs_name[i])
+			self.extra_label.append(extra_label_1[i])
+			self.runs_H5_surf.append(runs_H5_surf[i])
+			self.runs_H5_out.append(runs_H5_out[i])
+			k+=1
+		print self.run_dirs_name
 	def weighted_yields_massgrid(self,runs=[],isotopes=[],cycles=[],title=''):
 		'''
 			Plots behaviour star mass dependent yields of different isotopes - specify dirs at the beginning
@@ -166,6 +181,8 @@ class mppnp_set(se):
 	
 		'''
 
+
+
 		HDF5_surf=[]
 		if (len(runs) == 0):
 			HDF5_surf=self.runs_H5_surf
@@ -180,37 +197,65 @@ class mppnp_set(se):
 				sefiles.append(se(HDF5_surf[i]))		
 
 		color=['r','b','g','k']
-		marker_type=['o','D','s','p']
+		marker_type=['o','p','s','D']
 		line_style=['--','-','-.',':']
+		line_width=12*[5,3,4,6]
 		fig=plt.figure()
 		plt.rcParams.update({'font.size': 16})
 		plt.rc('xtick', labelsize=16) 
 		plt.rc('ytick', labelsize=16) 
 		ax = fig.add_subplot(1,1,1)
 		ax.set_yscale('log')
-	
-	
+		z_index_files=[]
+		z_values=[]
+		j=-1
+		for i in range(len(HDF5_surf)):
+			j+=1
+			star_z=sefiles[i].get("zini")[0]
+			if star_z not in z_values:
+				z_values.append(star_z)
+				z_index_files.append([])
+			z_index_files[ z_values.index(star_z)].append(i)
+		print "index files",z_index_files		
+
+		color_iso=-1
+		yields_1=[]
+		t=0
 		for j in range(len(isotopes)):
-			legend_k=0
 			yields=[]
-			star_mass_array=[]	
-			for i in range(len(HDF5_surf)):
-				#if (legend_k ==0):
-				star_mass=sefiles[i].get("mini")[0]				
-				star_mass_array.append(star_mass)
-				#below way not very efficient
-				iso_yield_folded,iso_yield_unfolded =self.weighted_yields(sefiles[i],cycles[i][0],cycles[i][1],cycles[i][2],isotopes,star_mass,False,legend=isotopes[j],color=color[j],title="",plot_fig=False)
-						
-				yields.append(iso_yield_folded[j])				
+			star_mass_array=[]
+			color_iso+=1
+			legend_k=-1
+			t=0	
+			for w in range(len(z_index_files)):
+				star_mass_array=[]
+				yields=[]
+				legend_k+=1
+				for k in z_index_files[w]: 
+					#if (legend_k ==0):
+					star_mass=sefiles[k].get("mini")[0]
+					star_z=sefiles[k].get("zini")[0]				
+					star_mass_array.append(star_mass)
+					#below way not very efficient
+					if cycles[k][1]==-1:
+						endcycle=sefiles[k].get("model_number")[-1] - 5000
+					else:
+						endcycle=cycles[k][1]
+					if j==0:
+						iso_name,iso_yield_folded,iso_yield_unfolded,iso_prod_name,iso_prod =self.weighted_yields_production_factor(sefiles[k],cycles[k][0],endcycle,cycles[k][2],isotopes,star_mass,False,legend=isotopes[j],color="k",title="")
+						yields_1.append(iso_yield_folded)
+					yields.append(yield_1[t][j])
+					t+=1				
 				#	legend_k=1
 				#	print yields			
 					#plt.plot(star_mass,yields[j],marker='*',markersize=8,mfc=color[j],linestyle='None',label=isotopes[j])			
 				#else:
 					#yields.append(weighted_yields(sefiles[i],cycles[i][0],cycles[i][1],cycles[i][2],isotopes,star_mass,False,color=color[j],title="",plot_fig=False))
-			order_indices=[i[0] for i in sorted(enumerate(star_mass_array), key=lambda x:x[1])]
-			star_mass_array = [ star_mass_array[i] for i in order_indices]		
-			yields = [ yields[i] for i in order_indices]		
-			plt.plot(star_mass_array,yields,marker=marker_type[j],markersize=10,mfc=color[j],linestyle=line_style[j],label=isotopes[j])				
+				order_indices=[i[0] for i in sorted(enumerate(star_mass_array), key=lambda x:x[1])]
+				star_mass_array = [ star_mass_array[i] for i in order_indices]		
+				yields = [ yields[i] for i in order_indices]		
+				#print "plotting graph",len(star_mass)
+				plt.plot(star_mass_array,yields,marker=marker_type[legend_k],markersize=10,mfc=color[color_iso],linewidth=line_width[legend_k],linestyle=line_style[legend_k],label=iso_name[j]+" , "+str(star_z)+"$Z_{\odot}$"  )				
 					#plt.plot(star_mass,yields[j],marker='*',markersize=8,mfc=color[j],linestyle='None')
 		plt.legend()				
 		plt.xlabel("M/M$_{\odot}$",fontsize=20)
@@ -221,7 +266,7 @@ class mppnp_set(se):
 
 
 
-	def set_pocket(self,runs=[],cycle=[45532,47566],mass_cell=[0.641981,0.641981],isotopes=[],mass_number_range=[],decayed=False,iso_label=False,title="PDCZ",colors=["red","blue","green","black"],yax_log=True,filename_norm="iniab2.0E-02GN93.ppn"):
+	def set_pocket(self,runs=[],cycle=[45532,47566],mass_cell=[0.641981,0.641981],isotopes=[],x_charge=False,mass_number_range=[],decayed=False,iso_label=False,title="PDCZ",colors=["red","blue","green","black"],yax_log=True,filename_norm="iniab2.0E-02GN93.ppn",elem_norm=''):
 
 		'''
 			plots isotopic composition for different runs, each with specific cycle number cycle[i] and specific mass cell mass_cell[i].
@@ -265,18 +310,88 @@ class mppnp_set(se):
                         z=sefiles.get("zini")[0]
                         legend=str(mass)+"M$_{\odot}$ Z= "+str(z)+", "+extra_label[i]
 			if len(isotopes)==0:
-                                self.plot_abu_atmasscoord(mp,sefiles,cycle[i],mass_cell[i],["He-4","C-12","O-16","Ne-22"],mass_number_range,decayed,file_norm,yax_log,label=iso_label,legend=legend,color=colors[i],title=title)
+                                self.plot_abu_atmasscoord(mp,sefiles,cycle[i],mass_cell[i],["He-4","C-12","O-16","Ne-22"],x_charge,mass_number_range,decayed,file_norm,elem_norm,yax_log,label=iso_label,legend=legend,color=colors[i],title=title)
 
 				#plt.figure(111);self.pocket_composition(mp,sefiles=sefiles,cycle=cycle[i], massbot=massrange[i][0],masstop=massrange[i][1],isotopes=["He-4","C-12","O-16","Ne-22"],label=True,legend=legend,color=colors[i],title=title)
 				#plt.figure(222);self.pocket_composition(mp,sefiles=sefiles,cycle=cycle[i], massbot=massrange[i][0],masstop=massrange[i][1],isotopes=['Fe-56','Co-60','Ni-61','Cu-65','Zn-67','Ga-71','Ge-73','As-75','Se-77','Br-82','Kr-84','Rb-87','Sr-88','Y-89','Zr-92','Nb-94','Zr-96','Mo-96','Ba-137','Ba-138','La-139','Ce-140','Nd-142','Sm-144','Pb-206'],label=True,legend=legend,color=colors[i],title=title)
 			else:
 				#plt.figure(111);self.pocket_composition(mp,sefiles=sefiles,cycle=cycle[i], massbot=massrange[i][0],masstop=massrange[i][1],isotopes=isotopes,label=True,legend=legend,color=colors[i],title=title)
-				self.plot_abu_atmasscoord(mp,sefiles,cycle[i],mass_cell[i],isotopes,mass_number_range,decayed,file_norm,yax_log,label=iso_label,legend=legend,color=colors[i],title=title)
+				self.plot_abu_atmasscoord(mp,sefiles,cycle[i],mass_cell[i],isotopes,x_charge,mass_number_range,decayed,file_norm,elem_norm,yax_log,label=iso_label,legend=legend,color=colors[i],title=title)
 
-	
-	
 
-	def set_surface_plots(self,runs=[],cycles=[[3113,50000,1000],[3031,60000,1000]],t0_model=[3113,3031],x_range=[-1.8,0.1],y_range=[]):
+        def set_surface_abundances(self,runs=[],cycle=[-1,-1],isotopes=[],x_charge=True,mass_number_range=[],decayed=False,iso_label=False,title="",colors=["red","blue","green","black"],yax_log=True,filename_norm="iniab2.0E-02GN93.ppn",elem_norm=''):
+
+                '''
+                        plots isotopic composition for different runs, each with specific cycle number cycle[i] and specific mass cell mass_cell[i].
+                        Initial abundace file for normalization can be chosen as filename_norm, but MUST be in run directory
+
+                        decayed - plot only decayed isotopes
+                        mass_number_range - array of min mass number and max mass number, isotopes inbetween will be plottet, if set, isotope array will be ignored
+                        iso_label - set labels of isotopes True or False
+                        title - 
+                        colors -
+                        filename_norm - not yet included, normalization with initial abundance file
+                        ....
+                        e.g.
+                        
+                        setse.set_pocket(cycle=[32840,29390],mass_cell=[0.6300,0.6076],isotopes=["He-4","C-12","O-16","Ne-22"],mass_number_range=[80,140],decayed=True)
+                        
+
+        
+                '''
+
+
+                import nugridse as mp
+                sefiles=[]
+                legend=[]
+                HDF5_out=[]
+                extra_label=[]
+
+
+                if len(runs) ==0:
+                        HDF5_out=self.runs_H5_out
+                        runs=self.run_dirs_name
+                        extra_label=self.extra_label
+                else:
+                        for i in range(len(self.run_dirs_name)):
+                                if self.run_dirs_name[i] in runs:
+                                        HDF5_out.append(self.runs_H5_out[i])
+                                        extra_label.append(self.extra_label[i])
+                for i in range(len(HDF5_out)):
+                        reload(mp)
+                        file_norm=HDF5_out[i][:-6]+filename_norm
+                        sefiles=se(HDF5_out[i])
+			if cycle[i] ==-1:
+				cycle_1=sefiles.se.cycles[-1]
+			else:
+				cycle_1=cycle[i]
+			masscell=sefiles.get(cycle_1,"mass")[0]
+                        mass=sefiles.get("mini")[0]
+                        z=sefiles.get("zini")[0]
+                        legend=str(mass)+"M$_{\odot}$ Z= "+str(z)+", "+extra_label[i]
+                        if len(isotopes)==0:
+                                self.plot_abu_atmasscoord(mp,sefiles,cycle_1,masscell,isotopes,x_charge,mass_number_range,decayed,file_norm,elem_norm,yax_log,label=iso_label,legend=legend,color=colors[i],title=title)
+
+                                #plt.figure(111);self.pocket_composition(mp,sefiles=sefiles,cycle=cycle[i], massbot=massrange[i][0],masstop=massrange[i][1],isotopes=["He-4","C-12","O-16","Ne-22"],label=True,legend=legend,color=colors[i],title=title)
+                                #plt.figure(222);self.pocket_composition(mp,sefiles=sefiles,cycle=cycle[i], massbot=massrange[i][0],masstop=massrange[i][1],isotopes=['Fe-56','Co-60','Ni-61','Cu-65','Zn-67','Ga-71','Ge-73','As-75','Se-77','Br-82','Kr-84','Rb-87','Sr-88','Y-89','Zr-92','Nb-94','Zr-96','Mo-96','Ba-137','Ba-138','La-139','Ce-140','Nd-142','Sm-144','Pb-206'],label=True,legend=legend,color=colors[i],title=title)
+                        else:
+                                #plt.figure(111);self.pocket_composition(mp,sefiles=sefiles,cycle=cycle[i], massbot=massrange[i][0],masstop=massrange[i][1],isotopes=isotopes,label=True,legend=legend,color=colors[i],title=title)
+                                self.plot_abu_atmasscoord(mp,sefiles,cycle_1,masscell,isotopes,x_charge,mass_number_range,decayed,file_norm,elem_norm,yax_log,label=iso_label,legend=legend,color=colors[i],title=title)
+
+
+	def plot_saga_data(self,fig=7,label_plot=["C-rich RGB","CEMP RGB","EMP RGB"],path="/nfs/rpod3/critter/DPG/saga_platform"):
+		
+		figure_data=plt.figure(fig)
+		pwd=os.getcwd()
+		os.chdir(path)
+		execfile(path+"/"+"read_files_images.py")
+		print pwd
+		os.chdir(pwd)
+		print "done"	
+		
+
+
+	def set_surface_plots(self,runs=[],cycles=[[10000,1000],[10000,1000]],t0_model=[],decayed=True,mesarunpath="",x_range=[-1.8,0.1],y_range=[]):
 		'''
 		Plot surface abundance evolution of multiple runs
 
@@ -285,12 +400,12 @@ class mppnp_set(se):
 		[Rb/Sr] [hs/ls]
 		plots Mg25/Mg24 vs Mg26/Mg24
           	plots plt.xlabel("$^{96}$Zr/$^{94}$Zr") plt.ylabel("$^{152}$Gd/$^{154}$Gd")
-		
+		plots [ls/Fe] vs star age
 		cycles - 2d array, containing the start and stop cycle for each run and the sparsity
 		t0_model - the starting model to plot, for the time dependent plot, t0_model will be..
 		x_range - define range of 
 	
-		!!Check setse.run_dirs_name array for order of runs for setting the cycles parameter!!	
+		!!Check/c setse.run_dirs_name array for order of runs for setting the cycles parameter!!	
 	
 		# creating prefix variable, we have agreed that this is an 11 character
 		# name with the initial mass and metallicity encoded: M5.00Z0.010 
@@ -298,13 +413,53 @@ class mppnp_set(se):
 		e.g. 
 		
 		set_surface_plots(self,runs=[],cycles=[[3113,50000,1000],[3031,60000,1000]],t0_model=[3113,3031],x_range=[],y_range=[]	
+		test2_template: [3620, 5145, 3030, 4757, 11997, 5288, 9470, 5123, 2996, 3312, 5828, 4749]
 
+		['./M3.000Z0.0060/LOGS',
+		 './M5.000Z0.0010/LOGS',
+		 './M2.000Z0.0001/LOGS',
+		 './M3.000Z0.0001/LOGS',
+		 './M1.650Z0.0060/LOGS',
+		 './M3.000Z0.0010/LOGS',
+		 './M1.650Z0.0010/LOGS',
+		 './M5.000Z0.0060/LOGS',
+		 './M2.000Z0.0010/LOGS',
+		 './M2.000Z0.0060/LOGS',
+	 	'./M1.650Z0.0001/LOGS',
+		 './M5.000Z0.0001/LOGS
 	
 		'''	
-	
-	
-		line_style=['--','-','-.',':']
-		color=['r','b','g','k']
+		
+
+                color=['r','b','k','g']	#'r','r','r','b','b','k','g','k','k','g','b','g']
+                marker_type=['o','o','o','p','p','p','D','D','D','s','s','s']
+		line_style=3*['--','-','-.',':']
+		#IDEA PASS PARAMETE BETWEEN BOTH CLASSES
+	        #if len(runs)==0:
+                #	t0_model=self.set_find_first_TP()
+		#cycles=[]
+		#for i in range(len(cyc)):
+		#	cycles.append([t0_model[i],cyc[i][0],cyc[i][1]])
+		
+		print "Do you want a TP-dependece on time axis?"
+		print "Read corresponding MESA runs?"
+		#answer=raw_input("Read corresponding MPPNP runs?")
+		#if answer ==True:
+		if len(mesarunpath) >0:
+		#mesa_path=raw_input("Read corresponding MPPNP runs?")
+			dir_1=mesarunpath
+			multi_dir=[]
+			for i in range(len(self.run_dirs_name)):
+				multi_dir.append(mesarunpath+"/"+self.run_dirs_name[i])
+			mesaset=mesa_set(multi_dir=multi_dir)
+			peak_lum_model_array_1,h1_mass_min_DUP_model_array = mesaset.multi_DUP(t0_model=[],plot_fig=False)
+			t0_model=[]
+			peak_lum_model_array=[]
+			cycles=[]
+			for i in range(len(peak_lum_model_array_1)):
+				cycles.append(map(int,np.array(peak_lum_model_array_1[i])))
+				t0_model.append(int(peak_lum_model_array_1[i][0]))
+		print "Cycles: ",cycles
 
 		sefiles=[]
 		legend=[]
@@ -324,9 +479,15 @@ class mppnp_set(se):
 
 		for i in range(len(HDF5_surf)):							
 			mass=sefiles[i].get("mini")[0]	
-			z=sefiles[i].get("zini")[0]	
+			z=sefiles[i].get("zini")[0]
+			if z <0.001:
+				color_1=color[0]
+			elif z <0.006:
+				color_1=color[1]
+			else:
+				color_1=color[2]	
 			legend=str(mass)+"M$_{\odot}$ Z= "+str(z)+", "+extra_label[i]
-			self.surface_plots(HDF5_surf[i],cycles[i],t0_model[i],legend,color[i],line_style[i],title="")
+			self.surface_plots(HDF5_surf[i],cycles[i],t0_model[i],decayed,legend,marker_type[i],color_1,line_style[i],title="")
 	
 		#HDF5_dirs=["/nfs/rpod3/critter/Results/test2_template_mppnp/M1.650Z0.0001","/nfs/rpod3/critter/Results/test2_template_mppnp/M5.000Z0.0001"],	
 			
@@ -401,7 +562,12 @@ class mppnp_set(se):
 			plt.figure(4);plt.xlim(x_range[0],x_range[1])
 			plt.figure(5);plt.xlim(x_range[0],x_range[1])
 
-	def set_triple_isotope_plot(self,runs=[],xiso=['S',34,'S',32],yiso=['S',33,'S',32],graintype=None,dcycle=100,USEEPP_path='USEEPP/',sens_runs=True):
+
+		plt.figure(6)
+
+
+
+	def set_triple_isotope_plot(self,runs=[],xiso=['Zr',96,'Zr',94],yiso=['Zr',92,'Zr',94],graintype=['sic'],C_star_only=True,dcycle=100,USEEPP_path='USEEPP',sens_runs=True):
 		'''
         		xiso:       give isotopes as ['Fe',57,'Fe',56]. x axis, yaxis
 	
@@ -409,6 +575,8 @@ class mppnp_set(se):
 
 		'''
 
+		import os
+		pwd=os.getcwd()
 		iniabufiles=[]			
 		
                 sefiles=[]
@@ -424,13 +592,11 @@ class mppnp_set(se):
                                 if self.run_dirs_name[i] in runs:
                                         HDF5_surf.append(self.runs_H5_surf[i])
                                         extra_label.append(self.extra_label[i])
-
 		if sens_runs==True:
 			import glob
 			import os
-			color=['r','r','b','b','k','g','k','g']
-			marker_type=['o','D','s','p','o','D','s','p']
-			
+			color=['r','r','b','b','k','g','k','g','k','b','r','g','g','b']
+			marker_type=['o','D','s','p','o','D','s','p','p','o','p','o','s','p']
 			line_style=['--','-','-.',':']
 			first_plot=True
 			for i in range(len(HDF5_surf)):
@@ -438,14 +604,14 @@ class mppnp_set(se):
                         	mass=sefiles.get("mini")[0]
                         	z=sefiles.get("zini")[0]
 	                        new_notation='{:.1E}'.format(float(z))
-        	                iniabufile=USEEPP_path+'/'+"iniab"+new_notation+"GN93.ppn"
-                        	legend=str(mass)+"M$_{\odot}$ Z= "+str(z)+", "+extra_label[i]
+        	                iniabufile="iniab"+new_notation+"GN93.ppn"     #pwd+"/"+USEEPP_path+'/'+"iniab"+new_notation+"GN93.ppn"
+                        	legend=str(mass)+"M$_{\odot}$, "+str(z)+"Z$_{\odot}$" #+", "+extra_label[i]
 				if first_plot==True:
-					sefiles.plot_isoratios(xiso=xiso,yiso=yiso,graintype=graintype,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend=legend,dcycle=dcycle,errbar=True,iniabufile=iniabufile,plt_symb=marker_type[i],plt_col=color[i])		
+					sefiles.plot_isoratios(xiso=xiso,yiso=yiso,graintype=graintype,tp_finding=False,C_star_only=C_star_only,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend=legend,dcycle=dcycle,errbar=True,iniabufile=iniabufile,plt_symb=marker_type[i],plt_col=color[i])		
 					first_plot=False			
 				else:
 					print ""				
-					sefiles.plot_isoratios(xiso=xiso,yiso=yiso,graintype=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend=legend,dcycle=dcycle,errbar=True,iniabufile=iniabufile,plt_symb=marker_type[i],plt_col=color[i])		
+					sefiles.plot_isoratios(xiso=xiso,yiso=yiso,tp_finding=False,C_star_only=C_star_only,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend=legend,dcycle=dcycle,errbar=True,iniabufile=iniabufile,plt_symb=marker_type[i],plt_col=color[i])		
 
 
 		#plot_isoratios(self,xiso,yiso,graintype=None,tp_finding=False,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,dcycle=500,errbar=True,iniabufile='iniab2.0E-02GN93.ppn'):
@@ -631,6 +797,7 @@ class mppnp_set(se):
                 import nugridse as mp
 	
 		X_i, E_i =sefiles.windyields(cyclestart, cycleend, sparse)
+		print "#################",X_i[:12],sefiles.se.isotopes[0:12],"+#################"
 		###calculate isotopes
 		#isotopes=['Fe-56','Co-60','Ni-61','Cu-65','Zn-67',]
 		#isotopes['Ga-71','Ge-73','As-75','Se-77','Br-82','Kr-84','Rb-87','Sr-88','Y-89','Zr-92','Nb-94','Zr-96','Mo-96','Ba-137','Ba-138','La-139','Ce-140','Nd-142','Sm-144','Pb-206']					
@@ -666,6 +833,7 @@ class mppnp_set(se):
 			specific_isotopes_ppn_world[i]=specific_isotopes_ppn_world[i].upper()
 		
 		isotope_name_prod_factor=[]
+		isotope_name_yield=[]
 		for j in range(len(u.stable)):
 			if u.stable[j] in specific_isotopes_ppn_world:
 				idx=specific_isotopes_ppn_world.index(u.stable[j])
@@ -673,6 +841,7 @@ class mppnp_set(se):
 				print specific_isotopes_ppn_world
 				print idx
 				iso_abu.append(X_i_decayed[j])
+				isotope_name_yield.append(isotopes[idx])
 				print X_i_decayed[j],initial_abu[idx]
 				if initial_abu[idx] <10e-20:
 					print "isotope "+u.stable[j]+" not in initial abundance, and production factor wont be calculated"
@@ -688,12 +857,87 @@ class mppnp_set(se):
 		iso_abu_IMF=[]
 		for i in range(len(iso_abu)):
 			iso_abu_IMF.append(f_m*iso_abu[i])
+		print "RETURN: ",isotope_name_yield,iso_abu_IMF	
+		return isotope_name_yield,iso_abu_IMF,iso_abu,isotope_name_prod_factor, production_factors #isotope name, folded, unfolded yields, and isotope name for production factor and production factor - all stable
+
+ 
+	def weighted_yields(self,sefiles,cyclestart=11000,cycleend=12000,sparse=100,isotopes=["H-1","H-2","H-3","He-4"],star_mass=1.65,label=True,legend="",color="r",title=" -Final wind yields - isotopic composition folded with IMF",plot_fig=True):
+		'''
+				Uses H5_surf
+	  	    This function returns the wind yields and ejected masses for stable species.  The command
+     		   is
+		'''
 	
-		return u.stable,iso_abu_IMF,iso_abu,isotope_name_prod_factor, production_factors #isotope name, folded, unfolded yields, and isotope name for production factor and production factor - all stable
+
+                import utils as u
+                import re
+                import nugridse as mp
+
+	
+		X_i, E_i =sefiles.windyields(cyclestart, cycleend, sparse)
+		###calculate isotopes
+		#isotopes=['Fe-56','Co-60','Ni-61','Cu-65','Zn-67',]
+		#isotopes['Ga-71','Ge-73','As-75','Se-77','Br-82','Kr-84','Rb-87','Sr-88','Y-89','Zr-92','Nb-94','Zr-96','Mo-96','Ba-137','Ba-138','La-139','Ce-140','Nd-142','Sm-144','Pb-206']					
+		#206
+		plotiso=[]
+		mass=[]
+		name=[]
+		isotope_names = sefiles.se.isotopes
+		sefiles.mass_frac = [X_i] #double array important for decay
+	
+		#convert isotope name scheme
+		u.convert_specie_naming_from_h5_to_ppn(isotope_names) #-define u.spe
+		names_ppn_world = u.spe 
+		number_names_ppn_world = u.n_array
+		u.define_zip_index_for_species(names_ppn_world,number_names_ppn_world) #--define u.cl!	
+	
+		#let species decay
+		u.stable_specie()
+		sefiles.decay([X_i]) #double array is important for decay()
+		X_i_decayed=decayed_multi_d[0]
+		
+		#convert specified isotopes in correct name scheme
+		u.convert_specie_naming_from_h5_to_ppn(isotopes) #-define u.spe
+		isotopes_ppn_world = u.spe
+	
+		for i in range(len(isotopes_ppn_world)):
+			isotopes_ppn_world[i]=isotopes_ppn_world[i].upper()
+		
+		for j in range(len(u.stable)):
+			if u.stable[j] in isotopes_ppn_world:
+				plotiso.append(X_i_decayed[j])
+				mass.append(int(re.findall(r'\d+',u.stable[j])[0]))
+				name.append(u.stable[j])
+		###Folding and plotting###			
+		#Salpeter mass function,Kroupa 2001:(lazyness..)
+		#f(M)=M**-2.3
+		f_m=(star_mass**(-2.3))
+		iso_IMF=[]
+		for i in range(len(plotiso)):
+			iso_IMF.append(f_m*plotiso[i])
+		if plot_fig == True:	
+			plt.plot(mass,iso_IMF,marker='*',markersize=8,mfc=color,linestyle='None',label=legend)
+			plt.xlabel("Mass number A")
+			plt.ylabel("Abundance")
+			plt.title(title)	
+			if label ==True:
+				k=-1
+				for j in range(len(plotiso)):
+					k+=1
+					if isotopes_ppn_world[j] != name[j]:
+						k+=1
+						print "Input isotope >>"+isotopes_ppn_world[j]+"<< not stable and will be removed"
+					plt.annotate(name[j], xytext = (0, 10),textcoords = 'offset points' ,xy=(mass[j], iso_IMF[j]))
+			mina=mass[0]-4 	
+			if mina<0:
+				mina=0
+			plt.xlim(mina,mass[-1]+4)
+			plt.legend()
+		return iso_IMF, plotiso #folded and unfolded - both stable
+	
 
 
-
-	def plot_abu_atmasscoord(self,mp,sefiles,cycle,masscell,isotopes_input,mass_number_range,decayed,filename_solar_norm,yax_log,label,legend,color,title):
+	def plot_abu_atmasscoord(self,mp,sefiles,cycle,masscell,isotopes_input,x_charge,mass_number_range,decayed,filename_solar_norm,elem_norm,yax_log,label,legend,color,title):
 		import utils as u
 
 		'''
@@ -755,17 +999,20 @@ class mppnp_set(se):
 		name=[]
 		
 		mass=sefiles.se.A
+		charge=sefiles.se.Z
 		#sefiles.stable_isotope_list[isotope] <> get isotopes you want
-		sefiles.iso_index=[]	
+		sefiles.iso_index=[]
+		iniabu_norm=0	
 		for j in range(len(sefiles.se.isotopes)):
 			if sefiles.se.isotopes[j] in isotopes:
 				name.append(sefiles.se.isotopes[j])
 				if decayed == False:
 					iso_abu.append(sefiles.get(cycle,sefiles.se.isotopes[j])[idx])
 				sefiles.iso_index.append(j)
-			#iniabu_array.append(sefiles.get(0,sefiles.se.isotopes[j])[0])
-				#print iso_1,plotiso[-1],mass[-1]
-
+			if len(elem_norm)==1:
+				if elem_norm in sefiles.se.isotopes[j]:
+					iniabu_norm+=sefiles.get(cycle,sefiles.se.isotopes[j])[0]
+					print "iniabu_norm....",iniabu_norm
 
 		if decayed ==True:
                		########isotope decay, new abundances#######
@@ -803,6 +1050,7 @@ class mppnp_set(se):
 
 
 		mass_specific_isotopes=[]
+		charge_specific_isotopes=[]
 		label_specific_isotopes=[]
 		###########Calculate production factor
 		if decayed == True:
@@ -811,9 +1059,12 @@ class mppnp_set(se):
 					#if sefiles isotope in both name schemes have same order, than following is correct
 					iso_idx=names_ppn_world_sefiles.index(u.stable[j].capitalize())
 					#print u.stable[j].capitalize(), sefiles.se.isotopes[iso_idx]
-					iniabu_norm=sefiles.get(0,sefiles.se.isotopes[iso_idx])[0]
-                                        if iniabu_norm <1e-20:
-                                                print "Warning: Isotope "+sefiles.se.isotopes[i]+" not in initial abundance file, no plotting"
+					if len(elem_norm)==0:
+						iniabu_norm=sefiles.get(0,sefiles.se.isotopes[iso_idx])[0]
+						print "this is not "
+                                        print iniabu_norm
+					if iniabu_norm <1e-20:
+                                                	print "Warning: Isotope "+sefiles.se.isotopes[i]+" not in initial abundance file, no plotting"
                                         else: 
 						#norm=iniabu_array[iso_idx]		#u.solar_abundance[isotopes_ppn_world]
 						plotiso.append(iso_abu_decayed[j]/iniabu_norm)
@@ -823,12 +1074,21 @@ class mppnp_set(se):
 			j=0
 			for i in range(len(sefiles.se.isotopes)):
 				if sefiles.se.isotopes[i] in isotopes:
-					iniabu_norm=sefiles.get(0,sefiles.se.isotopes[i])[0]
+					print sefiles.se.isotopes[i],isotopes
+					if len(elem_norm)==0:
+						print "count"+str(i)
+						iniabu_norm=1
+						print "print info:",sefiles.get(0,sefiles.se.isotopes[i])[0]
+						print "aaaa",iniabu_norm
+					print "aaaaaaaaaa",iniabu_norm
+					#if len(iniabu_norm)>1:
+					#	iniabu_norm=iniabu_norm[0]
 					if iniabu_norm <1e-20:
 						print "Warning: Isotope "+sefiles.se.isotopes[i]+" not in initial abundance file, no plotting"	
 					else:	
 						plotiso.append(iso_abu[j]/iniabu_norm)
 						mass_specific_isotopes.append(mass[i])
+						charge_specific_isotopes.append(charge[i])
 						label_specific_isotopes.append(sefiles.se.isotopes[i])
 					j+=1
 		
@@ -840,24 +1100,50 @@ class mppnp_set(se):
                 	ax = fig.add_subplot(1,1,1)
                         ax.set_yscale('log')
 
-		plt.plot(mass_specific_isotopes,plotiso,'*',label=legend,marker='*',markersize=8,mfc=color,linestyle='None')
-		if label ==True:
-			for j in range(len(plotiso)):
-				plt.annotate(label_specific_isotopes[j], xytext = (0, 10),textcoords = 'offset points' ,xy=(mass_specific_isotopes[j], plotiso[j]))
+		if x_charge==False:
+			plt.plot(mass_specific_isotopes,plotiso,'*',label=legend,marker='*',markersize=8,mfc=color,linestyle='None')
+
+	                if label ==True:
+        	                for j in range(len(plotiso)):
+                	                plt.annotate(label_specific_isotopes[j], xytext = (0, 10),textcoords = 'offset points' ,xy=(mass_specific_isotopes[j], plotiso[j]))
+
+
+		else:
+			plt.plot(charge_specific_isotopes,plotiso,'*',label=legend,marker='*',markersize=8,mfc=color,linestyle='None')
+			if label ==True:
+				for j in range(len(plotiso)):
+					plt.annotate(label_specific_isotopes[j], xytext = (0, 10),textcoords = 'offset points' ,xy=(charge_specific_isotopes[j], plotiso[j]))
 
                 plt.rcParams.update({'font.size': 16})
                 plt.rc('xtick', labelsize=16)
                 plt.rc('ytick', labelsize=16)
 		plt.minorticks_on()
-		plt.xlim(mass_specific_isotopes[0]-4,mass_specific_isotopes[-1]+4)
+		plt.xlim(mass_specific_isotopes[0],mass_specific_isotopes[-1])
 		plt.legend()
 		plt.title(title)
  		plt.ylabel("$X_{i}/X_{ini}$",fontsize=20)
-		plt.xlabel("Mass Number (A)",fontsize=20)
+		if x_charge==False:
+			plt.xlabel("Mass Number (A)",fontsize=20)
+		else:
+			plt.xlabel("Charge (Z)",fontsize=20)
+
+
+	def set_ba(self):
+
+		for i in range(len(self.runs_H5_surf)):
+			sefiles=se(self.runs_H5_surf[i])
+			y=[]
+			mass=sefiles.get("mini")[0]
+                        z=sefiles.get("zini")[0]
+                        legend=str(mass)+"M$_{\odot}$ Z= "+str(z)
+			for j in arange(0,len(sefiles.se.cycles)-1000,500):
+    				y.append(sefiles.get(j,"elem_massf","Ba"))
+			plt.plot(arange(0,len(sefiles.se.cycles)-1000,500),y,label=legend)
+
 
 
 	
-	def surface_plots(self,HDF5surf_dir,cycles,t0_model,legend="",color="r",line_style="-",title="",hs=["Ba","La","Nd","Sm"],ls=["Sr","Y","Zr"]): 
+	def surface_plots(self,HDF5surf_dir,cycles,t0_model,decayed=True,legend="",marker_type='o',color="r",line_style="-",title="",hs=["Ba","La","Nd","Sm"],ls=["Sr","Y","Zr"]): 
 	
 		'''surface hdf5
 	
@@ -865,7 +1151,7 @@ class mppnp_set(se):
 			hs: Ba,La,Nd,Sm -elements
 		
 			isotopes,elements,HDF5_dir,cycles,legend,title,x_range=[],y_range=[]):
-	
+		if cycle longer than 3 assume special sequence	
 	
 		plots [hs/ls] vs star age
 	plots  [ls/Fe] vs [hs/ls] 
@@ -875,7 +1161,13 @@ plots Mg25/Mg24 vs Mg26/Mg24
                 plt.ylabel("$^{152}$Gd/$^{154}$Gd")
 	'''	
 		
-		
+		import utils as u
+		import nugridse as mp	
+                if len(cycles)>3:
+                        cycle_range=cycles
+			t0_model=cycle_range[0]
+                else:
+                        cycle_range=np.arange(cycles[0],cycles[1],cycles[2])
 		
 		sefiles=se(HDF5surf_dir)
 
@@ -895,6 +1187,13 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		fe_abu=[]
 		rb_abu=[]####n-density + efficiency of N22(a,n)
 		sr_abu=[]
+		ba_abu=[]
+		eu_abu=[]
+		ls_abu_ini=[]
+		hs_abu_ini=[]
+		ba_abu_ini=[]
+		eu_abu_ini=[]
+		fe_abu_ini=[]
 		quot_abu_mg_26_24=[]
 		quot_abu_mg_25_24=[]
 		quot_abu_gd_152_154=[]
@@ -904,64 +1203,179 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		rb_isotopes=[]
 		fe_isotopes=[]
 		sr_isotopes=[]
+		ba_isotopes=[]
+		eu_isotopes=[]
 		mg_isotopes=['Mg-24','Mg-25','Mg-26']
 		gd_isotopes=['Gd-152','Gd-154']
 		zr_isotopes=['Zr-94','Zr-96']
 		for iso in sefiles.se.isotopes:
 			for i in range(len(ls)):
-				if ls[i] in iso:
+				if ls[i] in iso and (is_stable(iso) == 't'):
 					ls_isotopes.append(iso)
 			for i in range(len(hs)):
-				if hs[i] in iso:
+				if hs[i] in iso and (is_stable(iso) == 't'):
 					hs_isotopes.append(iso)
 			if "Rb" in iso:
 					rb_isotopes.append(iso)
-			if "Fe" in iso:
+			if "Fe" in iso and (is_stable(iso) == 't'):
 					fe_isotopes.append(iso)
-			if "Sr" in iso:
-					sr_isotopes.append(iso)		
-		print hs_isotopes,ls_isotopes,rb_isotopes,fe_isotopes,sr_isotopes
-		for cycle in np.arange(cycles[0],cycles[1],cycles[2]):
+			if "Sr" in iso and (is_stable(iso) == 't'):
+					sr_isotopes.append(iso)
+                        if "Ba" in iso and (is_stable(iso) == 't'):
+                                        ba_isotopes.append(iso) 
+                        if "Eu" in iso and (is_stable(iso) == 't'):
+                                        eu_isotopes.append(iso) 	
+		print "0000000000000000000"
+		#if decayed ==True:
+              #  	u.convert_specie_naming_from_h5_to_ppn(ls_isotopes) #-define u.spe
+                 #       ls_isotopes = u.spe
+	          #      for i in range(len(ls_isotopes)):
+        	   #             ls_isotopes[i]=ls_isotopes[i].upper()
+                    #    u.convert_specie_naming_from_h5_to_ppn(hs_isotopes) #-define u.spe
+                     #   hs_isotopes = u.spe
+                      #  for i in range(len(hs_isotopes)):
+                       #         hs_isotopes[i]=hs_isotopes[i].upper()
+            #           	u.convert_specie_naming_from_h5_to_ppn(rb_isotopes) #-define u.spe
+             #           rb_isotopes = u.spe
+              #          for i in range(len(rb_isotopes)):
+               ##                 rb_isotopes[i]=rb_isotopes[i].upper()
+		#	u.convert_specie_naming_from_h5_to_ppn(sr_isotopes) #-define u.spe
+                 #       sr_isotopes = u.spe
+                  #      for i in range(len(sr_isotopes)):
+                   #             sr_isotopes[i]=sr_isotopes[i].upper()
+                    #    u.convert_specie_naming_from_h5_to_ppn(ba_isotopes) #-define u.spe
+                     #   ba_isotopes = u.spe
+       #                 for i in range(len(ba_isotopes)):
+        #                        ba_isotopes[i]=ba_isotopes[i].upper()
+         #               u.convert_specie_naming_from_h5_to_ppn(eu_isotopes) #-define u.spe
+         #               eu_isotopes = u.spe
+          #              for i in range(len(eu_isotopes)):
+           #                     eu_isotopes[i]=eu_isotopes[i].upper()
+            #            u.convert_specie_naming_from_h5_to_ppn(fe_isotopes) #-define u.spe
+             #           fe_isotopes = u.spe
+              #          for i in range(len(fe_isotopes)):
+               #                 fe_isotopes[i]=fe_isotopes[i].upper()
+#
+		print hs_isotopes,ls_isotopes,rb_isotopes,fe_isotopes,sr_isotopes,ba_isotopes,eu_isotopes
+		#ini_abu=sefiles.get(0,"iso_massf_decay")
+		a=u.iniabu('iniab2.0E-02GN93.ppn')#'../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn')
+		for cycle in cycle_range:
+			reload(mp)
 			#print cycle
 			starage.append(sefiles.se.get(cycle,"age")-t0_time)
 			ls_abu_1=0
 			hs_abu_1=0
 			rb_abu_1=0
 			fe_abu_1=0
-			sr_abu_1=0			
+			sr_abu_1=0
+			ba_abu_1=0
+			eu_abu_1=0
+			ls_abu_ini_1=0
+			hs_abu_ini_1=0
+			ba_abu_ini_1=0
+			eu_abu_ini_1=0
+			fe_abu_ini_1=0
+			print "11111111111111"	
+			isotopes_complete=sefiles.se.isotopes
+			if decayed ==True:
+				isotope_abundances=sefiles.get(cycle,"iso_massf_decay")
+			else:
+				isotope_abundances=sefiles.get(cycle,"iso_massf")
+                                ########isotope decay, new abundances#######
+                                #isomers are excluded for now, in convert_specie naming...last ones 5
+                                #to decay whole network use all isotopes, change iso_abu
 
-			for iso in sefiles.se.isotopes:
-				if iso in ls_isotopes:
-					ls_abu_1+=sefiles.get(cycle,"iso_massf",iso)
-				if iso in hs_isotopes:
-					hs_abu_1+=sefiles.get(cycle,"iso_massf",iso)		
-				if iso in rb_isotopes:
-					rb_abu_1+=sefiles.get(cycle,"iso_massf",iso)
-				if iso in sr_isotopes:
-					sr_abu_1+=sefiles.get(cycle,"iso_massf",iso)
-				if iso in fe_isotopes:
-					fe_abu_1+=sefiles.get(cycle,"iso_massf",iso)
+	                #if decayed ==True:
+			#	print "111111111111111233124324"
+                        #	isotope_names = sefiles.se.isotopes
+                        #	sefiles.mass_frac = [isotope_abundances] #double array important for decay
+                        #	u.convert_specie_naming_from_h5_to_ppn(isotope_names) #-define u.spe
+                        #	names_ppn_world_sefiles = u.spe
+                        #	number_names_ppn_world = u.n_array
+                        #	u.define_zip_index_for_species(names_ppn_world_sefiles,number_names_ppn_world) #--define u.cl!
+                        #	#let species decay
+                        #	u.stable_specie()
+                        #	sefiles.decay([isotope_abundances]) #double array is important for decay()
+                        #	iso_abu_decayed=mp.decayed_multi_d
+			#	isotopes_complete=u.stable
+			#	isotope_abundances=iso_abu_decayed[0]
+			#	print "  "
+			#	print isotopes_complete
+			#	print len(isotope_abundances)		
+
+			u.convert_specie_naming_from_h5_to_ppn(isotopes_complete)
+			names_ppn_world=u.spe
+			for i in range(len(names_ppn_world)):
+				print "##############",len(isotopes_complete),len(names_ppn_world)
+				names=names_ppn_world[i].lower()
+				if isotopes_complete[i] in ls_isotopes:
+					ls_abu_1+=(sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i]))
+					ls_abu_ini_1+=a.habu[names]
+				if isotopes_complete[i] in hs_isotopes:
+					hs_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					hs_abu_ini_1+=a.habu[names]
+				if isotopes_complete[i] in rb_isotopes:
+					rb_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+				if isotopes_complete[i] in sr_isotopes:
+					sr_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+                                if isotopes_complete[i] in ba_isotopes:
+					#name=
+                                        ba_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					ba_abu_ini_1+=a.habu[names]
+                                if isotopes_complete[i] in eu_isotopes:
+
+                                        eu_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					eu_abu_ini_1+=a.habu[names]
+				if isotopes_complete[i] in fe_isotopes:
+					#name=
+					print isotopes_complete[i],sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					fe_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					fe_abu_ini_1+=a.habu[names]
+			#eu_abu_1=sefiles.get(cycle,"elem_massf_decay","Eu")
+			print fe_abu_1 	
+			print "fe: ",sefiles.get(cycle,"elem_massf","Fe")
+			print "fe: ",sefiles.get(cycle,"elem_massf_decay","Fe")
+			print fe_abu_1
+			print ba_abu_1
+			print "ba :",sefiles.get(cycle,"elem_massf_decay","Ba")	
+			print ba_abu_1
 			#create hs and ls as mean values of the elements		
 			hs_abu.append(hs_abu_1/len(hs))
 			ls_abu.append(ls_abu_1/len(ls))
 			fe_abu.append(fe_abu_1)
 			rb_abu.append(rb_abu_1)
-			sr_abu.append(sr_abu_1)			
-			quot_abu_mg_26_24.append( sefiles.get(cycle,"iso_massf",mg_isotopes[2])/sefiles.get(cycle,"iso_massf",mg_isotopes[0]) )
-			quot_abu_mg_25_24.append( sefiles.get(cycle,"iso_massf",mg_isotopes[1])/sefiles.get(cycle,"iso_massf",mg_isotopes[0] ))
-			quot_abu_gd_152_154.append( sefiles.get(cycle,"iso_massf",gd_isotopes[0])/sefiles.get(cycle,"iso_massf",gd_isotopes[1])) 
-			quot_abu_zr_96_94.append( sefiles.get(cycle,"iso_massf",zr_isotopes[1])/sefiles.get(cycle,"iso_massf",zr_isotopes[0]) )
+			sr_abu.append(sr_abu_1)	
+			ba_abu.append(ba_abu_1)
+			eu_abu.append(eu_abu_1)	
+			hs_abu_ini.append(hs_abu_ini_1)
+			ls_abu_ini.append(ls_abu_ini_1)
+			ba_abu_ini.append(ba_abu_ini_1)
+			eu_abu_ini.append(eu_abu_ini_1)
+			fe_abu_ini.append(fe_abu_ini_1)
+			#quot_abu_mg_26_24.append( sefiles.get(cycle,"iso_massf",mg_isotopes[2])/sefiles.get(cycle,"iso_massf",mg_isotopes[0]) )
+			#quot_abu_mg_25_24.append( sefiles.get(cycle,"iso_massf",mg_isotopes[1])/sefiles.get(cycle,"iso_massf",mg_isotopes[0] ))
+			#quot_abu_gd_152_154.append( sefiles.get(cycle,"iso_massf",gd_isotopes[0])/sefiles.get(cycle,"iso_massf",gd_isotopes[1])) 
+			#quot_abu_zr_96_94.append( sefiles.get(cycle,"iso_massf",zr_isotopes[1])/sefiles.get(cycle,"iso_massf",zr_isotopes[0]) )
 	
-		print quot_abu_mg_26_24
-		print quot_abu_mg_25_24
-		print quot_abu_gd_152_154
-		print quot_abu_zr_96_94	
+		print "hsabu:" 
+		print hs_abu
+		print "lsabu"
+		print ls_abu
+		print "feabu"
+		print fe_abu
+		print "rbabu"
+		print rb_abu
+		print "srabu"
+		print sr_abu
+		print "babu"
+		print ba_abu
+		print "euabu"
+		print eu_abu
+		print "starage"
+		print starage
 		
 		#Plotting different figures, beware of square bracket notation
 		plt.figure(1)
-		print t0_model
-		print t0_time
-		print np.array(starage)
 		plt.plot(np.array(starage),np.log10(np.array(hs_abu)/np.array(ls_abu)),marker='*',markersize=8,mfc=color,linestyle=line_style,label=legend)
 		plt.xlabel("$star age [t-t_0]$")
 		plt.ylabel("[hs/ls]")
@@ -969,12 +1383,13 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		plt.title(title)
 		plt.draw()
 		#Paper 1 plot
+		print "plot2"
 		plt.figure(2);plt.plot(np.log10(np.array(hs_abu)/np.array(ls_abu)),np.log10(np.array(ls_abu)/np.array(fe_abu)),c=color,linestyle=line_style,label=legend)  #,marker='*',markersize=8,
 		plt.xlabel("[hs/ls]");plt.ylabel("[ls/Fe]")
 		plt.legend()
 		plt.title(title)
 		plt.draw()	
-	
+		print "print3"
 		#Paper 1 plot
 		plt.figure(3);plt.plot(np.log10(np.array(hs_abu)/np.array(ls_abu)),np.log10(np.array(rb_abu)/np.array(sr_abu)),c=color,linestyle=line_style,label=legend)
 		plt.xlabel("[hs/ls]")
@@ -982,9 +1397,9 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		plt.legend()
 		plt.title(title)
 		plt.draw()
-
+		print "plot4"
 		#Paper 1 plot
-		plt.figure(4);plt.plot(quot_abu_mg_25_24,quot_abu_mg_26_24,c=color,linestyle=line_style,label=legend)
+		#plt.figure(4);plt.plot(quot_abu_mg_25_24,quot_abu_mg_26_24,c=color,linestyle=line_style,label=legend)
 		plt.xlabel("$^{25}$Mg/$^{24}$Mg")
 		plt.ylabel("$^{26}$Mg/$^{24}$Mg")
 		plt.legend()
@@ -992,12 +1407,47 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		plt.draw()
 	
 		#Paper 1 plot
-		plt.figure(5);plt.plot(quot_abu_zr_96_94,quot_abu_gd_152_154,c=color,linestyle=line_style,label=legend)
+		#plt.figure(5);plt.plot(quot_abu_zr_96_94,quot_abu_gd_152_154,c=color,linestyle=line_style,label=legend)
 		plt.xlabel("$^{96}$Zr/$^{94}$Zr")
 		plt.ylabel("$^{152}$Gd/$^{154}$Gd")
 		plt.legend()
 		plt.title(title)
 		plt.draw()
+		#new
+                plt.figure(6)
+                plt.plot(np.array(starage),np.log10( np.array(hs_abu)*np.array(ls_abu_ini)/(np.array(ls_abu)*np.array(hs_abu_ini))),marker=marker_type,markersize=12,mfc=color,linestyle=line_style,label=legend)
+                plt.xlabel("$t-t_0 [yr]$",fontsize=20)
+                plt.ylabel("[hs/ls]",fontsize=20)
+                plt.legend()
+                plt.title(title)
+                plt.draw()
+                plt.rcParams.update({'font.size': 16})
+                plt.rc('xtick', labelsize=16)
+                plt.rc('ytick', labelsize=16)
+                plt.minorticks_on()
+
+                plt.rcParams.update({'font.size': 16})
+                plt.rc('xtick', labelsize=16)
+                plt.rc('ytick', labelsize=16)
+                plt.minorticks_on()
+
+
+                #new
+                plt.figure(7)
+                plt.plot( np.log10( np.array(eu_abu)*np.array(fe_abu_ini) /(np.array(fe_abu)*np.array(eu_abu_ini)  )), np.log10( np.array(ba_abu)*np.array(fe_abu_ini)/(np.array(fe_abu)*np.array(ba_abu_ini))),marker=marker_type,markersize=12,mfc=color,linestyle=line_style,label=legend)
+                plt.xlabel("[Eu/Fe]",fontsize=20)
+                plt.ylabel("[Ba/Fe]",fontsize=20)
+                plt.legend()
+                plt.title(title)
+                plt.draw()
+                plt.rcParams.update({'font.size': 16})
+                plt.rc('xtick', labelsize=16)
+                plt.rc('ytick', labelsize=16)
+                plt.minorticks_on()
+
+
+
+
 		
 		return [starage,hs_abu,ls_abu,fe_abu,rb_abu,sr_abu]
 
@@ -1116,7 +1566,7 @@ class mesa_set(history_data):
 					print "Error: not history.data or star.log file found in "+run_path		
 
 	
-	def multi_DUP(self,dirs=[],path=path,t0_model=[],h_core_mass=False):
+	def multi_DUP(self,dirs=[],path=path,t0_model=[],h_core_mass=False,plot_fig=True):
 		'''
 			z1e-2:1.65-5:[13690,3120,3163,5306]
 			z2e-2:1.65-5:[16033,6214,3388,5368]
@@ -1142,10 +1592,17 @@ class mesa_set(history_data):
 		color=['r','b','g','k','g','b','r','k','r','g','b','k']
 		marker_type=['D','D','s','s','o','D','s','p','o','D','s','o']
 		#line_style=['--','-','-.',':']
+		peak_lum_model_array=[]
+		h1_mass_min_DUP_model_array=[]
 		for i in range(len(dirs)):
 			#color,marker_type)
-			historydata[i].find_TP_attributes(0,t0_model[i],color[i],marker_type[i],h_core_mass)			
+			peak_lum_model,h1_mass_min_DUP_model = historydata[i].find_TP_attributes(0,t0_model[i],color[i],marker_type[i],h_core_mass,no_fig=plot_fig)			
+			peak_lum_model_array.append(peak_lum_model)
+			h1_mass_min_DUP_model.append(h1_mass_min_DUP_model)
 
+		return peak_lum_model_array,h1_mass_min_DUP_model_array
+
+				
 	###the following methods allow are parts of Falks vis3.py file, thanks Falk
 
 	def set_plot_hrd(self,end_model=[]):
@@ -1166,9 +1623,13 @@ class mesa_set(history_data):
         		plot(logTeff,logL,symbs[i],label=self.run_label[i])
         		i += 1
 		case.xlimrev()
+                ax = plt.gca()
+                plt.rcParams.update({'font.size': 16})
+                plt.rc('xtick', labelsize=16)
+                plt.rc('ytick', labelsize=16)
     		legend(loc=4)
-   		xlabel('log Teff')
-    		ylabel('log L')
+   		xlabel('log Teff',fontsize=18)
+    		ylabel('log L',fontsize=18)
  
 	def set_plot_t_mass(self):
     				
@@ -1227,7 +1688,6 @@ class mesa_set(history_data):
                         if end_model[i] != -1:
                                 t1_model=end_model[i]
                         t0_model=case.get("model_number")[0]
-
         		star_age=case.get('star_age')[:(t1_model-t0_model)]
         		model_number=case.get('model_number')[:(t1_model-t0_model)]
         		star_mass=case.get('star_mass')[:(t1_model-t0_model)]
@@ -1238,9 +1698,12 @@ class mesa_set(history_data):
         		i += 1
    		legend(loc=2)
     		ax = plt.gca()
-    		ax.invert_xaxis()
-    		xlabel('star mass')
-    		ylabel('C/O ratio')
+                plt.rcParams.update({'font.size': 16})
+                plt.rc('xtick', labelsize=16)
+                plt.rc('ytick', labelsize=16)
+		ax.invert_xaxis()
+    		plt.xlabel('star mass $[M_{\odot}]$',fontsize=18)
+		plt.ylabel('C/O Verhaeltnis', fontsize=18)
 
         def set_plot_CO_mH(self):
                 m=self.run_historydata
@@ -1260,7 +1723,7 @@ class mesa_set(history_data):
                 legend(loc=2)
                 ax = plt.gca()
                 ax.invert_xaxis()
-                xlabel('star mass')
+                xlabel('star mass [M$_{H}$]')
                 ylabel('C/O ratio')
 
 
@@ -1442,81 +1905,6 @@ class mesa_set(history_data):
 		else:
                         return str(mass)+"$M_{\odot}$, z="+str(z)+" , "+extra_label
 			
- 
-	def weighted_yields(self,sefiles,cyclestart=11000,cycleend=12000,sparse=100,isotopes=["H-1","H-2","H-3","He-4"],star_mass=1.65,label=True,legend="",color="r",title=" -Final wind yields - isotopic composition folded with IMF",plot_fig=True):
-		'''
-				Uses H5_surf
-	  	    This function returns the wind yields and ejected masses for stable species.  The command
-     		   is
-		'''
-	
-
-                import utils as u
-                import re
-                import nugridse as mp
-
-	
-		X_i, E_i =sefiles.windyields(cyclestart, cycleend, sparse)
-		###calculate isotopes
-		#isotopes=['Fe-56','Co-60','Ni-61','Cu-65','Zn-67',]
-		#isotopes['Ga-71','Ge-73','As-75','Se-77','Br-82','Kr-84','Rb-87','Sr-88','Y-89','Zr-92','Nb-94','Zr-96','Mo-96','Ba-137','Ba-138','La-139','Ce-140','Nd-142','Sm-144','Pb-206']					
-		#206
-		plotiso=[]
-		mass=[]
-		name=[]
-		isotope_names = sefiles.se.isotopes
-		sefiles.mass_frac = [X_i] #double array important for decay
-	
-		#convert isotope name scheme
-		u.convert_specie_naming_from_h5_to_ppn(isotope_names) #-define u.spe
-		names_ppn_world = u.spe 
-		number_names_ppn_world = u.n_array
-		u.define_zip_index_for_species(names_ppn_world,number_names_ppn_world) #--define u.cl!	
-	
-		#let species decay
-		u.stable_specie()
-		sefiles.decay([X_i]) #double array is important for decay()
-		X_i_decayed=decayed_multi_d[0]
-		
-		#convert specified isotopes in correct name scheme
-		u.convert_specie_naming_from_h5_to_ppn(isotopes) #-define u.spe
-		isotopes_ppn_world = u.spe
-	
-		for i in range(len(isotopes_ppn_world)):
-			isotopes_ppn_world[i]=isotopes_ppn_world[i].upper()
-		
-		for j in range(len(u.stable)):
-			if u.stable[j] in isotopes_ppn_world:
-				plotiso.append(X_i_decayed[j])
-				mass.append(int(re.findall(r'\d+',u.stable[j])[0]))
-				name.append(u.stable[j])
-		###Folding and plotting###			
-		#Salpeter mass function,Kroupa 2001:(lazyness..)
-		#f(M)=M**-2.3
-		f_m=(star_mass**(-2.3))
-		iso_IMF=[]
-		for i in range(len(plotiso)):
-			iso_IMF.append(f_m*plotiso[i])
-		if plot_fig == True:	
-			plt.plot(mass,iso_IMF,marker='*',markersize=8,mfc=color,linestyle='None',label=legend)
-			plt.xlabel("Mass number A")
-			plt.ylabel("Abundance")
-			plt.title(title)	
-			if label ==True:
-				k=-1
-				for j in range(len(plotiso)):
-					k+=1
-					if isotopes_ppn_world[j] != name[j]:
-						k+=1
-						print "Input isotope >>"+isotopes_ppn_world[j]+"<< not stable and will be removed"
-					plt.annotate(name[j], xytext = (0, 10),textcoords = 'offset points' ,xy=(mass[j], iso_IMF[j]))
-			mina=mass[0]-4 	
-			if mina<0:
-				mina=0
-			plt.xlim(mina,mass[-1]+4)
-			plt.legend()
-		return iso_IMF, plotiso #folded and unfolded - both stable
-	
 def is_stable(isotope):
                 
 	isotopes={"N-1":"t",

@@ -1221,7 +1221,7 @@ class history_data(DataPlot):
 # we may or may not need this below
 #        fig.clear()
 	
-    def find_TP_attributes(self,fig,t0_model,color,marker_type,h_core_mass=False):
+    def find_TP_attributes(self,fig,t0_model,color,marker_type,h_core_mass=False,no_fig=False):
 		'''
 			Function which finds TPs and uses the calc_DUP_parameter function
 			to calculate DUP parameter evolution dependent of the star or core mass.			
@@ -1231,6 +1231,9 @@ class history_data(DataPlot):
 			marker_type - marker type
 			h_core_mass - If True: plot dependence from h free core , else star mass 
 		'''
+		
+		#if len(t0_model)==0:
+			
 		t0_idx=(t0_model-self.get("model_number")[0])	
 		first_TP_he_lum=10**(self.get("log_LHe")[t0_idx])
 		he_lum=10**(self.get("log_LHe")[t0_idx:])
@@ -1305,7 +1308,9 @@ class history_data(DataPlot):
 		for i in range(len(peak_lum_model)):
 			modeln.append(peak_lum_model[i])
 			modeln.append(h1_mass_min_DUP_model[i])
-		self.calc_DUP_parameter(fig,modeln,leg,color,marker_type,h_core_mass)
+		if no_fig==True:	
+			self.calc_DUP_parameter(fig,modeln,leg,color,marker_type,h_core_mass)
+		return peak_lum_model,h1_mass_min_DUP_model
 		
     def calc_DUP_parameter(self,fig,modeln,leg,color,marker_type,h_core_mass=False): 
 		'''

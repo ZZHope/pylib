@@ -479,7 +479,7 @@ class DataPlot():
 			pl.xlim(limits[0],limits[1])
 			pl.ylim(limits[2],limits[3])
 
-	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend='',errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10.,plt_modlw=3.,plt_sparse=0,plt_mrng=False,calling_routine='all'):
+	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,C_star_only=False,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend='',errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10.,plt_modlw=3.,plt_sparse=0,plt_mrng=False,calling_routine='all'):
 		'''
 		Method for plotting ratio data from model output as well as grain data.
 		Important: You have to give some input to the routine!
@@ -593,8 +593,9 @@ class DataPlot():
 					pl.legend(loc=5)
 			else:
 				# plot
-				pl.plot(mxdata_orich,mydata_orich,'--',c='b',label='C/O$<$1'+extra_legend)
-				pl.plot(mxdata_crich,mydata_crich,'o-',c='b',label='C/O$>$1'+extra_legend)
+				if C_star_only ==False:
+					pl.plot(mxdata_orich,mydata_orich,linestyle='--',marker=plt_symb,c=plt_col,label='C/O$<$1'+", "+extra_legend)
+				pl.plot(mxdata_crich,mydata_crich,linestyle='o-',marker=plt_symb,c=plt_col,label='C/O$>$1'+", "+extra_legend)
 				# axis
 				if logx and logy:
 					pl.loglog()
@@ -727,8 +728,9 @@ class DataPlot():
 			# plot model:
 			if m_co != None and misosx!=None:
 				# actual plotting
-				pl.plot(mxdata_orich,mydata_orich,'--',c='k',label='C/O$<$1'+extra_legend,lw=plt_modlw)
-				pl.plot(mxdata_crich,mydata_crich,'*-',c='k',label='C/O$>$1'+extra_legend,lw=plt_modlw,markersize=plt_modms,markeredgecolor='k',markerfacecolor='y')
+				if C_star_only==False:
+					pl.plot(mxdata_orich,mydata_orich,'--',marker=plt_symb,c=plt_col,label='C/O$<$1'+', '+extra_legend,lw=plt_modlw)
+				pl.plot(mxdata_crich,mydata_crich,'*-',marker=plt_symb,c=plt_col,label='C/O$>$1'+', '+extra_legend,lw=plt_modlw,markersize=plt_modms,markeredgecolor='k',markerfacecolor='y')
 			elif misosx != None:
 				if modlegend != None:
 					if calling_routine == 'general':
