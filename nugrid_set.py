@@ -57,7 +57,7 @@ import numpy as np
 import os
 from nugridse import *
 from mesa import *
-from paper2_analysis import *
+#from paper2_analysis import *
 import glob
 
 import utils
@@ -1189,6 +1189,8 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		sr_abu=[]
 		ba_abu=[]
 		eu_abu=[]
+		li7_abu=[]
+		h_abu=[]
 		ls_abu_ini=[]
 		hs_abu_ini=[]
 		ba_abu_ini=[]
@@ -1208,6 +1210,7 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		mg_isotopes=['Mg-24','Mg-25','Mg-26']
 		gd_isotopes=['Gd-152','Gd-154']
 		zr_isotopes=['Zr-94','Zr-96']
+		h_isotopes=["H-1","H-2"]
 		for iso in sefiles.se.isotopes:
 			for i in range(len(ls)):
 				if ls[i] in iso and (is_stable(iso) == 't'):
@@ -1224,7 +1227,7 @@ plots Mg25/Mg24 vs Mg26/Mg24
                         if "Ba" in iso and (is_stable(iso) == 't'):
                                         ba_isotopes.append(iso) 
                         if "Eu" in iso and (is_stable(iso) == 't'):
-                                        eu_isotopes.append(iso) 	
+                                        eu_isotopes.append(iso) 
 		print "0000000000000000000"
 		#if decayed ==True:
               #  	u.convert_specie_naming_from_h5_to_ppn(ls_isotopes) #-define u.spe
@@ -1270,6 +1273,8 @@ plots Mg25/Mg24 vs Mg26/Mg24
 			sr_abu_1=0
 			ba_abu_1=0
 			eu_abu_1=0
+			li7_abu_1=0
+			h_abu_1=0
 			ls_abu_ini_1=0
 			hs_abu_ini_1=0
 			ba_abu_ini_1=0
@@ -1331,6 +1336,9 @@ plots Mg25/Mg24 vs Mg26/Mg24
 					print isotopes_complete[i],sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
 					fe_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
 					fe_abu_ini_1+=a.habu[names]
+				if isotopes_complete[i] in h_isotopes:
+					h_abu_1=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+			li7_abu_1=sefiles.get(cycle,"iso_massf_decay","Li-7")
 			#eu_abu_1=sefiles.get(cycle,"elem_massf_decay","Eu")
 			print fe_abu_1 	
 			print "fe: ",sefiles.get(cycle,"elem_massf","Fe")
@@ -1347,6 +1355,8 @@ plots Mg25/Mg24 vs Mg26/Mg24
 			sr_abu.append(sr_abu_1)	
 			ba_abu.append(ba_abu_1)
 			eu_abu.append(eu_abu_1)	
+			li7_abu.append(li7_abu_1)
+			h_abu.append(h_abu_1)
 			hs_abu_ini.append(hs_abu_ini_1)
 			ls_abu_ini.append(ls_abu_ini_1)
 			ba_abu_ini.append(ba_abu_ini_1)
@@ -1446,8 +1456,18 @@ plots Mg25/Mg24 vs Mg26/Mg24
                 plt.minorticks_on()
 
 
-
-
+                plt.figure(8)
+		#####formula for li7 log(LI7/H)+12
+                plt.plot(np.array(starage),np.log10( np.array(li7_abu)/(np.array(h_abu)))+12,marker=marker_type,markersize=12,mfc=color,linestyle=line_style,label=legend)
+                plt.xlabel("$t-t_0 [yr]$",fontsize=20)
+                plt.ylabel("epsilon Li7",fontsize=20)
+                plt.legend()
+                plt.title(title)
+                plt.draw()
+                plt.rcParams.update({'font.size': 16})
+                plt.rc('xtick', labelsize=16)
+                plt.rc('ytick', labelsize=16)
+                plt.minorticks_on()
 		
 		return [starage,hs_abu,ls_abu,fe_abu,rb_abu,sr_abu]
 
@@ -1566,7 +1586,7 @@ class mesa_set(history_data):
 					print "Error: not history.data or star.log file found in "+run_path		
 
 	
-	def multi_DUP(self,dirs=[],path=path,t0_model=[],h_core_mass=False,plot_fig=True):
+	def multi_DUP(self,dirs=[],t0_model=[],h_core_mass=False,plot_fig=True):
 		'''
 			z1e-2:1.65-5:[13690,3120,3163,5306]
 			z2e-2:1.65-5:[16033,6214,3388,5368]
