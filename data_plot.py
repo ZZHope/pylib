@@ -479,7 +479,7 @@ class DataPlot():
 			pl.xlim(limits[0],limits[1])
 			pl.ylim(limits[2],limits[3])
 
-	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,C_star_only=False,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend='',errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10.,plt_modlw=3.,plt_sparse=0,plt_mrng=False,calling_routine='all'):
+	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,C_star_only=False,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend='',errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10.,plt_grms=7.,plt_modlw=3.,plt_sparse=0,plt_mrng=False,calling_routine='all'):
 		'''
 		Method for plotting ratio data from model output as well as grain data.
 		Important: You have to give some input to the routine!
@@ -501,6 +501,7 @@ class DataPlot():
 		modlegend:	legend for model data
 		plt_symb:	symbold for plotting model data
 		plt_modms:	markersize for models
+      plt_grms:   markersize for grains
 		plt_modlw:	linewidht for models
 		plt_col:		color for plotting model data
 		plt_sparse:	sparse function for model data
@@ -567,7 +568,7 @@ class DataPlot():
 						# annotate mass range
 						if plt_mrng != False:
 							for mrng_ind in range(len(plt_mrng)):
-								pl.text(plt_mrng[mrng_ind][0],plt_mrng[mrng_ind][1],str(plt_mrng[mrng_ind][2]),ha='right',va='bottom',color=plt_col)
+								pl.text(plt_mrng[mrng_ind][0],plt_mrng[mrng_ind][1],str(round(plt_mrng[mrng_ind][2],2)),ha='right',va='bottom',color=plt_col)
 
 				# axis
 				if logx and logy:
@@ -643,10 +644,8 @@ class DataPlot():
 						mcol = 'r'
 					elif gtypelist[i][1] == 'AB':
 						mcol = 'c'
-					elif gtypelist[i][1] == 'C':
+					elif gtypelist[i][1] == 'C' or gtypelist[i][1] == 'U/C':
 						mcol = 'y'
-					elif gtypelist[i][1] == 'U/C':
-						mcol = '0.6'
 					elif gtypelist[i][1] == 'N':
 						mcol = 'm'
 					else:
@@ -722,9 +721,9 @@ class DataPlot():
 					grainlabelclean = gtypelist[i][0] + ' ' + gtypelist[i][1]
 				if errbar:
 					pl.errorbar(gdatax[i],gdatay[i],xerr=gdataxerr[i],yerr=gdatayerr[i],marker=msymb,c=mcol,linestyle='')
-					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=grainlabelclean)
+					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=grainlabelclean,markersize=plt_grms)
 				else:
-					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=grainlabelclean)
+					pl.plot(gdatax[i],gdatay[i],msymb,c=mcol,label=grainlabelclean,markersize=plt_grms)
 			# plot model:
 			if m_co != None and misosx!=None:
 				# actual plotting
@@ -745,7 +744,7 @@ class DataPlot():
 						# annotate mass range
 						if plt_mrng != False:
 							for mrng_ind in range(len(plt_mrng)):
-								pl.text(plt_mrng[mrng_ind][0],plt_mrng[mrng_ind][1],str(plt_mrng[mrng_ind][2]),ha='right',va='bottom',color=plt_col)
+								pl.text(plt_mrng[mrng_ind][0],plt_mrng[mrng_ind][1],str(round(plt_mrng[mrng_ind][2],2)),ha='right',va='bottom',color=plt_col)
 				else:
 					pl.plot(misosx,misosy,'o--',markersize=plt_modms,lw=plt_modlw)
 			# axis
