@@ -1221,24 +1221,24 @@ class history_data(DataPlot):
 # we may or may not need this below
 #        fig.clear()
 	
-    def find_TP_attributes(self,fig,t0_model,color,marker_type,h_core_mass=False,no_fig=False):
+    def find_TP_attributes(self,fig,color,marker_type,h_core_mass=False,no_fig=False):
 		'''
-			Function which finds TPs and uses the calc_DUP_parameter function
+			Function which finds TPs and can uses the calc_DUP_parameter function
 			to calculate DUP parameter evolution dependent of the star or core mass.			
 			Returns two arrays: One with model numbers of the he peak of TPs, the other
 					   with the corresponding model of min mass coordinate/DUP
 					    of the TP. (If no DUP is happening, model of second array is min value
 					    in interpulse phase, i think)
 					    
-
+			no_fig - if True, use calc_DUP_parameter to calculate and plot DUP parameter
 			fig - figure number to plot 
 			t0_model - first he-shell lum peak
 			color - color of the plot
 			marker_type - marker type
 			h_core_mass - If True: plot dependence from h free core , else star mass 
 		'''
-		
-		#if len(t0_model)==0:
+		#model of max lum of first TP	
+		t0_model=self.find_first_TP()	
 			
 		t0_idx=(t0_model-self.get("model_number")[0])	
 		first_TP_he_lum=10**(self.get("log_LHe")[t0_idx])
@@ -1282,11 +1282,12 @@ class history_data(DataPlot):
 				model_1.append(t0_model)
 				h1_mass_1=[h1_bndry[0]]
 				h1_mass_model=[t0_model]
+				#peak_lum_model=[t0_model]
 			else:
 				lum_1.append(he_lum[i])										
 				model_1.append(model[i])
 						
-			if (new_TP == True and TP_interpulse==True and interpulse_counter >200): #and (model[i] - t0_model	>min_TP_distance):
+			if (new_TP == True and TP_interpulse==True and interpulse_counter> 80):#>200): #and (model[i] - t0_model	>min_TP_distance):
 										#if (he_lum[i]> (perc*first_TP_he_lum)) or (i == len(he_lum)-1):		
 					#if (model[i] - model_1[-1]	>min_TP_distance):			
 					#calculate maximum of peak lum of certain TP
@@ -1317,6 +1318,36 @@ class history_data(DataPlot):
 		if no_fig==True:	
 			self.calc_DUP_parameter(fig,modeln,leg,color,marker_type,h_core_mass)
 		return peak_lum_model,h1_mass_min_DUP_model
+
+    def find_first_TP(self):
+		'''
+			Method to find first TP of AGB phase. 
+			Returns model number of max he luminosity of TP.
+		'''
+
+                t0_model=0
+                #for j in range(len(dirs)):
+                h1_boundary_mass  = self.get('h1_boundary_mass')
+                he4_boundary_mass = self.get('he4_boundary_mass')
+                star_mass         = self.get('star_mass')
+                mx2_bot           = self.get('mx2_bot')*star_mass
+                he_lumi           = self.get('log_LHe')
+                h_lumi            = self.get('log_LH')
+                lum_array=[]
+                activate=False
+                models=[]
+                for i in range(len(h1_boundary_mass)):
+                	if (h1_boundary_mass[i]-he4_boundary_mass[i] <0.1) and (he4_boundary_mass[i]>0.2):
+                        	if (mx2_bot[i]>he4_boundary_mass[i]) and (he_lumi[i]>h_lumi[i]):
+                                	activate=True
+                                        lum_array.append(he_lumi[i])
+                                        models.append(i)
+                                if (activate == True) and (he_lumi[i]<h_lumi[i]):
+                                        	break
+                t0_model=models[np.argmax(lum_array)]
+                return t0_model
+
+
 		
     def calc_DUP_parameter(self,fig,modeln,leg,color,marker_type,h_core_mass=False): 
 		'''
