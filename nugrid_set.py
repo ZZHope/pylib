@@ -391,7 +391,7 @@ class mppnp_set(se):
 		
 
 
-	def set_surface_plots(self,runs=[],cycles=[[10000,1000],[10000,1000]],t0_model=[],decayed=True,mesarunpath="",x_range=[-1.8,0.1],y_range=[]):
+	def set_surface_plots(self,runs=[],cycles=[[10000,1000],[10000,1000]],t0_model=[],decayed=True,mesarunpath="",mesa_multi_dir=[],ini_abu_file="/astro/critter/critter/PPN/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn",x_range=[-1.8,0.1],y_range=[]):
 		'''
 		Plot surface abundance evolution of multiple runs
 
@@ -449,8 +449,12 @@ class mppnp_set(se):
 		#mesa_path=raw_input("Read corresponding MPPNP runs?")
 			dir_1=mesarunpath
 			multi_dir=[]
-			for i in range(len(self.run_dirs_name)):
-				multi_dir.append(mesarunpath+"/"+self.run_dirs_name[i])
+			if len(mesa_multi_dir)>0:
+                                for i in range(len(self.run_dirs_name)):
+                                        multi_dir.append(mesarunpath+"/"+mesa_multi_dir[i])
+			else:
+				for i in range(len(self.run_dirs_name)):
+					multi_dir.append(mesarunpath+"/"+self.run_dirs_name[i])
 			mesaset=mesa_set(multi_dir=multi_dir)
 			peak_lum_model_array_1,h1_mass_min_DUP_model_array = mesaset.multi_DUP(t0_model=[],plot_fig=False)
 			t0_model=[]
@@ -487,7 +491,7 @@ class mppnp_set(se):
 			else:
 				color_1=color[2]	
 			legend=str(mass)+"M$_{\odot}$ Z= "+str(z)+", "+extra_label[i]
-			self.surface_plots(HDF5_surf[i],cycles[i],t0_model[i],decayed,legend,marker_type[i],color_1,line_style[i],title="")
+			self.surface_plots(HDF5_surf[i],cycles[i],t0_model[i],decayed,legend,ini_abu_file,marker_type[i],color_1,line_style[i],title="")
 	
 		#HDF5_dirs=["/nfs/rpod3/critter/Results/test2_template_mppnp/M1.650Z0.0001","/nfs/rpod3/critter/Results/test2_template_mppnp/M5.000Z0.0001"],	
 			
@@ -1143,7 +1147,7 @@ class mppnp_set(se):
 
 
 	
-	def surface_plots(self,HDF5surf_dir,cycles,t0_model,decayed=True,legend="",marker_type='o',color="r",line_style="-",title="",hs=["Ba","La","Nd","Sm"],ls=["Sr","Y","Zr"]): 
+	def surface_plots(self,HDF5surf_dir,cycles,t0_model,decayed=True,legend="",ini_abu_file="/astro/critter/critter/PPN/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn",marker_type='o',color="r",line_style="-",title="",hs=["Ba","La","Nd","Sm"],ls=["Sr","Y","Zr"]): 
 	
 		'''surface hdf5
 	
@@ -1210,7 +1214,7 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		mg_isotopes=['Mg-24','Mg-25','Mg-26']
 		gd_isotopes=['Gd-152','Gd-154']
 		zr_isotopes=['Zr-94','Zr-96']
-		h_isotopes=["H-1","H-2"]
+		h_isotopes=['H-1','H-2']
 		for iso in sefiles.se.isotopes:
 			for i in range(len(ls)):
 				if ls[i] in iso and (is_stable(iso) == 't'):
@@ -1261,11 +1265,11 @@ plots Mg25/Mg24 vs Mg26/Mg24
 #
 		print hs_isotopes,ls_isotopes,rb_isotopes,fe_isotopes,sr_isotopes,ba_isotopes,eu_isotopes
 		#ini_abu=sefiles.get(0,"iso_massf_decay")
-		a=u.iniabu('iniab2.0E-02GN93.ppn')#'../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn')
+		a=u.iniabu(ini_abu_file) #('../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn')
 		for cycle in cycle_range:
 			reload(mp)
 			#print cycle
-			starage.append(sefiles.se.get(cycle,"age")-t0_time)
+			starage.append((sefiles.se.get(cycle,"age")-t0_time)/(24.*3600.*365.5))
 			ls_abu_1=0
 			hs_abu_1=0
 			rb_abu_1=0
@@ -1311,34 +1315,38 @@ plots Mg25/Mg24 vs Mg26/Mg24
 			u.convert_specie_naming_from_h5_to_ppn(isotopes_complete)
 			names_ppn_world=u.spe
 			for i in range(len(names_ppn_world)):
+				if decayed ==True:
+					source="iso_massf_decay"
+				else:
+					source="iso_massf"
 				print "##############",len(isotopes_complete),len(names_ppn_world)
 				names=names_ppn_world[i].lower()
 				if isotopes_complete[i] in ls_isotopes:
-					ls_abu_1+=(sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i]))
+					ls_abu_1+=(sefiles.get(cycle,source,isotopes_complete[i]))
 					ls_abu_ini_1+=a.habu[names]
 				if isotopes_complete[i] in hs_isotopes:
-					hs_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					hs_abu_1+=sefiles.get(cycle,source,isotopes_complete[i])
 					hs_abu_ini_1+=a.habu[names]
 				if isotopes_complete[i] in rb_isotopes:
-					rb_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					rb_abu_1+=sefiles.get(cycle,source,isotopes_complete[i])
 				if isotopes_complete[i] in sr_isotopes:
-					sr_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					sr_abu_1+=sefiles.get(cycle,source,isotopes_complete[i])
                                 if isotopes_complete[i] in ba_isotopes:
 					#name=
-                                        ba_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+                                        ba_abu_1+=sefiles.get(cycle,source,isotopes_complete[i])
 					ba_abu_ini_1+=a.habu[names]
                                 if isotopes_complete[i] in eu_isotopes:
 
-                                        eu_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+                                        eu_abu_1+=sefiles.get(cycle,source,isotopes_complete[i])
 					eu_abu_ini_1+=a.habu[names]
 				if isotopes_complete[i] in fe_isotopes:
 					#name=
-					print isotopes_complete[i],sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
-					fe_abu_1+=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					#print isotopes_complete[i],sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
+					fe_abu_1+=sefiles.get(cycle,source,isotopes_complete[i])
 					fe_abu_ini_1+=a.habu[names]
 				if isotopes_complete[i] in h_isotopes:
-					h_abu_1=sefiles.get(cycle,"iso_massf_decay",isotopes_complete[i])
-			li7_abu_1=sefiles.get(cycle,"iso_massf_decay","Li-7")
+					h_abu_1+=sefiles.get(cycle,source,isotopes_complete[i])
+			li7_abu_1=sefiles.get(cycle,source,"Li-7")
 			#eu_abu_1=sefiles.get(cycle,"elem_massf_decay","Eu")
 			print fe_abu_1 	
 			print "fe: ",sefiles.get(cycle,"elem_massf","Fe")
@@ -1383,6 +1391,10 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		print eu_abu
 		print "starage"
 		print starage
+		print "li7abu"
+		print li7_abu
+		print "habu"
+		print h_abu
 		
 		#Plotting different figures, beware of square bracket notation
 		plt.figure(1)
@@ -1457,10 +1469,10 @@ plots Mg25/Mg24 vs Mg26/Mg24
 
 
                 plt.figure(8)
-		#####formula for li7 log(LI7/H)+12
-                plt.plot(np.array(starage),np.log10( np.array(li7_abu)/(np.array(h_abu)))+12,marker=marker_type,markersize=12,mfc=color,linestyle=line_style,label=legend)
+		#####formula for li7 log(LI7/H)+12, LI, H number frac
+                plt.plot(np.array(starage),np.log10( np.array(li7_abu)/(7*np.array(h_abu)))+12,marker=marker_type,markersize=8,linewidth=3,mfc=color,linestyle=line_style,label=legend)
                 plt.xlabel("$t-t_0 [yr]$",fontsize=20)
-                plt.ylabel("epsilon Li7",fontsize=20)
+		plt.ylabel("log $\\epsilon(^7$Li)",fontsize=20)
                 plt.legend()
                 plt.title(title)
                 plt.draw()

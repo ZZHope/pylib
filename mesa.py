@@ -1225,6 +1225,12 @@ class history_data(DataPlot):
 		'''
 			Function which finds TPs and uses the calc_DUP_parameter function
 			to calculate DUP parameter evolution dependent of the star or core mass.			
+			Returns two arrays: One with model numbers of the he peak of TPs, the other
+					   with the corresponding model of min mass coordinate/DUP
+					    of the TP. (If no DUP is happening, model of second array is min value
+					    in interpulse phase, i think)
+					    
+
 			fig - figure number to plot 
 			t0_model - first he-shell lum peak
 			color - color of the plot
