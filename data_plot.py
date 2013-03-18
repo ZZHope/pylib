@@ -523,11 +523,11 @@ class DataPlot():
 			misosyname = dumb
 		# style
 		# Size of font etc.
-		params = {'axes.labelsize':  15,
-          'text.fontsize':   12,
-          'legend.fontsize': 12,
-          'xtick.labelsize': 12,
-          'ytick.labelsize': 12}
+		params = {'axes.labelsize':  20,
+          'text.fontsize':   14,
+          'legend.fontsize': 14,
+          'xtick.labelsize': 14,
+          'ytick.labelsize': 14}
 		pl.rcParams.update(params)
 
 		# prepare model data (if necessary) - here PPN / Nugridse difference if included at some point!
