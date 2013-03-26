@@ -479,7 +479,7 @@ class DataPlot():
 			pl.xlim(limits[0],limits[1])
 			pl.ylim(limits[2],limits[3])
 
-	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,C_star_only=False,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend='',errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10.,plt_grms=7.,plt_modlw=3.,plt_sparse=0,plt_mrng=False,calling_routine='all'):
+	def plot_ratios(self,misosx,misosy,solsysx=None,solsysy=None,graindata=None,m_co=None,C_star_only=False,misosxname=None,misosyname=None,deltax=True,deltay=True,logx=False,logy=False,title=None,legend=True,extra_legend='',errbar=True,iniabufile='../../frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn',plt_show=True,modlegend=None,plt_symb='o',plt_col='b',plt_modms=10.,plt_grms=7.,plt_modlw=3.,plt_sparse=0,plt_mrng=False,calling_routine='all',private_legend=None):
 		'''
 		Method for plotting ratio data from model output as well as grain data.
 		Important: You have to give some input to the routine!
@@ -507,6 +507,7 @@ class DataPlot():
 		plt_sparse:	sparse function for model data
 		plt_mrng:   Plot mass range for massive stars (used by plot4iso_exp routine in nugridse)
 		calling_routine:	to identify where it comes from for some special treatment
+		private_legend:	If you want your own legend for the private file, then you're right here
 		'''
 		# compatibility
 		if misosxname != None and len(misosxname) == 2:
@@ -687,7 +688,7 @@ class DataPlot():
 					mcol = '0.4'
 				elif gtypelist[i][0].lower() == 'private':
 					msymb = 'o'
-					mcol = 'k'
+					mcol = 'y'
 				else:
 					msymb = '+'
 					mcol = '0.4'
@@ -713,6 +714,11 @@ class DataPlot():
 						gtypelist[i][jt] = 'high density'
 					elif gtypelist[i][jt] == 'idp':
 						gtypelist[i][jt] = 'IDP'
+					elif gtypelist[i][jt] == 'private':
+						if private_legend==None:
+							gtypelist[i][jt] = 'Private'
+						else:
+							gtypelist[i][jt]=private_legend
 				# now plot the grain data!
 				# IDP grain labels properly
 				if gtypelist[i][0] == 'IDP':

@@ -1794,7 +1794,7 @@ def graindata_handler(isosx,isosy=None,graintype_in='all',deltax=True,deltay=Tru
                      ['Graphites','LD','HD','U'],
                      ['Misc','Si3N4'],
                      ['IDP', 'IDP'],
-                     ['private','M','X','Y','Z','AB','N','U','1','2','3','4','LD','HD','Si3N4']]
+                     ['private','M','C','U/C','X','Y','Z','AB','N','U','1','2','3','4','LD','HD','Si3N4']]
     if type(graintype_in) == str:
         if graintype_in.lower() == 'all':
             graintype = allgraintypes[0:5]   # exclude private

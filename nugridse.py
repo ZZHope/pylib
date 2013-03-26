@@ -527,7 +527,7 @@ class se(DataPlot,Utils):
         return tp_pos,co_return
 
 
-    def plot4iso_exp(self,isotope_list,shift=0,graintype=None,deltax=False,deltay=False,logx=False,logy=False,addiso=None,weighting=None,co_toggle='c',pl_title=None,modlegend=None,errbar=True,plt_show=True,plt_symb='o',plt_col='b',plt_markersize=10.,plt_grms=7.,plt_linewidth=3.,plt_sparse=10,plt_massrange=False,iniabufile='iniab2.0E-02GN93.ppn'):
+    def plot4iso_exp(self,isotope_list,shift=0,graintype=None,deltax=False,deltay=False,logx=False,logy=False,addiso=None,weighting=None,co_toggle='c',pl_title=None,modlegend=None,errbar=True,plt_show=True,plt_symb='o',plt_col='b',plt_markersize=10.,plt_grms=7.,plt_linewidth=3.,plt_sparse=10,plt_massrange=False,iniabufile='iniab2.0E-02GN93.ppn',grainonly=False,private_legend=None):
         '''
         This subroutine plots 4 isotope plots for explosive stars, assuming one model initialized in nugridse
         Description here on how it is done. It plots the model along w/ presolar grain data if wanted.
@@ -535,8 +535,7 @@ class se(DataPlot,Utils):
         Change once grainclass is done
 
         Input:
-        - isotope_list:   List of isotopes, format ['C-12','C-13','N-14','N-15']. First pair: nominator, denominator of x-axis, second pair: y-axis
-        - shift:          By how much do you want to shift the models back. If zero, the last cycle is taken
+        - isotope_list:   List of isotopes, format ['C-12','C-13','N-14','N-15']. First pair: nominator, denominator of x-axis, second pair: y-axis        - shift:          By how much do you want to shift the models back. If zero, the last cycle is taken
         - graintype:      Graintype, e.g., 'all', 'sic', ['sic','oxides'], [['sic','N']], ... see graindata_handler in utils.py
         - deltax, deltay: Plot delta values on  x and y axes?
         - logx, logy:     Logarithmic axes?
@@ -555,6 +554,8 @@ class se(DataPlot,Utils):
         - plt_sparse:     Every so many datapoint is plotted for model data
         - plt_massrange:  Plot mass of shell with first and last datapoint of each zone. If list given, label those zones
         - iniabufile:     File where the initial abundances are stored. Give absolute path or relative to USEEPP!
+        - grainonly:      If true, plots only grains
+        - private_legend: If you need a private legend for the private.txt graindata file -> replaces the word "private"
         '''
 
         ### WORK ON PATH ###
@@ -569,7 +570,8 @@ class se(DataPlot,Utils):
                     svnpathtmp += scriptpathtmp.split('/')[i] + '/'
             iniabufile = svnpathtmp + 'frames/mppnp/USEEPP/' + iniabufile   # make absolute path for iniabufile
         ### END PATH WORK ###
-        
+
+
         ### Input compatibility ###
         co_toggle = co_toggle.lower()
 
@@ -812,7 +814,10 @@ class se(DataPlot,Utils):
             graindata = graindata_handler(isotope_list[0:2],isosy=isotope_list[2:4],graintype_in=graintype,deltax=deltax,deltay=deltay,iniabufile_in=iniabufile)
 
         ### send to data_plot.py -> plot_ratios ###
-        DataPlot.plot_ratios(self,ratiox,ratioy,solsysx=ratiox_solsys,solsysy=ratioy_solsys,graindata=graindata,m_co=None,misosxname=isotope_list[0:2],misosyname=isotope_list[2:4],deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=pl_title,legend=True,iniabufile=iniabufile,modlegend=modlegend,calling_routine='4iso_exp',plt_symb=plt_symb,plt_col=plt_col,plt_modms=plt_markersize,plt_grms=plt_grms,plt_modlw=plt_linewidth,plt_sparse=plt_sparse,plt_show=plt_show,plt_mrng=plt_massrange_lst,errbar=errbar)
+        if grainonly:
+            DataPlot.plot_ratios(self,None,ratioy,solsysx=ratiox_solsys,solsysy=ratioy_solsys,graindata=graindata,m_co=None,misosxname=isotope_list[0:2],misosyname=isotope_list[2:4],deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=pl_title,legend=True,iniabufile=iniabufile,modlegend=modlegend,calling_routine='4iso_exp',plt_symb=plt_symb,plt_col=plt_col,plt_modms=plt_markersize,plt_grms=plt_grms,plt_modlw=plt_linewidth,plt_sparse=plt_sparse,plt_show=plt_show,plt_mrng=plt_massrange_lst,errbar=errbar,private_legend=private_legend)
+        else:
+            DataPlot.plot_ratios(self,ratiox,ratioy,solsysx=ratiox_solsys,solsysy=ratioy_solsys,graindata=graindata,m_co=None,misosxname=isotope_list[0:2],misosyname=isotope_list[2:4],deltax=deltax,deltay=deltay,logx=logx,logy=logy,title=pl_title,legend=True,iniabufile=iniabufile,modlegend=modlegend,calling_routine='4iso_exp',plt_symb=plt_symb,plt_col=plt_col,plt_modms=plt_markersize,plt_grms=plt_grms,plt_modlw=plt_linewidth,plt_sparse=plt_sparse,plt_show=plt_show,plt_mrng=plt_massrange_lst,errbar=errbar,private_legend=private_legend)
 
 
     def plot4(self,num):
