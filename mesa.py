@@ -321,7 +321,7 @@ class history_data(DataPlot):
     header_attr = []
     cols = [] 
     
-    def __init__(self,sldir,slname='history.data',clean_starlog=True):
+    def __init__(self,sldir,slname='history.data',clean_starlog=False):
         self.sldir  = sldir
         self.slname = slname
         self.clean_starlog  = clean_starlog
@@ -346,10 +346,8 @@ class history_data(DataPlot):
         slname  = self.slname
         slaname = slname+'sa'
         if self.clean_starlog and os.path.exists(sldir+'/'+slaname):
-            jonesmod=str(raw_input("Clean "+self.slname+" to make new "+self.slname+"sa? (y/n)"))
-            if jonesmod == 'y':
-                os.remove(sldir+'/'+slaname)
-            
+            print 'Executing request to remove '+self.slname+'sa file.'
+            os.remove(sldir+'/'+slaname)
         if not os.path.exists(sldir+'/'+slaname):
             print 'No '+self.slname+'sa file found, create new one from '+self.slname
             cleanstarlog(sldir+'/'+slname)
@@ -1201,7 +1199,7 @@ class history_data(DataPlot):
 		print 'plotting abund boundaries'
 		ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary',linestyle='-')
 		ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary',linestyle='--')
-		ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
+                ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
 
         ax.axis([xlims[0],xlims[1],ylims[0],ylims[1]])
 
