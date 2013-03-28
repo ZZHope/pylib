@@ -347,10 +347,6 @@ class history_data(DataPlot):
         slaname = slname+'sa'
         if self.clean_starlog and os.path.exists(sldir+'/'+slaname):
         	print "Automatically not cleaning " +self.slname+ ". Therefore no new "+self.slname+"sa."
-        	#jonesmod = 'y'
-            #jonesmod=str(raw_input("Clean "+self.slname+" to make new "+self.slname+"sa? (y/n)")) #changes re: Nicholas Bruce and Falk Herwig
-            #if jonesmod == 'y':
-                #os.remove(sldir+'/'+slaname)
             
         if not os.path.exists(sldir+'/'+slaname):
             print 'No '+self.slname+'sa file found, create new one from '+self.slname
