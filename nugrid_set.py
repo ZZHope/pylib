@@ -2,7 +2,6 @@
 
     v0.1, 15JAN2013: Christian Ritter
 
-
 	##########################
 	#### Still experimental tool  ####
 	##########################
@@ -59,7 +58,7 @@ from nugridse import *
 from mesa import *
 #from paper2_analysis import *
 import glob
-
+from mpl_toolkits.mplot3d import Axes3D
 import utils
 symbs=utils.symbol_list('lines1')
 
@@ -123,7 +122,10 @@ class mppnp_set(se):
 		for element in slist:
                         
 			if len(multi_dir)==0:
-                                run_path=pwd+"/"+rundir+"/"+element
+				if rundir[0]=="/":
+					run_path=rundir+"/"+element
+				else:
+                                	run_path=pwd+"/"+rundir+"/"+element
                         else:
                                 if multi_dir[i][0] == "/":
                                         run_path=multi_dir[i]
@@ -149,7 +151,13 @@ class mppnp_set(se):
 				print "Read "+run_path		
 			i+=1
 		###order lists###
-		sorted_indices=sorted(range(len(run_dirs_name)),key=lambda k: run_dirs_name[k])	
+		to_sort_names=[]
+		for i in range(len(run_dirs_name)):
+			test=float(run_dirs_name[i][1:4])*100 
+			to_sort_names.append(test)
+			print test
+		
+		sorted_indices=sorted(range(len(to_sort_names)),key=lambda k: to_sort_names[k])	
 		print sorted_indices
 		print run_dirs_name
 		k=0
@@ -161,7 +169,37 @@ class mppnp_set(se):
 			self.runs_H5_out.append(runs_H5_out[i])
 			k+=1
 		print self.run_dirs_name
-	def weighted_yields_massgrid(self,runs=[],isotopes=[],cycles=[],title=''):
+
+	def grid_yields_3D(self,ax,isotopes,cycles,weighted,lable=True):
+		
+		color=['r','k','b','g']
+                marker_type=['o','p','s','D']
+                line_style=['--','-','-.',':']
+		grid_3D=self.yields_massgrid(weighted=weighted,isotopes=isotopes,cycles=cycles,title='')
+		print "grid..............."
+		print grid_3D
+		#fig=plt.figure(1)
+		#ax = fig.add_subplot(111, projection='3d')
+		for i in range(len(grid_3D)):
+			#fig=plt.figure()
+			if lable==True:
+				self.plot_3D(ax,grid_3D[i][0],grid_3D[i][1],grid_3D[i][2],legend=isotopes[i],x_label="Mass",y_label="Metallicity Z",z_label="Weighted Yield",color=color[i],markercolor=color[i],marker=marker_type[i],line_style=line_style[i],markersize=14)
+			else:
+				self.plot_3D(ax,grid_3D[i][0],grid_3D[i][1],grid_3D[i][2],legend="",x_label="Mass",y_label="Metallicity Z",z_label="Weighted Yield",color=color[i],markercolor=color[i],marker=marker_type[i],line_style=line_style[i],markersize=14)
+		#plt.legend()
+		#plt.ylim(0,7e-3)
+		#plt.legend()
+		figure(1);plt.legend()
+
+	def grid_yield_3D_surf(self,ax,isotopes,cycles,weighted,lable=True):	
+                color=['r','k','b','g']
+                marker_type=['o','p','s','D']
+                line_style=['--','-','-.',':']
+                grid_3D=self.yields_massgrid(weighted=weighted,isotopes=isotopes,cycles=cycles,title='')
+		
+	
+
+	def yields_massgrid(self,weighted=True,log=True,runs=[],isotopes=[],cycles=[],title=''):
 		'''
 			Plots behaviour star mass dependent yields of different isotopes - specify dirs at the beginning
 			Beware  of different z
@@ -205,7 +243,8 @@ class mppnp_set(se):
 		plt.rc('xtick', labelsize=16) 
 		plt.rc('ytick', labelsize=16) 
 		ax = fig.add_subplot(1,1,1)
-		ax.set_yscale('log')
+		if log==True:
+			ax.set_yscale('log')
 		z_index_files=[]
 		z_values=[]
 		j=-1
@@ -217,52 +256,118 @@ class mppnp_set(se):
 				z_index_files.append([])
 			z_index_files[ z_values.index(star_z)].append(i)
 		print "index files",z_index_files		
-
+		max_yield=[]
 		color_iso=-1
 		yields_1=[]
 		t=0
-		for j in range(len(isotopes)):
-			yields=[]
+		###for 3D plotting,z,M,yield
+		zeros=[0]*len(HDF5_surf)
+		grid_3D_1=[zeros,zeros,zeros]
+		grid_3D=[]
+		for i in range(len(isotopes)):
+			grid_3D.append([[0]*len(HDF5_surf),  [0]*len(HDF5_surf),[0]*len(HDF5_surf)])
+		print grid_3D
+		##get index of isotopes
+		indx_iso=[]
+		for i in range(len(isotopes)):
+			indx_iso.append(sefiles[0].se.isotopes.index(isotopes[i]))	
+
+		legend_k=0
+		for w in range(len(z_index_files)):
+			print "-----------------------"
+			print "z :",w
+			print "##########################"
 			star_mass_array=[]
-			color_iso+=1
-			legend_k=-1
-			t=0	
-			for w in range(len(z_index_files)):
-				star_mass_array=[]
-				yields=[]
-				legend_k+=1
-				for k in z_index_files[w]: 
-					#if (legend_k ==0):
-					star_mass=sefiles[k].get("mini")[0]
-					star_z=sefiles[k].get("zini")[0]				
-					star_mass_array.append(star_mass)
-					#below way not very efficient
-					if cycles[k][1]==-1:
-						endcycle=sefiles[k].get("model_number")[-1] - 5000
+			yields=[]
+			legend_k+=1
+			iso_yields=[]
+			iniabu_yields_folded=[]
+			for i in range(len(isotopes)):
+				iso_yields.append(np.zeros(len( z_index_files[w]   )))
+				iniabu_yields_folded.append(np.zeros(len( z_index_files[w]   )))
+			t=0
+			for k in z_index_files[w]:
+				star_mass=sefiles[k].get("mini")[0]
+				star_z=sefiles[k].get("zini")[0]				
+				star_mass_array.append(star_mass)
+				if cycles[k][1]==-1:
+					endcycle=int(sefiles[k].se.cycles[-1]) - 5000
+				else:
+					endcycle=cycles[k][1]
+				#get yields from marcos func
+				iso_yield_folded,iniabu_folded,iso_yield_unfolded =self.weighted_yields(sefiles[k],cycles[k][0],endcycle,cycles[k][2],star_mass)
+				for i in range(len(isotopes)):
+					if weighted==True:
+						grid_3D[i][0][t]=star_mass
+						grid_3D[i][1][t]=star_z
+						grid_3D[i][2][t]=iso_yield_folded[ indx_iso[i]     ]
+						iso_yields[i][t]=iso_yield_folded[ indx_iso[i]     ]
+						iniabu_yields_folded[i][t]=iniabu_folded[ indx_iso[i]     ]
+                                        	max_yield.append(iso_yield_folded[ indx_iso[i]     ])
+						print grid_3D
 					else:
-						endcycle=cycles[k][1]
-					if j==0:
-						iso_name,iso_yield_folded,iso_yield_unfolded,iso_prod_name,iso_prod =self.weighted_yields_production_factor(sefiles[k],cycles[k][0],endcycle,cycles[k][2],isotopes,star_mass,False,legend=isotopes[j],color="k",title="")
-						yields_1.append(iso_yield_folded)
-					yields.append(yield_1[t][j])
-					t+=1				
-				#	legend_k=1
-				#	print yields			
+                                                grid_3D[i][0][t]=star_mass
+                                                grid_3D[i][1][t]=star_z
+                                                grid_3D[i][2][t]=iso_yield_unfolded[ indx_iso[i]     ]
+
+						iso_yields[i][t]=iso_yield_unfolded[ indx_iso[i]     
+]
+						max_yield.append(iso_yield_unfolded[ indx_iso[i]     ])
+					print sefiles[k].se.isotopes[indx_iso[i]],iso_yield_unfolded[ indx_iso[i]     ],iso_yield_folded[ indx_iso[i]     ]
+
+				t+=1
+				
 					#plt.plot(star_mass,yields[j],marker='*',markersize=8,mfc=color[j],linestyle='None',label=isotopes[j])			
 				#else:
 					#yields.append(weighted_yields(sefiles[i],cycles[i][0],cycles[i][1],cycles[i][2],isotopes,star_mass,False,color=color[j],title="",plot_fig=False))
-				order_indices=[i[0] for i in sorted(enumerate(star_mass_array), key=lambda x:x[1])]
-				star_mass_array = [ star_mass_array[i] for i in order_indices]		
-				yields = [ yields[i] for i in order_indices]		
-				#print "plotting graph",len(star_mass)
-				plt.plot(star_mass_array,yields,marker=marker_type[legend_k],markersize=10,mfc=color[color_iso],linewidth=line_width[legend_k],linestyle=line_style[legend_k],label=iso_name[j]+" , "+str(star_z)+"$Z_{\odot}$"  )				
+			###plotting
+			color_iso=0
+			for h in range(len(isotopes)):
+				#yield_1=iso_yields[i]
+				#mass_1=star_mass_array
+				yield_1=[]
+				mass_1=[]			
+				iniabu_folded=[]	
+               			indices_array=sorted(range(len(star_mass_array)),key=lambda x:star_mass_array[x])
+                		for i in indices_array:
+					yield_1.append(iso_yields[h][i])
+					mass_1.append(star_mass_array[i])
+					iniabu_folded.append(iniabu_yields_folded[h][i])
+				####Plotting yields
+				plt.plot(mass_1,yield_1,marker=marker_type[legend_k],color=color[color_iso],markersize=10,mfc=color[color_iso],linewidth=line_width[legend_k],linestyle="-",label=isotopes[h]+" , "+str(star_z)+"$Z_{\odot}$"  ) #line_style[legend_k]
+				##Plotting iniabu yields
+				plt.plot(mass_1,iniabu_folded,"--",color=color[color_iso],linewidth=line_width[legend_k],label=isotopes[h]+" , "+str(star_z)+"$Z_{\odot}$"+", initial")
 					#plt.plot(star_mass,yields[j],marker='*',markersize=8,mfc=color[j],linestyle='None')
+				color_iso+=1
+				legend_k+=1
+		#####
+		x_imf=[]
+		y_imf=[]
+		m_max=max(star_mass_array)+2.
+		print m_max
+		#if weighted==True:
+		#	for mass in np.arange(0.01,m_max,0.01):
+		#		x_imf.append(mass)
+		#		y_imf.append(mass**(-2.3))
+		#	plt.plot(x_imf,y_imf,label="IMF, M$^{-2.3}$",c="k")		
+		##
+		max_1=2.*max(max_yield)
+		min_1=0.5*min(max_yield)
+		plt.ylim(ymin=min_1,ymax=max_1)
+		print min_1,max_1
 		plt.legend()				
 		plt.xlabel("M/M$_{\odot}$",fontsize=20)
 		plt.minorticks_on()
-		plt.ylabel("Weighted stellar yields",fontsize=20)
+		if weighted==True:
+			plt.ylabel("Weighted stellar yields",fontsize=20)
+		else:
+			plt.ylabel("Stellar yields",fontsize=20)
 		plt.title(title)		
-		plt.xlim(0,max(star_mass_array)+2)
+		#plt.xlim(0,max(star_mass_array)+2)
+		print "RETURN:"
+		print grid_3D
+
+		return grid_3D
 
 
 
@@ -391,7 +496,7 @@ class mppnp_set(se):
 		
 
 
-	def set_surface_plots(self,runs=[],cycles=[[10000,1000],[10000,1000]],t0_model=[],decayed=True,mesarunpath="",mesa_multi_dir=[],ini_abu_file="/astro/critter/critter/PPN/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn",x_range=[-1.8,0.1],y_range=[]):
+	def set_surface_plots(self,runs=[],cycles=[[10000,1000],[10000,1000]],t0_model=[],decayed=True,mesarunpath="",mesa_multi_dir=[],ini_abu_file="/astro/critter/critter/PPN/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn",x_range=[-1.8,0.1],withmarker=True,y_range=[]):
 		'''
 		Plot surface abundance evolution of multiple runs
 
@@ -459,10 +564,12 @@ class mppnp_set(se):
 			peak_lum_model_array_1,h1_mass_min_DUP_model_array = mesaset.multi_DUP(t0_model=[],plot_fig=False)
 			t0_model=[]
 			peak_lum_model_array=[]
-			cycles=[]
+			cycles_1=[]
 			for i in range(len(peak_lum_model_array_1)):
-				cycles.append(map(int,np.array(peak_lum_model_array_1[i])))
+				cycles_1.append(map(int,np.array(peak_lum_model_array_1[i])))
 				t0_model.append(int(peak_lum_model_array_1[i][0]))
+			if len(cycles)==0:
+				cycles=cycles_1
 		print "Cycles: ",cycles
 
 		sefiles=[]
@@ -491,7 +598,7 @@ class mppnp_set(se):
 			else:
 				color_1=color[2]	
 			legend=str(mass)+"M$_{\odot}$ Z= "+str(z)+", "+extra_label[i]
-			self.surface_plots(HDF5_surf[i],cycles[i],t0_model[i],decayed,legend,ini_abu_file,marker_type[i],color_1,line_style[i],title="")
+			self.surface_plots(HDF5_surf[i],cycles[i],t0_model[i],decayed,legend,ini_abu_file,withmarker,marker_type[i],color_1,line_style[i],title="")
 	
 		#HDF5_dirs=["/nfs/rpod3/critter/Results/test2_template_mppnp/M1.650Z0.0001","/nfs/rpod3/critter/Results/test2_template_mppnp/M5.000Z0.0001"],	
 			
@@ -601,7 +708,7 @@ class mppnp_set(se):
 			import os
 			color=['r','r','b','b','k','g','k','g','k','b','r','g','g','b']
 			marker_type=['o','D','s','p','o','D','s','p','p','o','p','o','s','p']
-			line_style=['--','-','-.',':']
+			line_style=2*['--','-','-.',':']
 			first_plot=True
 			for i in range(len(HDF5_surf)):
 				sefiles=se(HDF5_surf[i])
@@ -624,31 +731,46 @@ class mppnp_set(se):
 
 
 
-	def write_prod_fact_stellarwinds(self,cyclerange=[5000,8000,1000],isotopes=["H-1","H-2","H-3","He-4"], label="fig:testlabel",caption="",table_header=[],file_1="test",table_size="normal",ascii_1=True,latex=True):
+	def write_prod_fact_stellarwinds(self,cyclerange=[[5000,8000,1000],[5000,8000,1000]],isotopes=["C-12","N-14","O-16","Ne-22"],weighted=True, label="fig:testlabel",caption="",table_header=[],file_1="test",table_size="normal",ascii_1=True,latex=False):
 
 		'''
 			
 		'''
+
 		production_factors=[]
+		yields_all=[]
+		iso_names=[]
 		for i in range(len(self.runs_H5_surf)):
                 	sefiles=se(self.runs_H5_surf[i])
+			indx_iso=[]
+			yields_1=[]
+			iso_names=[]
+			for w in range(len(isotopes)):
+				indx_iso.append(sefiles.se.isotopes.index(isotopes[w]))
+
 			if len(cyclerange)==0:
 				cyclestart=sefiles.se.cycles[0]
 				cycleend=sefiles.se.cycles[-1]
 				cyclesparse=500
 			else:
-				cyclestart=cyclerange[0]
-				cycleend=cyclerange[1]
-				cyclesparse=cyclerange[2]
+				cyclestart=cyclerange[i][0]
+				cycleend=cyclerange[i][1]
+				cyclesparse=cyclerange[i][2]
 			mass=sefiles.get("mini")[0]
-		    	iso_folded,yield_folded,yield_unfolded,iso_production_factor_name,production_factor=self.weighted_yields_production_factor(sefiles=sefiles,cyclestart=cyclestart,cycleend=cycleend,sparse=cyclesparse,isotopes=isotopes,star_mass=mass,label=True,legend="",color="r",title="")
-
-			production_factors.append(production_factor)
-		cols=[iso_production_factor_name]+production_factors
+		    	yield_folded,yield_unfolded=self.weighted_yields(sefiles=sefiles,cyclestart=cyclestart,cycleend=cycleend,sparse=cyclesparse,star_mass=mass)
+			for i in indx_iso:
+				iso_names.append(sefiles.se.isotopes[i])
+				if weighted==True:
+					yields_1.append(yield_folded[i])
+				else:
+					yields_1.append(yield_unfolded[i])	
+			yields_all.append(yields_1)
+		cols=[iso_names] + yields_all
+		#cols=[iso_production_factor_name]+production_factors
 		if latex==True:
-			self.write_latex_table(header_file="Isotopic production factor stellar winds",cols=cols,label=label,caption=caption,table_header=table_header,latexfile=file_1,table_size=table_size)
+			self.write_latex_table(header_file="Weighted stellar winds",cols=cols,label=label,caption=caption,table_header=table_header,latexfile=file_1,table_size=table_size)
 		if ascii_1==True:
-			self.write_ascii_table(header_file="Isotopic production factor stellar winds",cols=cols,txtfile=file_1)
+			self.write_ascii_table(header_file="weighted stellar winds",cols=cols,txtfile=file_1)
 	
 
 
@@ -689,12 +811,12 @@ class mppnp_set(se):
 		if table_size=="small":
 			file.write("\\tabletypesize{\\small}")
 		file.write("\\caption{"+caption+"}"+"\n")
-		file.write("\\begin{tabular}{"+("c"*(1+len(self.runs_H5_out)))+"}"+"\n")
+		file.write("\\begin{tabular}{"+("c"*(1+len(self.runs_H5_aued)))+"}"+"\n")
 		file.write("\\hline"+"\n")
 		#write content
 		if len(table_header)==0:
-			for i in range(len(self.runs_H5_out)):
-                                sefiles=se(self.runs_H5_out[i])
+			for i in range(len(self.runs_H5_surf)):
+                                sefiles=se(self.runs_H5_surf[i])
                                 mass=sefiles.get("mini")[0]
                                 z=sefiles.get("zini")[0]
                                 new_notation='{:.1E}'.format(float(z))
@@ -725,7 +847,7 @@ class mppnp_set(se):
 		
 		
 
-        def write_ascii_table(self,row_type="specie",header_file="Table element",cols=[[],[]],table_header=[],txtfile="test.txt",table_size="normal"):
+        def write_ascii_table(self,row_type="isotopes",header_file="Table element",cols=[[],[]],table_header=[],txtfile="test.txt",table_size="normal"):
 
 
                 '''
@@ -759,8 +881,8 @@ class mppnp_set(se):
                 file_1.write("\n")
                 #write content
                 if len(table_header)==0:
-                        for i in range(len(self.runs_H5_out)):
-                                sefiles=se(self.runs_H5_out[i])
+                        for i in range(len(self.runs_H5_surf)):
+                                sefiles=se(self.runs_H5_surf[i])
                                 mass=sefiles.get("mini")[0]
                                 z=sefiles.get("zini")[0]
                                 new_notation='{:.1E}'.format(float(z))
@@ -788,6 +910,16 @@ class mppnp_set(se):
 	#########################################
 
 
+	def plot_3D(self,ax,x,y,z,legend,x_label="Metallicity Z",y_label="Mass",z_label="",color='r',marker="*",markersize=14,markercolor="r",line_style="--"):
+		#fig=plt.figure(fig_num)
+		#ax=Axes3D(fig)
+		#ax = fig.add_subplot(111, projection='3d')
+		ax.plot(x,y,z,c=color,marker=marker,markerfacecolor=markercolor,markersize=markersize,linestyle=line_style,label=legend)
+		ax.set_xlabel(x_label)
+		ax.set_ylabel(y_label)
+		ax.set_zlabel(z_label)
+	
+
 
 	def weighted_yields_production_factor(self,sefiles,cyclestart=11000,cycleend=12000,sparse=100,isotopes=["H-1","H-2","H-3","He-4"],star_mass=1.65,label=True,legend="",color="r",title=" -Final wind yields - isotopic composition folded with IMF"):
 		'''
@@ -800,7 +932,7 @@ class mppnp_set(se):
                 import re
                 import nugridse as mp
 	
-		X_i, E_i =sefiles.windyields(cyclestart, cycleend, sparse)
+		X_i, E_i =sefiles.windyields(cyclestart, cycleend, sparse,abund='iso_massf_decay')
 		print "#################",X_i[:12],sefiles.se.isotopes[0:12],"+#################"
 		###calculate isotopes
 		#isotopes=['Fe-56','Co-60','Ni-61','Cu-65','Zn-67',]
@@ -865,7 +997,7 @@ class mppnp_set(se):
 		return isotope_name_yield,iso_abu_IMF,iso_abu,isotope_name_prod_factor, production_factors #isotope name, folded, unfolded yields, and isotope name for production factor and production factor - all stable
 
  
-	def weighted_yields(self,sefiles,cyclestart=11000,cycleend=12000,sparse=100,isotopes=["H-1","H-2","H-3","He-4"],star_mass=1.65,label=True,legend="",color="r",title=" -Final wind yields - isotopic composition folded with IMF",plot_fig=True):
+	def weighted_yields(self,sefiles,cyclestart=11000,cycleend=12000,sparse=100,star_mass=1.65):
 		'''
 				Uses H5_surf
 	  	    This function returns the wind yields and ejected masses for stable species.  The command
@@ -879,65 +1011,15 @@ class mppnp_set(se):
 
 	
 		X_i, E_i =sefiles.windyields(cyclestart, cycleend, sparse)
-		###calculate isotopes
-		#isotopes=['Fe-56','Co-60','Ni-61','Cu-65','Zn-67',]
-		#isotopes['Ga-71','Ge-73','As-75','Se-77','Br-82','Kr-84','Rb-87','Sr-88','Y-89','Zr-92','Nb-94','Zr-96','Mo-96','Ba-137','Ba-138','La-139','Ce-140','Nd-142','Sm-144','Pb-206']					
-		#206
-		plotiso=[]
-		mass=[]
-		name=[]
-		isotope_names = sefiles.se.isotopes
-		sefiles.mass_frac = [X_i] #double array important for decay
-	
-		#convert isotope name scheme
-		u.convert_specie_naming_from_h5_to_ppn(isotope_names) #-define u.spe
-		names_ppn_world = u.spe 
-		number_names_ppn_world = u.n_array
-		u.define_zip_index_for_species(names_ppn_world,number_names_ppn_world) #--define u.cl!	
-	
-		#let species decay
-		u.stable_specie()
-		sefiles.decay([X_i]) #double array is important for decay()
-		X_i_decayed=decayed_multi_d[0]
-		
-		#convert specified isotopes in correct name scheme
-		u.convert_specie_naming_from_h5_to_ppn(isotopes) #-define u.spe
-		isotopes_ppn_world = u.spe
-	
-		for i in range(len(isotopes_ppn_world)):
-			isotopes_ppn_world[i]=isotopes_ppn_world[i].upper()
-		
-		for j in range(len(u.stable)):
-			if u.stable[j] in isotopes_ppn_world:
-				plotiso.append(X_i_decayed[j])
-				mass.append(int(re.findall(r'\d+',u.stable[j])[0]))
-				name.append(u.stable[j])
-		###Folding and plotting###			
-		#Salpeter mass function,Kroupa 2001:(lazyness..)
+		#isotope_names = sefiles.se.isotopes
+		#print "test of x_i and se.ios",len(X_i),len(isotope_names)	
 		#f(M)=M**-2.3
 		f_m=(star_mass**(-2.3))
+		iniabu_weighted=sefiles.get(0,"iso_massf")*f_m
 		iso_IMF=[]
-		for i in range(len(plotiso)):
-			iso_IMF.append(f_m*plotiso[i])
-		if plot_fig == True:	
-			plt.plot(mass,iso_IMF,marker='*',markersize=8,mfc=color,linestyle='None',label=legend)
-			plt.xlabel("Mass number A")
-			plt.ylabel("Abundance")
-			plt.title(title)	
-			if label ==True:
-				k=-1
-				for j in range(len(plotiso)):
-					k+=1
-					if isotopes_ppn_world[j] != name[j]:
-						k+=1
-						print "Input isotope >>"+isotopes_ppn_world[j]+"<< not stable and will be removed"
-					plt.annotate(name[j], xytext = (0, 10),textcoords = 'offset points' ,xy=(mass[j], iso_IMF[j]))
-			mina=mass[0]-4 	
-			if mina<0:
-				mina=0
-			plt.xlim(mina,mass[-1]+4)
-			plt.legend()
-		return iso_IMF, plotiso #folded and unfolded - both stable
+		#for i in range(len(isotope_names)):
+		iso_IMF=f_m*X_i
+		return iso_IMF, iniabu_weighted,X_i #folded and unfolded - both stable???
 	
 
 
@@ -1147,7 +1229,7 @@ class mppnp_set(se):
 
 
 	
-	def surface_plots(self,HDF5surf_dir,cycles,t0_model,decayed=True,legend="",ini_abu_file="/astro/critter/critter/PPN/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn",marker_type='o',color="r",line_style="-",title="",hs=["Ba","La","Nd","Sm"],ls=["Sr","Y","Zr"]): 
+	def surface_plots(self,HDF5surf_dir,cycles,t0_model,decayed=True,legend="",ini_abu_file="/astro/critter/critter/PPN/forum.astro.keele.ac.uk/frames/mppnp/USEEPP/iniab2.0E-02GN93.ppn",withmarker=True,marker_type='o',color="r",line_style="-",title="",hs=["Ba","La","Nd","Sm"],ls=["Sr","Y","Zr"]): 
 	
 		'''surface hdf5
 	
@@ -1167,14 +1249,19 @@ plots Mg25/Mg24 vs Mg26/Mg24
 		
 		import utils as u
 		import nugridse as mp	
+                sefiles=se(HDF5surf_dir)
+
                 if len(cycles)>3:
                         cycle_range=cycles
 			t0_model=cycle_range[0]
-                else:
+                elif len(cycles)==3:
                         cycle_range=np.arange(cycles[0],cycles[1],cycles[2])
-		
-		sefiles=se(HDF5surf_dir)
-
+		elif len(cycles)==2:
+			if cycles[1]==-1:
+				cycles[1]=int(sefiles.se.cycles[-1])
+				print cycles,t0_model
+			cycle_range=np.arange(t0_model,cycles[1],cycles[0])
+			print cycles,t0_model
 		#if len(t0_model)==0:
 	#		t0_model=cycles[0]
 
@@ -1470,8 +1557,13 @@ plots Mg25/Mg24 vs Mg26/Mg24
 
                 plt.figure(8)
 		#####formula for li7 log(LI7/H)+12, LI, H number frac
-                plt.plot(np.array(starage),np.log10( np.array(li7_abu)/(7*np.array(h_abu)))+12,marker=marker_type,markersize=8,linewidth=3,mfc=color,linestyle=line_style,label=legend)
-                plt.xlabel("$t-t_0 [yr]$",fontsize=20)
+		#if withmarker==True:
+                #	plt.plot(np.array(starage),np.log10( np.array(li7_abu)/(7*np.array(h_abu)))+12,marker=marker_type,markersize=8,linewidth=3,mfc=color,linestyle=line_style,label=legend)
+                #else:
+		#	plt.plot(np.array(starage),np.log10( np.array(li7_abu)/(7*np.array(h_abu)))+12,linewidth=3,mfc=color,linestyle=line_style,label=legend)
+		plt.plot(np.array(starage),li7_abu,linewidth=3,mfc=color,linestyle=line_style,label=legend)		
+
+		plt.xlabel("$t-t_0 [yr]$",fontsize=20)
 		plt.ylabel("log $\\epsilon(^7$Li)",fontsize=20)
                 plt.legend()
                 plt.title(title)
@@ -1597,6 +1689,46 @@ class mesa_set(history_data):
 					#if len(multi_dir)>=0:
 					print "Error: not history.data or star.log file found in "+run_path		
 
+
+	def explosion(self,see_exp_dir='.',plots_dir='.'):
+		'''
+			Calculates synthetic explosions, delayed and rapid for 
+			typs "dummy" and "inter" for massive stars (as in set1)
+
+			Use of explosion_main tool in explosion dir
+
+			see_exp_dir - dir for calculated h5 files
+			plots_dir - dir for plots
+
+
+		'''
+		for i in range(len(self.run_historydata)):
+			
+			rundir_path=see_exp_dir+'/'+self.run_LOGS[i].split("/")[-2]
+			if not os.path.isdir(rundir_path):
+				os.mkdir(rundir_path)
+				print "create exp run dir ",rundir_path
+			
+			#:wos.chdir(rundir_path)
+				
+			#calculate collapse cycle
+			#1. ncycle,2.nramp,3.vsinput,4.coolingcycles,(5.cooolingcyclleswrite)
+			ncycle=21973
+			nramp=10
+			vsinput=2.e9
+			cooling_cycles=290
+			##calculate collapse
+			import imp
+			import explosive_main as exp
+			#pylib_path= str(__file__)[:-(len("nugrid_set.py")+1)]
+			#exp=imp.load_source("explosive_main",pylib_path+'/../explosion/explosive_main.py')
+			calc=exp.explosion(run_H5=self.runs_H5[i],LOGS_path=self.run_LOGS[i],ncycle=ncycle,nramp=nramp,vsinput=vsinput)			
+			for delay in [True,False]:
+				calc.exp_dummy(delay=delay,cooling_cycles=cooling_cycles+2,cooling_cycles_write=2,write_dir=rundir_path,extra_name='')
+				calc.exp_inter(delay=delay,cooling_cycles=290,write_dir=rundir_path,extra_name='')
+			#create diagrams in plots_dir dir
+				calc.plot_rho_T(delay=delay,plots_dir=plots_dir,energy_exp=2.0e51)			
+				calc.plot_exp_details(delay=delay,plots_dir=plots_dir,model_label='')
 	
 	def multi_DUP(self,dirs=[],t0_model=[],h_core_mass=False,plot_fig=True):
 		'''
@@ -1628,7 +1760,7 @@ class mesa_set(history_data):
 		h1_mass_min_DUP_model_array=[]
 		for i in range(len(dirs)):
 			#color,marker_type)
-			peak_lum_model,h1_mass_min_DUP_model = historydata[i].find_TP_attributes(0,t0_model[i],color[i],marker_type[i],h_core_mass,no_fig=plot_fig)			
+			peak_lum_model,h1_mass_min_DUP_model = historydata[i].find_TP_attributes(0,color[i],marker_type[i],h_core_mass,no_fig=plot_fig)			
 			peak_lum_model_array.append(peak_lum_model)
 			h1_mass_min_DUP_model.append(h1_mass_min_DUP_model)
 
