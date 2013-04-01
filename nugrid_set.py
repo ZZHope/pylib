@@ -1661,6 +1661,7 @@ class mesa_set(history_data):
 		self.run_historydata=[]
 		self.run_label=[]
 		i=0
+		clean_starlog=raw_input("Create new star.logsa/historydata.sa for all runs?")
 		for element in slist:
 			if len(multi_dir)==0:
 				run_path=rundir+"/"+element
@@ -1679,7 +1680,7 @@ class mesa_set(history_data):
 				if (len(glob.glob(run_path+"/*/*.data"))>0) or (len(glob.glob(run_path+"/*/*.log"))>0):
 					self.run_LOGS.append(run_path+"/LOGS")
 					print "Read "+run_path
-					self.run_historydata.append(history_data(run_path+"/LOGS"))
+					self.run_historydata.append(history_data(run_path+"/LOGS",clean_starlog=clean_starlog))
 					if len(extra_label)>0:
 						self.run_label.append(self.create_label(self.run_historydata[-1],extra_label[i]))
 					else:
