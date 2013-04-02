@@ -345,16 +345,15 @@ class history_data(DataPlot):
         sldir   = self.sldir
         slname  = self.slname
         slaname = slname+'sa'
-	if os.path.exists(sldir+'/'+slaname):
-        	if self.clean_starlog:
-			os.remove(sldir+'/'+slaname)
-			print 'Delete old '+slaname
-			print 'Create new '+slaname+' from '+self.slname
-		else:
-			print 'Using old '+self.slname+'sa file ...'
-	else:
-			print 'No '+slaname+' file found, create new one from '+self.slname
-        cleanstarlog(sldir+'/'+slname)    
+        if self.clean_starlog and os.path.exists(sldir+'/'+slaname):
+        	print "Automatically not cleaning " +self.slname+ ". Therefore no new "+self.slname+"sa."
+        	
+        if not os.path.exists(sldir+'/'+slaname):
+            print 'No '+self.slname+'sa file found, create new one from '+self.slname
+            cleanstarlog(sldir+'/'+slname)
+        else:
+            print 'Using old '+self.slname+'sa file ...'
+            
         cmd=os.popen('wc '+sldir+'/'+slaname)    
         cmd_out=cmd.readline()
         cnum_cycles=cmd_out.split()[0]
