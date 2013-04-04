@@ -890,7 +890,7 @@ class history_data(DataPlot):
         #fig.savefig(outfile)
         pl.show()
 
-    def kip_cont(self,ifig=110,modstart=0,modstop=-1,outfile='out.png',xlims=[0.,0.],ylims=[0.,0.],xres=1000,yres=1000,ixaxis='model_number',mix_zones=20,burn_zones=20,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=False,rad_lines=False,profiles=[],showfig=True,outlines=True,boundaries=True):
+    def kip_cont(self,ifig=110,modstart=0,modstop=-1,outfile='out.png',xlims=[0.,0.],ylims=[0.,0.],xres=1000,yres=1000,ixaxis='model_number',mix_zones=20,burn_zones=20,plot_radius=False,engenPlus=True,engenMinus=False,landscape_plot=False,rad_lines=False,profiles=[],showfig=True,outlines=True,boundaries=True,c12_boundary=False):
         '''This function creates a Kippenhahn plot with energy flux using
         contours.
 
@@ -1199,7 +1199,8 @@ class history_data(DataPlot):
 		print 'plotting abund boundaries'
 		ax.plot(xxx,self.get('h1_boundary_mass')[modstart:modstop],label='H boundary',linestyle='-')
 		ax.plot(xxx,self.get('he4_boundary_mass')[modstart:modstop],label='He boundary',linestyle='--')
-		ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
+		if c12_boundary==True:
+			ax.plot(xxx,self.get('c12_boundary_mass')[modstart:modstop],label='C boundary',linestyle='-.')
 
         ax.axis([xlims[0],xlims[1],ylims[0],ylims[1]])
 

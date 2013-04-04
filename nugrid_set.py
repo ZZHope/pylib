@@ -130,7 +130,10 @@ class mppnp_set(se):
                                 if multi_dir[i][0] == "/":
                                         run_path=multi_dir[i]
                                 else:
-                                        run_path=pwd+"/"+multi_dir[i]
+					if len(rundir)>0:
+						run_path=rundir+"/"+multi_dir[i]
+					else:
+                                        	run_path=pwd+"/"+multi_dir[i]
 
 			if os.path.isdir(run_path+"/H5_out") and os.path.isdir(run_path+"/H5_surf"):
 				sefiles = os.listdir(run_path+"/H5_out")
@@ -1661,7 +1664,11 @@ class mesa_set(history_data):
 		self.run_historydata=[]
 		self.run_label=[]
 		i=0
-		clean_starlog=raw_input("Create new star.logsa/historydata.sa for all runs?")
+		clean_1=raw_input("Create new star.logsa/historydata.sa for all runs? [y/n]")
+		if clean_1 == 'yes' or clean_1 == 'y':
+			clean_starlog=True
+		else:
+			clean_starlog=False
 		for element in slist:
 			if len(multi_dir)==0:
 				run_path=rundir+"/"+element
