@@ -173,32 +173,83 @@ class mppnp_set(se):
 			k+=1
 		print self.run_dirs_name
 
-	def grid_yields_3D(self,ax,isotopes,cycles,weighted,lable=True):
-		
+	def grid_yields_3D(self,ax,ax2,isotopes,cycles,weighted,lable=True):
+		ax_2=ax2	
 		color=['r','k','b','g']
                 marker_type=['o','p','s','D']
                 line_style=['--','-','-.',':']
-		grid_3D=self.yields_massgrid(weighted=weighted,isotopes=isotopes,cycles=cycles,title='')
+		grid_3D,grid_3D_prodfac=self.yields_massgrid(weighted=weighted,isotopes=isotopes,cycles=cycles,title='')
 		print "grid..............."
-		print grid_3D
+		print grid_3D,grid_3D_prodfac
 		#fig=plt.figure(1)
 		#ax = fig.add_subplot(111, projection='3d')
 		for i in range(len(grid_3D)):
 			#fig=plt.figure()
 			if lable==True:
-				self.plot_3D(ax,grid_3D[i][0],grid_3D[i][1],grid_3D[i][2],legend=isotopes[i],x_label="Mass",y_label="Metallicity Z",z_label="Weighted Yield",color=color[i],markercolor=color[i],marker=marker_type[i],line_style=line_style[i],markersize=14)
+				x=[]
+				z=[]
+				y=[]
+				j=0
+				for bool_1 in (np.array(grid_3D[i][2])>0):
+					if bool_1:
+						x.append(grid_3D[i][0][j])
+						y.append(np.log10( grid_3D[i][1][j]))
+						z.append(np.log10(  grid_3D[i][2][j]))
+					j+=1
+				self.plot_3D(ax,x,y,z,legend=isotopes[i],x_label="Mass",y_label="Logarithmic Metallicity Z",z_label="Logarithmic Weighted Yield",color=color[i],markercolor=color[i],marker=marker_type[i],line_style=line_style[i],markersize=14)
 			else:
-				self.plot_3D(ax,grid_3D[i][0],grid_3D[i][1],grid_3D[i][2],legend="",x_label="Mass",y_label="Metallicity Z",z_label="Weighted Yield",color=color[i],markercolor=color[i],marker=marker_type[i],line_style=line_style[i],markersize=14)
-		#plt.legend()
+                                x=[]
+                                y=[]
+                                z=[]
+				j=0
+                                for bool_1 in (np.array(grid_3D[i][2])>0):
+                                        if bool_1:
+                                                x.append(grid_3D[i][0][j])
+                                                y.append(np.log10( grid_3D[i][1][j]))
+                                                z.append(np.log10(  grid_3D[i][2][j]))
+                                        j+=1
+				self.plot_3D(ax,x,y,z,legend="",x_label="Mass",y_label="Logarithmic Metallicity Z",z_label="Logarithmic Weighted Yield",color=color[i],markercolor=color[i],marker=marker_type[i],line_style=line_style[i],markersize=14)
+
+		######for proction factor		
+                for i in range(len(grid_3D_prodfac)):
+                        #fig=plt.figure()
+                        if lable==True:
+                                x=[]
+                                y=[]
+                                z=[]
+                                j=0
+                                for bool_1 in (np.array(grid_3D_prodfac[i][2])>0):
+                                        if bool_1:
+                                                x.append(grid_3D_prodfac[i][0][j])
+                                                y.append(np.log10( grid_3D_prodfac[i][1][j]))
+                                                z.append(np.log10(  grid_3D_prodfac[i][2][j]))
+                                        j+=1
+                                self.plot_3D(ax_2,x,y,z,legend=isotopes[i],x_label="Mass",y_label="Logarithmic Metallicity Z",z_label="Logarithmic Production factor",color=color[i],markercolor=color[i],marker=marker_type[i],line_style=line_style[i],markersize=14)
+                        else:
+                                x=[]
+                                y=[]
+                                z=[]
+                                j=0
+                                for bool_1 in (np.array(grid_3D_prodfac[i][2])>0):
+                                        if bool_1:
+                                                x.append(grid_3D_prodfac[i][0][j])
+                                                y.append(np.log10( grid_3D_prodfac[i][1][j]))
+                                                z.append(np.log10(  grid_3D_prodfac[i][2][j]))
+                                        j+=1
+                                self.plot_3D(ax_2,x,y,z,legend="",x_label="Mass",y_label="Logarithmic Metallicity Z",z_label="Logarithmic Production factor",color=color[i],markercolor=color[i],marker=marker_type[i],line_style=line_style[i],markersize=14)
+		
+		plt.legend()
 		#plt.ylim(0,7e-3)
 		#plt.legend()
-		figure(1);plt.legend()
+		#figure(1);plt.legend()
+		#.weighted_yields_massgrid(runs=['M1.650Z0.0001', 'M2.000Z0.0001','M3.000Z0.0001','M5.000Z0.0001'],isotopes=["He-4","C-12","O-16"],cycles=[[0,10000,1000],[0,10000,1000],[0,10000,1000],[0,10000,1000]])
+		####other legend?
 
 	def grid_yield_3D_surf(self,ax,isotopes,cycles,weighted,lable=True):	
                 color=['r','k','b','g']
                 marker_type=['o','p','s','D']
                 line_style=['--','-','-.',':']
-                grid_3D=self.yields_massgrid(weighted=weighted,isotopes=isotopes,cycles=cycles,title='')
+                grid_3D,grid_3D_prodfac=self.yields_massgrid(weighted=weighted,isotopes=isotopes,cycles=cycles,title='')
 		
 	
 
@@ -225,29 +276,42 @@ class mppnp_set(se):
 
 
 		HDF5_surf=[]
+		HDF5_out=[]
 		if (len(runs) == 0):
 			HDF5_surf=self.runs_H5_surf
+			HDF5_out=self.runs_H5_out
 		else:
 			for i in range(len(self.run_dirs_name)):
 				if self.run_dirs_name[i] in runs:
 					HDF5_surf.append(self.runs_H5_surf[i])
-
+					HDF5_surf.append(self.runs_H5_out[i])
 		legend_k=0
 		sefiles=[]
+		sefiles_hout=[]
 		for i in range(len(HDF5_surf)):
 				sefiles.append(se(HDF5_surf[i]))		
-
+				sefiles_hout.append(se(HDF5_out[i]))
 		color=['r','b','g','k']
 		marker_type=['o','p','s','D']
 		line_style=['--','-','-.',':']
 		line_width=12*[5,3,4,6]
+		##yield plot
 		fig=plt.figure()
+		ax = fig.add_subplot(1,1,1)
+                plt.rcParams.update({'font.size': 16})
+                plt.rc('xtick', labelsize=16)
+                plt.rc('ytick', labelsize=16)
+                if log==True:
+                        ax.set_yscale('log')
+		#prod factor plot
+		fig_2=plt.figure()
+		ax_2 = fig_2.add_subplot(1,1,1)
 		plt.rcParams.update({'font.size': 16})
 		plt.rc('xtick', labelsize=16) 
 		plt.rc('ytick', labelsize=16) 
-		ax = fig.add_subplot(1,1,1)
 		if log==True:
-			ax.set_yscale('log')
+			ax_2.set_yscale('log')
+		
 		z_index_files=[]
 		z_values=[]
 		j=-1
@@ -266,9 +330,12 @@ class mppnp_set(se):
 		###for 3D plotting,z,M,yield
 		zeros=[0]*len(HDF5_surf)
 		grid_3D_1=[zeros,zeros,zeros]
+		grid_3D_prodfac_1=[zeros,zeros,zeros]
 		grid_3D=[]
+		grid_3D_prodfac=[]
 		for i in range(len(isotopes)):
 			grid_3D.append([[0]*len(HDF5_surf),  [0]*len(HDF5_surf),[0]*len(HDF5_surf)])
+			grid_3D_prodfac.append([[0]*len(HDF5_surf),  [0]*len(HDF5_surf),[0]*len(HDF5_surf)])
 		print grid_3D
 		##get index of isotopes
 		indx_iso=[]
@@ -285,9 +352,11 @@ class mppnp_set(se):
 			legend_k+=1
 			iso_yields=[]
 			iniabu_yields_folded=[]
+			production_factor=[]
 			for i in range(len(isotopes)):
 				iso_yields.append(np.zeros(len( z_index_files[w]   )))
 				iniabu_yields_folded.append(np.zeros(len( z_index_files[w]   )))
+				production_factor.append(np.zeros(len( z_index_files[w]   )))
 			t=0
 			for k in z_index_files[w]:
 				star_mass=sefiles[k].get("mini")[0]
@@ -298,8 +367,12 @@ class mppnp_set(se):
 				else:
 					endcycle=cycles[k][1]
 				#get yields from marcos func
-				iso_yield_folded,iniabu_folded,iso_yield_unfolded =self.weighted_yields(sefiles[k],cycles[k][0],endcycle,cycles[k][2],star_mass)
+				iso_yield_folded,iniabu_folded,prod_factor,iso_yield_unfolded =self.weighted_yields(sefiles[k],sefiles_hout[k],cycles[k][0],endcycle,cycles[k][2],star_mass)
 				for i in range(len(isotopes)):
+                                        grid_3D_prodfac[i][0][t]=star_mass
+                                        grid_3D_prodfac[i][1][t]=star_z
+                                        grid_3D_prodfac[i][2][t]=prod_factor[ indx_iso[i]     ]
+                                        production_factor[i][t]=prod_factor[ indx_iso[i]     ]
 					if weighted==True:
 						grid_3D[i][0][t]=star_mass
 						grid_3D[i][1][t]=star_z
@@ -330,16 +403,26 @@ class mppnp_set(se):
 				#mass_1=star_mass_array
 				yield_1=[]
 				mass_1=[]			
-				iniabu_folded=[]	
+				iniabu_folded=[]
+				prod_fac_sorted=[]	
                			indices_array=sorted(range(len(star_mass_array)),key=lambda x:star_mass_array[x])
                 		for i in indices_array:
 					yield_1.append(iso_yields[h][i])
 					mass_1.append(star_mass_array[i])
 					iniabu_folded.append(iniabu_yields_folded[h][i])
-				####Plotting yields
-				plt.plot(mass_1,yield_1,marker=marker_type[legend_k],color=color[color_iso],markersize=10,mfc=color[color_iso],linewidth=line_width[legend_k],linestyle="-",label=isotopes[h]+" , "+str(star_z)+"$Z_{\odot}$"  ) #line_style[legend_k]
+					prod_fac_sorted.append(production_factor[h][i])
+				####Plotting prodfactor
+				plt.figure(fig_2.number)	
+                                ax_2.plot(mass_1,prod_fac_sorted,marker=marker_type[legend_k],color=color[color_iso],markersize=10,mfc=color[color_iso],linewidth=line_width[legend_k],linestyle="-",label=isotopes[h]+" , "+str(star_z)+"$Z_{\odot}$"  )				
+				m_max=max(star_mass_array)+2
+				plt.plot([0,m_max],[1,1],"k--",linewidth=3)
+				plt.plot([0,m_max],[2,2],"k--",linewidth=1)
+				plt.plot([0,m_max],[0.5,0.5],"k--",linewidth=1)				
+	
+				plt.figure(fig.number)
+				ax.plot(mass_1,yield_1,marker=marker_type[legend_k],color=color[color_iso],markersize=10,mfc=color[color_iso],linewidth=line_width[legend_k],linestyle="-",label=isotopes[h]+" , "+str(star_z)+"$Z_{\odot}$"  ) #line_style[legend_k]
 				##Plotting iniabu yields
-				plt.plot(mass_1,iniabu_folded,"--",color=color[color_iso],linewidth=line_width[legend_k],label=isotopes[h]+" , "+str(star_z)+"$Z_{\odot}$"+", initial")
+				ax.plot(mass_1,iniabu_folded,"--",color=color[color_iso],linewidth=line_width[legend_k],label=isotopes[h]+" , "+str(star_z)+"$Z_{\odot}$"+", initial")
 					#plt.plot(star_mass,yields[j],marker='*',markersize=8,mfc=color[j],linestyle='None')
 				color_iso+=1
 				legend_k+=1
@@ -354,10 +437,7 @@ class mppnp_set(se):
 		#		y_imf.append(mass**(-2.3))
 		#	plt.plot(x_imf,y_imf,label="IMF, M$^{-2.3}$",c="k")		
 		##
-		max_1=2.*max(max_yield)
-		min_1=0.5*min(max_yield)
-		plt.ylim(ymin=min_1,ymax=max_1)
-		print min_1,max_1
+		plt.figure(fig.number)
 		plt.legend()				
 		plt.xlabel("M/M$_{\odot}$",fontsize=20)
 		plt.minorticks_on()
@@ -365,12 +445,21 @@ class mppnp_set(se):
 			plt.ylabel("Weighted stellar yields",fontsize=20)
 		else:
 			plt.ylabel("Stellar yields",fontsize=20)
-		plt.title(title)		
+		plt.title(title)
+		plt.figure(fig_2.number)
+                ###plot figure 1
+		plt.legend()
+                plt.xlabel("M/M$_{\odot}$",fontsize=20)
+                plt.minorticks_on()
+                plt.ylabel("Production factor",fontsize=20)
+                plt.title(title)
+
+		
 		#plt.xlim(0,max(star_mass_array)+2)
 		print "RETURN:"
-		print grid_3D
+		print grid_3D,grid_3D_prodfac
 
-		return grid_3D
+		return grid_3D,grid_3D_prodfac
 
 
 
@@ -921,7 +1010,7 @@ class mppnp_set(se):
 		ax.set_xlabel(x_label)
 		ax.set_ylabel(y_label)
 		ax.set_zlabel(z_label)
-	
+		plt.legend()
 
 
 	def weighted_yields_production_factor(self,sefiles,cyclestart=11000,cycleend=12000,sparse=100,isotopes=["H-1","H-2","H-3","He-4"],star_mass=1.65,label=True,legend="",color="r",title=" -Final wind yields - isotopic composition folded with IMF"):
@@ -1000,7 +1089,7 @@ class mppnp_set(se):
 		return isotope_name_yield,iso_abu_IMF,iso_abu,isotope_name_prod_factor, production_factors #isotope name, folded, unfolded yields, and isotope name for production factor and production factor - all stable
 
  
-	def weighted_yields(self,sefiles,cyclestart=11000,cycleend=12000,sparse=100,star_mass=1.65):
+	def weighted_yields(self,sefiles,sefiles_hout,cyclestart=11000,cycleend=12000,sparse=100,star_mass=1.65):
 		'''
 				Uses H5_surf
 	  	    This function returns the wind yields and ejected masses for stable species.  The command
@@ -1013,16 +1102,36 @@ class mppnp_set(se):
                 import nugridse as mp
 
 	
-		X_i, E_i =sefiles.windyields(cyclestart, cycleend, sparse)
+		X_i, E_i =sefiles.windyields(cyclestart, cycleend, sparse,abund='iso_massf_decay')
 		#isotope_names = sefiles.se.isotopes
 		#print "test of x_i and se.ios",len(X_i),len(isotope_names)	
-		#f(M)=M**-2.3
 		f_m=(star_mass**(-2.3))
-		iniabu_weighted=sefiles.get(0,"iso_massf")*f_m
-		iso_IMF=[]
-		#for i in range(len(isotope_names)):
-		iso_IMF=f_m*X_i
-		return iso_IMF, iniabu_weighted,X_i #folded and unfolded - both stable???
+		iniabu_weighted=sefiles.get(0,"iso_massf_decay")*f_m
+		iniabu=sefiles.get(0,"iso_massf_decay")
+		
+		###calculated production factor
+		end_star_mass=sefiles.get(cycleend,"mass")
+		h_mass_frac=sefiles_hout.get(cycleend,"H-1")
+		for i in range(len(h_mass_frac)):
+			if h_mass_frac[i] > 1e-4:
+				h_free_core=sefiles_hout.get(cycleend,"mass")[i]
+				break
+		envelope_mass=end_star_mass-h_free_core
+		#if ((envelope_mass)/h_free_core)>0.1:
+		#		envelope_yield=(sefiles.get(cycleend,"iso_massf" )- iniabu)*(envelope_mass)
+		#	envelope_prodfac=(envelope_yield/(iniabu*envelope_mass))
+	#		print "Add envelope contribution for "+str(sefiles.get("mini")[0])+str(sefiles.get("mini")[0])+"star"
+	#	else:
+		envelope_prodfac=0.
+		envelope_yield=0
+		prod_factor=(X_i)/(iniabu*(star_mass-end_star_mass ))
+		total_yield=X_i#envelope_yield
+		#f(M)=M**-2.3
+                iso_IMF=[]
+                #for i in range(len(isotope_names)):
+                iso_IMF=f_m*total_yield
+
+		return iso_IMF, iniabu_weighted,prod_factor,X_i #folded and unfolded - both stable???
 	
 
 
@@ -1676,7 +1785,10 @@ class mesa_set(history_data):
 				if multi_dir[i][0] == "/":
 					run_path=multi_dir[i]
 				else:
-					run_path=os.getcwd()+"/"+multi_dir[i]	
+					if len(rundir)==0:
+						run_path=os.getcwd()+"/"+multi_dir[i]
+					else:
+						run_path=rundir+'/'+multi_dir[i]
 			if os.path.isdir(run_path):
 				run_path_1=glob.glob(run_path+"/*/*.h5")
 				if len(run_path_1)>0:
@@ -1712,6 +1824,10 @@ class mesa_set(history_data):
 		'''
 		for i in range(len(self.run_historydata)):
 			
+			####Massie stars defined ast M<=8M
+			star_mass=mesa_profile(self.run_LOGS[i],1).header_attr['initial_mass']
+			if star_mass <= 8.  :
+				continue
 			rundir_path=see_exp_dir+'/'+self.run_LOGS[i].split("/")[-2]
 			if not os.path.isdir(rundir_path):
 				os.mkdir(rundir_path)
@@ -1721,19 +1837,25 @@ class mesa_set(history_data):
 				
 			#calculate collapse cycle
 			#1. ncycle,2.nramp,3.vsinput,4.coolingcycles,(5.cooolingcyclleswrite)
+			
 			ncycle=21973
 			nramp=10
 			vsinput=2.e9
 			cooling_cycles=290
+
+			#Find the massive stars from the set
+			##
+			
 			##calculate collapse
 			import imp
 			import explosive_main as exp
 			#pylib_path= str(__file__)[:-(len("nugrid_set.py")+1)]
 			#exp=imp.load_source("explosive_main",pylib_path+'/../explosion/explosive_main.py')
-			calc=exp.explosion(run_H5=self.runs_H5[i],LOGS_path=self.run_LOGS[i],ncycle=ncycle,nramp=nramp,vsinput=vsinput)			
+			calc=exp.explosion(run_H5=self.runs_H5[i],LOGS_path=self.run_LOGS[i],nramp=nramp,vsinput=vsinput)			
 			for delay in [True,False]:
-				calc.exp_dummy(delay=delay,cooling_cycles=cooling_cycles+2,cooling_cycles_write=2,write_dir=rundir_path,extra_name='')
-				calc.exp_inter(delay=delay,cooling_cycles=290,write_dir=rundir_path,extra_name='')
+				print '############Calculate dummy is',delay
+				calc.exp_dummy(delay=delay,write_dir=rundir_path,extra_name='')
+				calc.exp_inter(delay=delay,write_dir=rundir_path,extra_name='')
 			#create diagrams in plots_dir dir
 				calc.plot_rho_T(delay=delay,plots_dir=plots_dir,energy_exp=2.0e51)			
 				calc.plot_exp_details(delay=delay,plots_dir=plots_dir,model_label='')
